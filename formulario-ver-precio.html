@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subir Imágenes</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      justify-content: center;
+    }
+
+    .container {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #00ffcc;
+    }
+
+    input[type="file"] {
+      margin: 1rem 0;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: #00ffcc;
+      color: #1e1e2f;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #00e6b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Subir Imágenes</h1>
+    <form id="uploadForm">
+      <input type="file" name="image1" accept="image/*" required>
+      <input type="file" name="image2" accept="image/*">
+      <input type="file" name="image3" accept="image/*">
+      <input type="file" name="image4" accept="image/*">
+      <input type="file" name="image5" accept="image/*">
+      <button type="submit">Subir Imágenes</button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      deleteDoc,
+    } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+      authDomain: "inventario-35d6b.firebaseapp.com",
+      projectId: "inventario-35d6b",
+      storageBucket: "inventario-35d6b.appspot.com",
+      messagingSenderId: "266100399659",
+      appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+
+      // Obtener la colección "slider" y eliminar documentos anteriores
+      const sliderRef = collection(db, "slider");
+      const sliderSnapshot = await getDocs(sliderRef);
+      sliderSnapshot.forEach(async (doc) => {
+        await deleteDoc(doc.ref); // Eliminar todos los documentos en "slider"
+      });
+
+      const formData = new FormData(event.target);
+      const images = [];
+      const promises = [];
+
+      for (let i = 0; i < 5; i++) {
+        const file = formData.get(`image${i + 1}`);
+        if (file) {
+          const storageRef = ref(storage, `images/${file.name}`);
+          promises.push(uploadBytes(storageRef, file).then(() => getDownloadURL(storageRef)));
+        }
+      }
+
+      Promise.all(promises).then(async (urls) => {
+        try {
+          await addDoc(sliderRef, {
+            images: urls,
+            timestamp: new Date()
+          });
+          alert('Imágenes subidas exitosamente a la colección "slider".');
+        } catch (error) {
+          console.error("Error subiendo las imágenes: ", error);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
