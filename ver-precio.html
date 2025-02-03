@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buscador EAN/UPC</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .slider {
+      width: 300px;
+      height: 200px;
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 1rem;
+    }
+
+    .slides {
+      display: flex;
+      transition: transform 0.5s ease;
+      width: 100%;
+    }
+
+    .slide {
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .container {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      color: #00ffcc;
+    }
+
+    #searchInput {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      outline: none;
+      margin-bottom: 1rem;
+    }
+
+    #searchInput::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .numeric-keyboard {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 1rem;
+    }
+
+    .numeric-btn {
+      padding: 1rem;
+      font-size: 1.25rem;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .numeric-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    #backspaceBtn, #acceptBtn {
+      grid-column: span 3;
+      background: #00ffcc;
+      color: #1e1e2f;
+    }
+
+    #backspaceBtn:hover, #acceptBtn:hover {
+      background: #00e6b8;
+    }
+
+    /* Estilos del modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .modal-content h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: #00ffcc;
+    }
+
+    .modal-content p {
+      font-size: 1.25rem;
+      margin: 0.5rem 0;
+      color: #fff;
+    }
+
+    .modal-content button {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: #00ffcc;
+      color: #1e1e2f;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin-top: 1rem;
+    }
+
+    .modal-content button:hover {
+      background: #00e6b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="slider">
+    <div class="slides" id="slides">
+      <!-- Las imágenes se agregarán aquí dinámicamente -->
+    </div>
+  </div>
+
+  <div class="container">
+    <h1>Buscador EAN/UPC</h1>
+    <input type="text" id="searchInput" placeholder="Ingrese el código EAN/UPC" autofocus>
+    <div class="numeric-keyboard">
+      <button class="numeric-btn" data-value="1">1</button>
+      <button class="numeric-btn" data-value="2">2</button>
+      <button class="numeric-btn" data-value="3">3</button>
+      <button class="numeric-btn" data-value="4">4</button>
+      <button class="numeric-btn" data-value="5">5</button>
+      <button class="numeric-btn" data-value="6">6</button>
+      <button class="numeric-btn" data-value="7">7</button>
+      <button class="numeric-btn" data-value="8">8</button>
+      <button class="numeric-btn" data-value="9">9</button>
+      <button class="numeric-btn" data-value="0">0</button>
+      <button class="numeric-btn" id="backspaceBtn">⌫</button>
+      <button class="numeric-btn" id="acceptBtn">Buscar</button>
+    </div>
+  </div>
+
+  <!-- Modal para mostrar el resultado -->
+  <div class="modal" id="resultModal">
+    <div class="modal-content">
+      <h2>Resultado de la búsqueda</h2>
+      <p id="productName"></p>
+      <p id="productPrice"></p>
+      <button id="closeModalBtn">Cerrar</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      query,
+      where,
+    } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+      authDomain: "inventario-35d6b.firebaseapp.com",
+      projectId: "inventario-35d6b",
+      storageBucket: "inventario-35d6b.appspot.com",
+      messagingSenderId: "266100399659",
+      appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const slides = document.getElementById('slides');
+    const searchInput = document.getElementById("searchInput");
+    const numericButtons = document.querySelectorAll(".numeric-btn");
+    const backspaceBtn = document.getElementById("backspaceBtn");
+    const acceptBtn = document.getElementById("acceptBtn");
+    const resultModal = document.getElementById("resultModal");
+    const productName = document.getElementById("productName");
+    const productPrice = document.getElementById("productPrice");
+    const closeModalBtn = document.getElementById("closeModalBtn");
+
+    // Función para cargar imágenes del slider desde Firestore
+    const loadImages = async () => {
+      const sliderRef = collection(db, "slider");
+      const sliderSnapshot = await getDocs(sliderRef);
+
+      sliderSnapshot.forEach(async (sliderDoc) => {
+        const sliderData = sliderDoc.data();
+        if (sliderData.images) {
+          sliderData.images.forEach((image) => {
+            const slide = document.createElement('div');
+            slide.className = 'slide';
+            slide.innerHTML = `<img src="${image}" alt="Imagen">`;
+            slides.appendChild(slide);
+          });
+        }
+      });
+      startSlider(); // Inicia el slider después de cargar las imágenes
+    };
+
+    // Manejar la entrada de números en el campo EAN/UPC
+    numericButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        if (button.id !== "backspaceBtn" && button.id !== "acceptBtn") {
+          searchInput.value += button.getAttribute("data-value");
+        }
+      });
+    });
+
+    // Botón de borrar
+    backspaceBtn.addEventListener("click", () => {
+      searchInput.value = searchInput.value.slice(0, -1);
+    });
+
+    // Función para buscar el producto
+    const searchProduct = async (eanTerm) => {
+      try {
+        const businessesRef = collection(db, "businesses");
+        const businessesSnapshot = await getDocs(businessesRef);
+
+        let productFound = false;
+
+        businessesSnapshot.forEach(async (businessDoc) => {
+          const productsRef = collection(db, "businesses", businessDoc.id, "products");
+          const productsQuery = query(productsRef, where("eanUpcCode", "==", eanTerm));
+
+          const querySnapshot = await getDocs(productsQuery);
+          querySnapshot.forEach((doc) => {
+            const product = doc.data();
+            productFound = true;
+            showProductInModal(product);
+          });
+        });
+
+        if (!productFound) {
+          productName.textContent = "Producto no encontrado.";
+          productPrice.textContent = "";
+          resultModal.style.display = "flex";
+        }
+      } catch (error) {
+        console.error("Error al buscar el producto:", error);
+      }
+    };
+
+    // Botón de aceptar (buscar)
+    acceptBtn.addEventListener("click", () => {
+      searchProduct(searchInput.value);
+    });
+
+    // Escuchar cambios en el campo de búsqueda
+    searchInput.addEventListener("input", () => {
+      if (searchInput.value.length > 0) {
+        searchProduct(searchInput.value); // Busca automáticamente al escribir
+      }
+    });
+
+    // Función para mostrar el producto en el modal
+    const showProductInModal = (product) => {
+      const profitPercentage = product.profitPercentage || 10; // Ganancia del 10% por defecto
+      const priceWithProfit = product.pricePerUnit * (1 + profitPercentage / 100);
+
+      productName.textContent = `Producto: ${product.name}`;
+      productPrice.textContent = `Precio final: $${priceWithProfit.toFixed(2)}`;
+      resultModal.style.display = "flex";
+    };
+
+    // Cerrar el modal
+    closeModalBtn.addEventListener("click", () => {
+      resultModal.style.display = "none";
+    });
+
+    // Enfocar automáticamente el campo de búsqueda al cargar la página
+    window.onload = async () => {
+      searchInput.focus();
+      await loadImages(); // Cargar imágenes al iniciar
+    };
+
+    // Función para el slider
+    let currentIndex = 0;
+
+    function startSlider() {
+      const totalSlides = slides.children.length;
+      if (totalSlides > 0) {
+        setInterval(() => {
+          currentIndex = (currentIndex + 1) % totalSlides; // Cambia el índice
+          slides.style.transform = `translateX(-${currentIndex * 100}%)`;
+        }, 3000);
+      }
+    }
+  </script>
+</body>
+</html>
