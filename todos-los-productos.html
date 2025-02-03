@@ -1,0 +1,508 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario de Productos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #2C3E50;
+        }
+
+        header {
+            background-color: #2C3E50;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2em;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .business {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+            transition: background 0.3s;
+        }
+
+        .business:hover {
+            background: #f9f9f9;
+        }
+
+        .business h5 {
+            font-size: 0.8em;
+            margin-top: 0;
+            color: #333;
+        }
+
+        .product {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 4px solid #007BFF;
+            background: #f9f9f9;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        .product:hover {
+            background: #f2f2f2;
+        }
+
+        .product p {
+            margin: 0;
+            font-size: 1em;
+        }
+
+        .product .casi-agotado {
+            color: #FF0000;
+        }
+
+        .product .agotado {
+            color: #FF0000;
+            font-weight: bold;
+        }
+
+        .actionButtons {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .actionButton {
+            background: transparent;
+            border: none;
+            border-radius: 50%;
+            padding: 10px;
+            margin: 0 5px;
+            cursor: pointer;
+            font-size: 1.5em;
+            transition: background-color 0.3s;
+            color: #16a085;
+        }
+
+        .actionButton:hover {
+            background-color: #e0e0e0;
+        }
+
+        .actionButton i {
+            margin: 0;
+        }
+
+        @media print {
+            .actionButtons {
+                display: none;
+            }
+
+            .modal-content .modal-footer, 
+            .modal-content .close-modal {
+                display: none;
+            }
+        }
+
+        /* Estilos para la alerta modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #2c3e59;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 10px;
+            color: #fff;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+        .modal-body {
+            padding: 10px 0;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+
+        .close-modal {
+            background: transparent;
+            border: none;
+            font-size: 1.5em;
+            color: #FFF;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-modal:hover {
+            color: #28a745;
+        } 
+
+     /* Desactivar la selección de texto y el efecto de arrastre en todos los elementos */
+* {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none; /* estándar */
+
+  -webkit-user-drag: none; /* Safari */
+  -khtml-user-drag: none; /* Konqueror HTML */
+  -moz-user-drag: none; /* Firefox */
+  -o-user-drag: none; /* Opera */
+  user-drag: none; /* estándar */
+  }
+    
+
+    .back-button {
+    position: fixed;
+    top: 10px; /* Distancia desde la parte superior */
+    left: 10px; /* Distancia desde el borde izquierdo */
+    background-color: #16a085; /* Color de fondo */
+    color: #fff; /* Color del texto y del icono */
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s; /* Transición suave para el color de fondo */
+    z-index: 1000; /* Asegura que el botón esté sobre otros elementos */
+}
+
+.back-button i {
+    margin-right: 8px; /* Espacio entre el icono y el texto */
+}
+
+.back-button:hover {
+    background-color: #2c2e50; /* Color de fondo al pasar el ratón */
+}
+ 
+    </style>
+</head>
+<body>
+
+<header>
+
+    <button class="back-button" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i> Volver
+    </button>
+
+    <h1>Todos los Productos</h1>
+</header>
+
+<div class="container">
+    <div class="actionButtons">
+        <button id="printButton" class="actionButton" onclick="window.print()">
+            <i class="fas fa-print"></i>
+        </button>
+        <button id="exportExcelButton" class="actionButton">
+            <i class="fas fa-file-excel"></i>
+        </button>
+
+     <a href="graficos-de-los-productos.html">
+    <button class="actionButton">
+      <i class="fas fa-chart-bar"></i>
+       </button> 
+</a>
+    </div>
+
+    <div id="inventorySection">
+        <!-- El contenido se carga aquí dinámicamente -->
+    </div>
+</div>
+
+<!-- Alerta Modal -->
+<div id="alertModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Atención, Agotamiento de productos</h2>
+            <button class="close-modal" id="closeModalButton">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody">
+            <!-- Aquí se insertan los productos agotados o casi agotados -->
+        </div>
+        <div class="modal-footer">
+            <button id="printModalButton" class="actionButton">
+                <i class="fas fa-print"></i> Imprimir
+            </button>
+            <button id="copyModalButton" class="actionButton">
+                <i class="fas fa-copy"></i> Copiar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import * as XLSX from "https://cdn.sheetjs.com/xlsx-0.19.2/package/xlsx.mjs";
+
+    const firebaseConfig = {
+     apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+    authDomain: "inventario-35d6b.firebaseapp.com",
+    databaseURL: "https://inventario-35d6b-default-rtdb.firebaseio.com",
+    projectId: "inventario-35d6b",
+    storageBucket: "inventario-35d6b.appspot.com",
+    messagingSenderId: "266100399659",
+    appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
+  };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function fetchInventory() {
+        const inventorySection = document.getElementById('inventorySection');
+        inventorySection.innerHTML = ''; // Limpiar el contenido previo
+
+        const businessesSnapshot = await getDocs(collection(db, "businesses"));
+        const businesses = businessesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        const excelData = [];
+        const excelSheets = [];
+        let alertMessage = '';
+
+        for (const business of businesses) {
+            const businessDiv = document.createElement('div');
+            businessDiv.classList.add('business');
+            businessDiv.innerHTML = `<h5>${business.name}</h5>`;
+
+            excelData.push([`Negocio: ${business.name}`]);
+            const wsData = [[`Negocio: ${business.name}`]];
+            excelSheets.push({ name: business.name, data: wsData });
+
+            const productsSnapshot = await getDocs(collection(db, "businesses", business.id, "products"));
+            const products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            for (const product of products) {
+                const productDiv = document.createElement('div');
+                productDiv.classList.add('product');
+
+                let statusClass = '';
+                let statusText = '';
+
+                if (product.quantity === 0) {
+                    statusClass = 'agotado';
+                    statusText = 'AGOTADO.';
+                    alertMessage += `<p>${business.name}: ${product.name} - AGOTADO</p>`;
+                } else if (product.quantity < 10) {
+                    statusClass = 'casi-agotado';
+                    statusText = 'casi agotado.';
+                    alertMessage += `<p>${business.name}: ${product.name} - casi agotado</p>`;
+                }
+
+                productDiv.innerHTML = `
+                    <p>Producto: ${product.name}</p>
+                    <p class="${statusClass}">- Unidad: ${product.quantity} ${statusText}</p>
+                `;
+                businessDiv.appendChild(productDiv);
+
+                excelData.push([`Producto: ${product.name}`, `Unidad: ${product.quantity}`, statusText]);
+                wsData.push([`Producto: ${product.name}`, `Unidad: ${product.quantity}`, statusText]);
+            }
+
+            inventorySection.appendChild(businessDiv);
+        }
+
+        if (alertMessage) {
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = alertMessage;
+            const alertModal = document.getElementById('alertModal');
+            alertModal.style.display = "block";
+        }
+
+        document.getElementById('exportExcelButton').addEventListener('click', () => {
+            const wb = XLSX.utils.book_new();
+            for (const sheet of excelSheets) {
+                const ws = XLSX.utils.aoa_to_sheet(sheet.data);
+                XLSX.utils.book_append_sheet(wb, ws, sheet.name);
+            }
+            XLSX.writeFile(wb, "Inventario.xlsx");
+        });
+    }
+
+    function closeModal() {
+        const alertModal = document.getElementById('alertModal');
+        alertModal.style.display = "none";
+    }
+
+    document.getElementById('printModalButton').addEventListener('click', function() {
+        window.print();
+    });
+
+    document.getElementById('copyModalButton').addEventListener('click', function() {
+        const modalBodyText = document.getElementById('modalBody').innerText;
+        navigator.clipboard.writeText(modalBodyText).then(function() {
+            alert('Texto copiado al portapapeles');
+        }, function() {
+            alert('Error al copiar el texto');
+        });
+    });
+
+    document.getElementById('closeModalButton').addEventListener('click', closeModal);
+
+    fetchInventory();
+</script>
+
+</body> 
+</html> 
+
+
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
+
+
+
+
+
+  <!-- BLOQUEO DE CLIC DERECHO, F12 ETC. -->
+
+  <script>
+        // Bloquear el clic derecho
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquear teclas específicas (F12, Ctrl+Shift+I, Ctrl+U)
+        document.addEventListener('keydown', function(e) {
+            // F12
+            if (e.key === "F12") {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+I (inspeccionar)
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+            }
+
+            // Ctrl+U (ver código fuente)
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+J (consola)
+            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                e.preventDefault();
+            }
+        });
+    </script>
+
+
+
+
+
+<!-- Accesos Directos -->
+
+
+    <script>
+        document.addEventListener('keydown', function(event) {
+            // Ctrl + A: Ir a archivos.html
+            if (event.ctrlKey && event.key === 'a') {
+                event.preventDefault();
+                window.location.href = 'archivos.html';
+            }
+            
+            // Ctrl + N: Ir a Negocio.html
+            if (event.ctrlKey && event.key === 'n') {
+                event.preventDefault();
+                window.location.href = 'Negocio.html';
+            }
+            
+            // Ctrl + P: Ir a Producto.html
+            if (event.ctrlKey && event.key === 'p') {
+                event.preventDefault();
+                window.location.href = 'Producto.html';
+            }
+            
+            // Ctrl + S: Ir a soporte.html
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+                window.location.href = 'soporte.html';
+            }
+            
+            // Ctrl + Alt + C: Ir a permisos.html
+            if (event.ctrlKey && event.altKey && event.key === 'c') {
+                event.preventDefault();
+                window.location.href = 'permisos.html';
+            }
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- LOGUIADOS -->
+
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+        authDomain: "inventario-35d6b.firebaseapp.com",
+        projectId: "inventario-35d6b",
+        storageBucket: "inventario-35d6b.appspot.com",
+        messagingSenderId: "266100399659",
+        appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Verifica si el usuario está autenticado
+    onAuthStateChanged(auth, user => {
+        if (!user) {
+            // Si el usuario no está autenticado, redirigir a index.html
+            window.location.href = "index.html";
+        } else {
+            // El usuario está autenticado, puedes mostrar contenido o permitir acceso a la página
+            console.log("Usuario autenticado:", user);
+        }
+    });
+</script>

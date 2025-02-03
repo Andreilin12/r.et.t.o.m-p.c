@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Facturación</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+      <button class="back-button" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i> Volver
+    </button>  
+<header>
+    <h1>Dashboard de Facturación</h1>
+</header>
+
+<div class="container">
+    <div class="stats">
+        <div class="stat-box">
+            <h2 id="totalMes">Total del Mes: $0.00</h2>
+        </div>
+        <div class="stat-box">
+            <h2 id="totalITBIS">Total ITBIS: $0.00</h2>
+        </div>
+        <div class="stat-box">
+            <h2 id="totalITBISPlusMonth">Total ITBIS + Mes: $0.00</h2>
+        </div>
+    </div>
+
+    <div class="invoices" id="invoices"></div>
+</div>
+
+<div class="floating-buttons">
+    <button onclick="window.print();" aria-label="Imprimir">
+        <i class="fa-solid fa-print"></i>
+    </button>
+</div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+        import {
+            getFirestore,
+            collection,
+            query,
+            where,
+            getDocs,
+            Timestamp
+        } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+            authDomain: "inventario-35d6b.firebaseapp.com",
+            projectId: "inventario-35d6b",
+            storageBucket: "inventario-35d6b.appspot.com",
+            messagingSenderId: "266100399659",
+            appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const getStartOfMonth = () => {
+            const today = new Date();
+            today.setDate(1);
+            today.setHours(0, 0, 0, 0);
+            return Timestamp.fromDate(today);
+        };
+
+        const getSalesData = async () => {
+            try {
+                const startOfMonth = getStartOfMonth();
+                const invoicesRef = collection(db, "invoices");
+                const monthQuery = query(invoicesRef, where("date", ">=", startOfMonth));
+
+                const monthSnapshot = await getDocs(monthQuery);
+                const invoicesByDate = {};
+
+                let totalMonth = 0;
+                let totalITBIS = 0;
+
+                monthSnapshot.forEach(doc => {
+                    const invoice = doc.data();
+                    const invoiceDate = new Date(invoice.date.seconds * 1000).toLocaleDateString();
+                    
+                    if (!invoicesByDate[invoiceDate]) {
+                        invoicesByDate[invoiceDate] = [];
+                    }
+                    invoicesByDate[invoiceDate].push(invoice);
+
+                    invoice.items.forEach(item => {
+                        const itemTotal = item.quantity * item.pricePerUnit;
+                        totalMonth += itemTotal;
+                        totalITBIS += itemTotal * 0.18;
+                    });
+                });
+
+                displayInvoices(invoicesByDate);
+                
+                document.getElementById("totalMes").textContent = `Total del Mes: $${totalMonth.toFixed(2)}`;
+                document.getElementById("totalITBIS").textContent = `Total ITBIS: $${totalITBIS.toFixed(2)}`;
+                document.getElementById("totalITBISPlusMonth").textContent = `Total ITBIS + Mes: $${(totalITBIS + totalMonth).toFixed(2)}`;
+            } catch (error) {
+                console.error("Error al recuperar los datos de ventas:", error);
+            }
+        };
+
+        const displayInvoices = (invoicesByDate) => {
+            const invoicesContainer = document.getElementById("invoices");
+            invoicesContainer.innerHTML = "";
+
+            Object.keys(invoicesByDate).forEach(date => {
+                const dateDiv = document.createElement("div");
+                dateDiv.classList.add("date-folder");
+                dateDiv.innerHTML = `<h2>${date}</h2>`;
+
+                invoicesByDate[date].forEach(invoice => {
+                    const invoiceDiv = document.createElement("div");
+                    invoiceDiv.classList.add("invoice-item");
+
+                    const itemsList = document.createElement("ul");
+                    let invoiceTotal = 0;
+
+                    invoice.items.forEach(item => {
+                        const itemTotal = item.quantity * item.pricePerUnit;
+                        invoiceTotal += itemTotal;
+
+                        const itemElement = document.createElement("li");
+                        itemElement.textContent = `${item.name} - Cantidad: ${item.quantity}, Precio: $${item.pricePerUnit.toFixed(2)}, Total: $${itemTotal.toFixed(2)}`;
+                        itemsList.appendChild(itemElement);
+                    });
+
+                    invoiceDiv.innerHTML = `<p><strong>Factura ID:</strong> ${invoice.id}</p>`;
+                    invoiceDiv.appendChild(itemsList);
+                    invoiceDiv.innerHTML += `<p><strong>Total Factura:</strong> $${invoiceTotal.toFixed(2)}</p>`;
+
+                    dateDiv.appendChild(invoiceDiv);
+                });
+
+                invoicesContainer.appendChild(dateDiv);
+            });
+        };
+
+        window.onload = getSalesData;
+    </script>
+
+</script>
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    /* Fuente y configuración básica */
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #2c3e50;
+        color: #fff;
+        margin: 0;
+        padding: 0;
+        line-height: 1.6;
+    }
+
+    header {
+        background: linear-gradient(90deg, #2c3e50, #15a086);
+        color: white;
+        padding: 5px;
+        text-align: center;
+        font-size: 0.8rem;
+        border-bottom: 3px solid #fff;
+    }
+
+    .container {
+        padding: 20px;
+    }
+
+    .stats {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 20px;
+    }
+
+    .stat-box {
+        background: #2c3e50;
+        border: 2px solid #15a086;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        color: #fff;
+        box-shadow: 0 0 15px rgba(21, 160, 134);
+    }
+
+    .invoice-item {
+        background: #2c3e50;
+        border: 1px solid #15a086;
+        margin-top: 15px;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 0 20px rgba(21, 160, 134);
+        page-break-inside: avoid; /* Evita que el contenido se corte en impresión */
+    }
+
+    .invoice-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .product-table {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 10px;
+    }
+
+    .product-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #444;
+    }
+
+    .product-row span {
+        flex: 1;
+        text-align: center;
+    }
+
+    .product-row.header {
+        font-weight: bold;
+        background-color: #333;
+    }
+
+    .invoice-total {
+        text-align: right;
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-top: 10px;
+    }
+
+    footer {
+        text-align: center;
+        padding: 15px;
+        background: #2c3e50;
+        color: white;
+        box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Botones flotantes */
+    .floating-buttons {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        z-index: 1000;
+    }
+
+    .floating-buttons button {
+        background: #15a086;
+        color: #282c34;
+        border: none;
+        padding: 15px;
+        border-radius: 50%;
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
+        cursor: pointer;
+        font-size: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .floating-buttons button:hover {
+        background: #16e086;
+        transform: scale(1.1);
+    }
+
+    /* Configuración para impresión */
+    @media print {
+        /* Ocultar botones flotantes, encabezados, pies y otros elementos no deseados */
+        .floating-buttons,
+        button,
+        header,
+        footer {
+            display: none !important;
+        }
+
+        /* Asegurar que los elementos no se corten en la impresión */
+        .invoice-item {
+            page-break-inside: avoid; /* Evita cortes dentro del elemento */
+            margin: 0 0 20px; /* Espaciado entre elementos */
+        }
+
+        body {
+            background-color: white;
+            color: black;
+        }
+    }
+
+
+       /* Desactivar la selección de texto y el efecto de arrastre en todos los elementos */
+    * {
+        -webkit-user-select: none; /* Safari */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* IE 10+ */
+        user-select: none; /* estándar */
+
+        -webkit-user-drag: none; /* Safari */
+        -khtml-user-drag: none; /* Konqueror HTML */
+        -moz-user-drag: none; /* Firefox */
+        -o-user-drag: none; /* Opera */
+        user-drag: none; /* estándar */
+    }
+
+                .back-button {
+    position: fixed;
+    top: 10px; /* Distancia desde la parte superior */
+    left: 10px; /* Distancia desde el borde izquierdo */
+    background-color: #16a085; /* Color de fondo */
+    color: #fff; /* Color del texto y del icono */
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s; /* Transición suave para el color de fondo */
+    z-index: 1000; /* Asegura que el botón esté sobre otros elementos */
+}
+
+.back-button i {
+    margin-right: 8px; /* Espacio entre el icono y el texto */
+}
+
+.back-button:hover {
+    background-color: #2c2e50; /* Color de fondo al pasar el ratón */
+}
+</style>
+
+
+<footer>
+    <p>© 2024 Retom, Todos los derechos reservados</p>
+</footer>
+</body>
+</html>
+
+
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
+
+
+
+
+
+<!-- LOGUIADOS -->
+
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+        authDomain: "inventario-35d6b.firebaseapp.com",
+        projectId: "inventario-35d6b",
+        storageBucket: "inventario-35d6b.appspot.com",
+        messagingSenderId: "266100399659",
+        appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Verifica si el usuario está autenticado
+    onAuthStateChanged(auth, user => {
+        if (!user) {
+            // Si el usuario no está autenticado, redirigir a index.html
+            window.location.href = "index.html";
+        } else {
+            // El usuario está autenticado, puedes mostrar contenido o permitir acceso a la página
+            console.log("Usuario autenticado:", user);
+        }
+    });
+</script>

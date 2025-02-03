@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retom Inventario</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #2c3e50;
+        }
+        .login-container, .home-container {
+            display: none;
+        }
+        .login-container {
+            background-color: #FFF;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 350px;
+            text-align: center;
+            margin: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .home-container {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            min-height: 100vh;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #34495e;
+            padding: 10px 20px;
+            border-bottom: 1px solid #7f8c8d;
+        }
+        .profile {
+            display: flex;
+            align-items: center;
+        }
+        .profile img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            margin-right: 10px;
+            background-color: #7f8c8d;
+        }
+        .profile h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #fff;
+        }
+        .logo {
+            max-height: 50px;
+            margin: 0 20px;
+        }
+        .search-container {
+            display: flex;
+            align-items: center;
+        }
+        .search-container a {
+            color: #ecf0f1;
+            font-size: 24px;
+            text-decoration: none;
+            padding: 0 10px;
+        }
+        .search-container a:hover {
+            color: #1abc9c;
+        }
+        .icon-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 20px auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        .icon-box {
+            background-color: #34495e;
+            border: 1px solid #7f8c8d;
+            padding: 15px;
+            margin: 10px;
+            text-align: center;
+            width: 200px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .icon-box:hover {
+            background-color: #1abc9c;
+        }
+        .icon-box i {
+            font-size: 40px;
+            color: #ecf0f1;
+        }
+        .icon-box h3 {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #ecf0f1;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 600px;
+            background-color: #34495e;
+            padding: 20px;
+            border: 1px solid #7f8c8d;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .modal-content {
+            text-align: center;
+        }
+        .close {
+            color: #ecf0f1;
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .button {
+            background-color: #1abc9c;
+            color: #ecf0f1;
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .button:hover {
+            background-color: #16a085;
+        }
+        .login-container input[type="email"], .login-container input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .login-container .btn {
+            background-color: #28a745;
+            color: white;
+            padding: 10px;
+            width: 100%;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .login-container .btn:hover {
+            background-color: #038521;
+        }
+        .chat-icon {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 40px;
+            background-color: #1abc9c;
+            color: #fff;
+            border-radius: 50%;
+            padding: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            transition: background-color 0.3s;
+        }
+        .chat-icon:hover {
+            background-color: #16a085;
+        }
+        .alert {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #e74c3c;
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
+        }
+        .alert.show {
+            display: block;
+        }
+
+         h2  {
+            color: #fff;
+        }
+
+        h1  {
+            color: #000;
+        }
+
+          /* Desactivar la selección de texto y el efecto de arrastre en todos los elementos */
+* {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none; /* estándar */
+
+  -webkit-user-drag: none; /* Safari */
+  -khtml-user-drag: none; /* Konqueror HTML */
+  -moz-user-drag: none; /* Firefox */
+  -o-user-drag: none; /* Opera */
+  user-drag: none; /* estándar */
+} 
+     
+
+
+
+
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h3>Bienvenido a RETOM</h3>
+    <form id="loginForm">
+        <input type="email" id="loginEmail" placeholder="Correo Electrónico" required>
+        <input type="password" id="loginPassword" placeholder="Contraseña" required>
+        <button type="submit" class="btn">Iniciar Sesión</button>
+    </form>
+</div>
+
+<div class="home-container">
+    <header>
+
+
+        <div class="profile">
+            <img id="profilePicture" src="https://firebasestorage.googleapis.com/v0/b/inventario-35d6b.appspot.com/o/SIN%20FOTO%20DE%20PERFIL.png?alt=media&token=2e8c3d69-e0ae-47ec-89e0-f314ea58f727" alt="Foto de perfil">
+            <h4 id="userName">RETOM</h4>
+        </div>
+        <img src="https://firebasestorage.googleapis.com/v0/b/inventario-35d6b.appspot.com/o/RETOM%20COMPLETO%20(2).png?alt=media&token=bcb475a5-edf6-494a-96e5-ca8f0a8ae005" alt="Logo" class="logo">
+        <div class="search-container">
+            <a href="search.html"><i class="fa fa-search"></i></a>
+        </div> 
+    </header>
+
+    <div class="icon-container">
+        <div class="icon-box" data-modal="modal1"> 
+            <i class="fas fa-chart-line"></i>
+            <h3>Gestion de negocio</h3>
+        </div>
+        <div class="icon-box" data-modal="modal2">
+            <i class="fas fa-shopping-cart"></i>
+            <h3>Gestion de productos</h3>
+        </div>
+        <div class="icon-box" data-modal="modal3">
+            <i class="fas fa-history"></i>
+            <h3>Historial</h3>
+        </div>
+
+           <!-- 
+        <div class="icon-box" data-modal="modal4">
+            <i class="fas fa-users"></i>
+            <h3>Gestionar Colaboradores</h3>
+        </div>
+                          -->                     
+          
+        <div class="icon-box" data-modal="modal5">
+            <i class="fas fa-cogs"></i>
+            <h3>Configuración</h3>
+        </div>
+    </div>
+
+     <!-- Chat Icon -->
+      <a href="informe.html" class="chat-icon"><i class="fas fa-comments"></i></a> 
+
+    <!-- Modales -->
+<div id="modal1" class="modal">
+    <div class="modal-content">
+        <span class="close" data-modal="modal1">×</span>
+        <h2>Gestion de negocio</h2>
+        <a href="formulario Agregar Negocio.html" class="button">Agregar Negocio</a>
+        <a href="formulario Agregar Producto.html" class="button">Agregar Producto</a> 
+    </div>
+</div>
+
+<div id="modal2" class="modal">
+    <div class="modal-content">
+        <span class="close" data-modal="modal2">×</span>
+        <h2>Gestion de productos</h2>
+        <a href="gestion-productos.html" class="button">Gestion de productos</a>
+        <a href="PRODUCTOS CON ALERTAS.html" class="button">Todos los productos</a>
+    </div>
+</div>
+
+<div id="modal3" class="modal">
+    <div class="modal-content">
+        <span class="close" data-modal="modal3">×</span>
+        <h2>Historial</h2>
+        <a href="Productos Eliminados.html" class="button">Productos eliminados</a>
+        <a href="historial-de-productos.html" class="button">Historial de productos</a>
+    </div>
+</div>
+
+   
+<div id="modal4" class="modal">
+    <div class="modal-content">
+        <span class="close" data-modal="modal4">×</span>
+        <h2>Gestionar Colaboradores</h2>
+        <a href="#manage-employees" class="button">Ver Colaboradores</a>
+        <a href="#edit-employee" class="button">Editar Colaborador</a>
+    </div>
+</div>
+
+
+<div id="modal5" class="modal">
+    <div class="modal-content">
+        <span class="close" data-modal="modal5">×</span>
+        <h2>Configuración</h2>
+        <a href="configuracion-del-sistema.html" class="button">Configuración del sistema</a>
+    </div>
+</div>
+
+
+<!-- Alert Box -->
+<div id="alert" class="alert"></div>
+
+
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, getDocs, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+
+    const firebaseConfig = {
+    apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+    authDomain: "inventario-35d6b.firebaseapp.com",
+    databaseURL: "https://inventario-35d6b-default-rtdb.firebaseio.com",
+    projectId: "inventario-35d6b",
+    storageBucket: "inventario-35d6b.appspot.com",
+    messagingSenderId: "266100399659",
+    appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
+  };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const firestore = getFirestore(app);
+    const storage = getStorage(app);
+
+    // Manejar inicio de sesión
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+        } catch (error) {
+            console.error('Error de autenticación:', error.message);
+            alert('Error de autenticación. Por favor, revisa tus credenciales.');
+        }
+    });
+
+    // Cambios de estado de autenticación
+    onAuthStateChanged(auth, async (user) => { 
+        if (user) {
+            document.querySelector('.login-container').style.display = 'none';
+            document.querySelector('.home-container').style.display = 'block';
+
+            // Recuperar datos del usuario
+            const userDoc = doc(firestore, `users/${user.uid}`);
+            const docSnapshot = await getDoc(userDoc);
+            if (docSnapshot.exists()) {
+                const userData = docSnapshot.data();
+                document.getElementById('userName').textContent = userData.name || 'RETOM';
+                
+                // Set user profile picture
+                const profilePic = document.getElementById("profilePicture");
+                if (userData.photoURL) {
+                    const profileRef = ref(storage, userData.photoURL);
+                    getDownloadURL(profileRef).then((url) => {
+                        profilePic.src = url;
+                    }).catch((error) => {
+                        console.error("Error getting profile picture URL: ", error);
+                    });
+                } else {
+                    profilePic.src = "default-profile.jpg"; // Default image
+                }
+            }
+
+            // Alerta de vencimiento de productos
+            checkAlerts();
+        } else {
+            document.querySelector('.login-container').style.display = 'block';
+            document.querySelector('.home-container').style.display = 'none';
+        }
+    });
+
+    // Manejar modales
+    document.querySelectorAll('.icon-box').forEach(box => {
+        box.addEventListener('click', () => {
+            const modalId = box.getAttribute('data-modal');
+            document.getElementById(modalId).style.display = 'block';
+        });
+    });
+
+    document.querySelectorAll('.modal .close').forEach(close => {
+        close.addEventListener('click', () => {
+            const modalId = close.getAttribute('data-modal');
+            document.getElementById(modalId).style.display = 'none';
+        });
+    });
+
+    // Cerrar modales al hacer clic fuera de ellos
+    window.addEventListener('click', (event) => {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
+    });
+
+    function showAlert(message) {
+        const alertBox = document.getElementById("alert");
+        alertBox.innerHTML = message;
+        alertBox.classList.add("show");
+
+        setTimeout(() => {
+            alertBox.classList.remove("show");
+        }, 3000);
+    }
+
+    function checkAlerts() {
+        onSnapshot(collection(firestore, "businesses"), async (snapshot) => {
+            let alertContent = "";
+            const currentDate = new Date();
+
+            for (const businessDoc of snapshot.docs) {
+                const businessName = businessDoc.data().name;
+                const productsQuerySnapshot = await getDocs(collection(firestore, "businesses", businessName, "products"));
+                let lowStockProducts = "";
+
+                productsQuerySnapshot.forEach((productDoc) => {
+                    const productData = productDoc.data();
+                    const expirationDate = new Date(productData.expirationDate);
+                    const daysUntilExpiration = (expirationDate - currentDate) / (1000 * 60 * 60 * 24);
+
+                    if (productData.quantity <= productData.lowStockThreshold) {
+                        lowStockProducts += `<li>${productData.name} - ${productData.quantity}</li>`;
+                    }
+
+                    if (daysUntilExpiration <= 30) {
+                        lowStockProducts += `<li>${productData.name} - Fecha de vencimiento cercana: ${productData.expirationDate}</li>`;
+                    }
+                });
+
+                if (lowStockProducts) {
+                    alertContent += `<strong>${businessName}</strong><ul>${lowStockProducts}</ul>`;
+                }
+            }
+
+            if (alertContent) {
+                showAlert(alertContent);
+            }
+        });
+    }
+
+    // Función para cargar productos (ejemplo)
+    async function loadProducts(name = "", code = "", ean = "") {
+        // Implementa tu lógica para cargar productos aquí
+    }
+
+    document.getElementById("searchName").addEventListener("input", (e) => {
+        const name = e.target.value;
+        const code = document.getElementById("searchCode").value;
+        const ean = document.getElementById("searchEAN").value;
+        loadProducts(name, code, ean);
+    });
+
+    document.getElementById("searchCode").addEventListener("input", (e) => { 
+        const code = e.target.value;
+        const name = document.getElementById("searchName").value; 
+        const ean = document.getElementById("searchEAN").value;
+        loadProducts(name, code, ean);
+    });
+
+    document.getElementById("searchEAN").addEventListener("input", (e) => {
+        const ean = e.target.value;
+        const name = document.getElementById("searchName").value;
+        const code = document.getElementById("searchCode").value;
+        loadProducts(name, code, ean);
+    });
+
+    loadProducts();
+</script>
+
+</body>
+</html>

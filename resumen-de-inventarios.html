@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- FontAwesome -->
+  <title>Totales de Inventario</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+      authDomain: "inventario-35d6b.firebaseapp.com",
+      projectId: "inventario-35d6b",
+      storageBucket: "inventario-35d6b.appspot.com",
+      messagingSenderId: "266100399659",
+      appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function calculateTotals() {
+      const businessesSnapshot = await getDocs(collection(db, "businesses"));
+      let totalQuantity = 0;
+      let totalPrices = 0;
+      let productsHtml = '';
+
+      for (const businessDoc of businessesSnapshot.docs) {
+        const businessName = businessDoc.data().name;
+        const productsSnapshot = await getDocs(collection(db, "businesses", businessName, "products"));
+
+        productsSnapshot.forEach((productDoc) => {
+          const product = productDoc.data();
+          const quantity = product.quantity || 0;
+          const pricePerUnit = product.pricePerUnit || 0;
+          const totalPrice = quantity * pricePerUnit;
+
+          totalQuantity += quantity;
+          totalPrices += totalPrice;
+
+          // Mostrar cada producto en la lista
+          productsHtml += `
+            <div class="product">
+              <p><strong>Producto:</strong> ${product.name}</p>
+              <p><strong>Precio:</strong> $${pricePerUnit.toLocaleString()}</p>
+              <p><strong>Cantidad:</strong> ${quantity.toLocaleString()}</p>
+              <p><strong>Total:</strong> $${totalPrice.toLocaleString()}</p>
+            </div>
+          `;
+        });
+      }
+
+      // Mostrar los totales en la interfaz con comas
+      document.getElementById("totalQuantity").textContent = `Cantidad total de productos: ${totalQuantity.toLocaleString()}`;
+      document.getElementById("totalPrices").textContent = `Total general: $${totalPrices.toLocaleString()}`;
+
+      // Mostrar la lista de productos
+      document.getElementById("productsList").innerHTML = productsHtml;
+    }
+
+    document.addEventListener("DOMContentLoaded", calculateTotals);
+
+    function printPage() {
+      window.print();
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #2c3e50, #2c3e50);
+      color: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      color: #15a086;
+    }
+
+    .product {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      padding: 15px;
+      margin: 15px 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .product p {
+      font-size: 1.1em;
+      margin: 5px 0;
+    }
+
+    .btn-print {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #15a086;
+      border: none;
+      color: #fff;
+      font-size: 1em;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-print:hover {
+      background: #16e086;
+      color: #fff;
+    }
+
+    /* Estilo para impresión */
+    @media print {
+      button, .btn-print, .btn-floating {
+        display: none !important;
+      }
+
+      body {
+        background: #fff;
+        color: #000;
+      }
+
+      .container {
+        max-width: 100%;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+        text-align: left;
+      }
+
+      h1 {
+        font-size: 2em;
+      }
+
+      p {
+        font-size: 1em;
+      }
+    }
+
+    /* Modal */
+    .modal {
+      position: relative;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      padding: 10px;
+      box-sizing: border-box;
+      display: none;
+      z-index: 9999;
+      margin-top: 20px; /* Agregado para que no tape el título */
+    }
+
+    .modal-content {
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 100%;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    .modal-content p {
+      font-size: 1.2em;
+      margin: 10px 0;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #ff5e5e;
+      border: none;
+      color: #fff;
+      font-size: 1.5em;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 50%;
+      transition: all 0.3s;
+    }
+
+    .close-btn:hover {
+      background: #ff3d3d;
+    }
+
+    .modal.show {
+      display: block;
+    }
+
+    .modal-header {
+      font-size: 1.5em;
+      margin-bottom: 10px;
+    }
+
+    /* Botón flotante */
+    .btn-floating {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #16a085;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      padding: 15px;
+      font-size: 1.5em;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-floating:hover {
+      background-color: #2c2e50;
+    }
+
+   /* Estilo para impresión */
+@media print {
+  /* Oculta todos los botones, incluidos los flotantes */
+  button, .btn-print, .floating-button {
+    display: none !important;
+  }
+
+  body {
+    background: #fff; /* Cambia el fondo a blanco en la impresión */
+    color: #000; /* Cambia el color de texto a negro */
+  }
+
+  .container {
+    max-width: 100%; /* Asegura que la caja ocupe el ancho completo */
+    box-shadow: none; /* Elimina la sombra para la impresión */
+    border-radius: 0; /* Elimina bordes redondeados */
+    padding: 0; /* Elimina el padding adicional */
+    text-align: left; /* Alinea el texto a la izquierda */
+  }
+
+  h1 {
+    font-size: 2em; /* Ajusta el tamaño del título para impresión */
+  }
+
+  p {
+    font-size: 1em; /* Ajusta el tamaño de los párrafos para impresión */
+  }
+}
+
+
+  .back-button {
+    position: fixed;
+    top: 10px; /* Distancia desde la parte superior */
+    left: 10px; /* Distancia desde el borde izquierdo */
+    background-color: #16a085; /* Color de fondo */
+    color: #fff; /* Color del texto y del icono */
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s; /* Transición suave para el color de fondo */
+    z-index: 1000; /* Asegura que el botón esté sobre otros elementos */
+}
+
+.back-button i {
+    margin-right: 8px; /* Espacio entre el icono y el texto */
+}
+
+.back-button:hover {
+    background-color: #2c2e50; /* Color de fondo al pasar el ratón */
+}
+
+  </style>
+</head>
+<body>
+  <button class="back-button" onclick="goBack()">
+    <i class="fas fa-arrow-left"></i> Volver
+  </button> 
+
+  <!-- Modal -->
+  <div class="modal" id="totalModal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeModal()">×</button>
+      <div class="modal-header">
+        Totales de Inventario
+      </div>
+      <p id="totalQuantity">Cantidad total de productos: 0</p>
+      <p id="totalPrices">Total general: $0.00</p>
+      <button class="btn-print" onclick="window.print()">Imprimir</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1>Resumen de Inventario</h1>
+    <div id="productsList">Cargando productos...</div>
+  </div>
+
+  <button class="btn-floating" onclick="showModal()">
+    <i class="fas fa-chart-pie"></i>
+  </button>
+
+  <script>
+    function showModal() {
+      document.getElementById('totalModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('totalModal').classList.remove('show');
+    }
+
+    function goBack() {
+      window.history.back();
+    }
+  </script>
+</body>
+</html>
+
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
+     
+
+
+
+  <!-- BLOQUEO DE CLIC DERECHO, F12 ETC. -->
+
+  <script>
+        // Bloquear el clic derecho
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquear teclas específicas (F12, Ctrl+Shift+I, Ctrl+U)
+        document.addEventListener('keydown', function(e) {
+            // F12
+            if (e.key === "F12") {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+I (inspeccionar)
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+            }
+
+            // Ctrl+U (ver código fuente)
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+J (consola)
+            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                e.preventDefault();
+            }
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- LOGUIADOS -->
+
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+        authDomain: "inventario-35d6b.firebaseapp.com",
+        projectId: "inventario-35d6b",
+        storageBucket: "inventario-35d6b.appspot.com",
+        messagingSenderId: "266100399659",
+        appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Verifica si el usuario está autenticado
+    onAuthStateChanged(auth, user => {
+        if (!user) {
+            // Si el usuario no está autenticado, redirigir a index.html
+            window.location.href = "index.html";
+        } else {
+            // El usuario está autenticado, puedes mostrar contenido o permitir acceso a la página
+            console.log("Usuario autenticado:", user);
+        }
+    });
+</script>
+
+

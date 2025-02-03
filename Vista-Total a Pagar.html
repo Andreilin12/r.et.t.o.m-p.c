@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cálculo de Total General</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #2C3E50;
+    }
+    header {
+      background-color: #2C3E50;
+      color: #fff;
+      padding: 10px 0;
+      text-align: center;
+    }
+    main {
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .total-section {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    .total-section h2 {
+      margin-top: 0;
+    }
+    .total {
+      font-size: 110px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    .btn {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+    .btn:hover {
+      background-color: #0056b3;
+    }
+    .icon-btn {
+      background: none;
+      border: none;
+      color: #dc3545;
+      cursor: pointer;
+      font-size: 1.2em;
+      margin-left: 10px;
+    }
+    .icon-btn:hover {
+      color: #c82333;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Cálculo en General</h1>
+  </header>
+  <main>
+    <section class="total-section">
+      <h2>Total a Pagar</h2>
+      <div id="totalGeneral" class="total">0.00</div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getFirestore, collection, query, onSnapshot, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+    const firebaseConfig = {
+    apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+    authDomain: "inventario-35d6b.firebaseapp.com",
+    databaseURL: "https://inventario-35d6b-default-rtdb.firebaseio.com",
+    projectId: "inventario-35d6b",
+    storageBucket: "inventario-35d6b.appspot.com",
+    messagingSenderId: "266100399659",
+    appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
+  };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const totalGeneralDiv = document.getElementById('totalGeneral');
+
+    function updateTotalGeneral() {
+      const invoiceTotalsRef = collection(db, 'invoiceTotals');
+      const q = query(invoiceTotalsRef);
+
+      onSnapshot(q, (snapshot) => {
+        let totalGeneralPrice = 0;
+        snapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          totalGeneralPrice += data.totalPrice;
+        });
+        totalGeneralDiv.textContent = totalGeneralPrice.toFixed(2);
+      });
+    }
+
+    updateTotalGeneral();
+  </script>
+</body>
+</html>
+
+
+
+
+  <!-- BLOQUEO DE CLIC DERECHO, F12 ETC. -->
+
+  <script>
+        // Bloquear el clic derecho
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquear teclas específicas (F12, Ctrl+Shift+I, Ctrl+U)
+        document.addEventListener('keydown', function(e) {
+            // F12
+            if (e.key === "F12") {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+I (inspeccionar)
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+            }
+
+            // Ctrl+U (ver código fuente)
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+J (consola)
+            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                e.preventDefault();
+            }
+        });
+    </script>
+
+
+
+
+
+<!-- Accesos Directos -->
+
+
+    <script>
+        document.addEventListener('keydown', function(event) {
+            // Ctrl + A: Ir a archivos.html
+            if (event.ctrlKey && event.key === 'a') {
+                event.preventDefault();
+                window.location.href = 'archivos.html';
+            }
+            
+            // Ctrl + N: Ir a Negocio.html
+            if (event.ctrlKey && event.key === 'n') {
+                event.preventDefault();
+                window.location.href = 'Negocio.html';
+            }
+            
+            // Ctrl + P: Ir a Producto.html
+            if (event.ctrlKey && event.key === 'p') {
+                event.preventDefault();
+                window.location.href = 'Producto.html';
+            }
+            
+            // Ctrl + S: Ir a soporte.html
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+                window.location.href = 'soporte.html';
+            }
+            
+            // Ctrl + Alt + C: Ir a permisos.html
+            if (event.ctrlKey && event.altKey && event.key === 'c') {
+                event.preventDefault();
+                window.location.href = 'permisos.html';
+            }
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- LOGUIADOS -->
+
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+        authDomain: "inventario-35d6b.firebaseapp.com",
+        projectId: "inventario-35d6b",
+        storageBucket: "inventario-35d6b.appspot.com",
+        messagingSenderId: "266100399659",
+        appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Verifica si el usuario está autenticado
+    onAuthStateChanged(auth, user => {
+        if (!user) {
+            // Si el usuario no está autenticado, redirigir a index.html
+            window.location.href = "index.html";
+        } else {
+            // El usuario está autenticado, puedes mostrar contenido o permitir acceso a la página
+            console.log("Usuario autenticado:", user);
+        }
+    });
+</script>
+
+

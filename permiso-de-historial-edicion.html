@@ -1,0 +1,410 @@
+<!DOCTYPE html> 
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuración de Permisos</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #34495e;
+      color: #fff;
+    }
+    header {
+      background-color: #2c3e50;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+      font-size: 1.5em;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    main {
+      padding: 20px;
+      max-width: 1200px;
+      margin: auto;
+    }
+    .user-card {
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #2c3e50;
+    }
+    .user-card img {
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      margin-right: 20px;
+    }
+    .user-card button {
+      background-color: #16a085;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .user-card button:hover {
+      background-color: #2C3E50;
+    }
+    .alert {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #e74c3c;
+      color: #fff;
+      padding: 15px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      display: none;
+    }
+    .alert.show {
+      display: block;
+    }
+
+         /* Desactivar la selección de texto y el efecto de arrastre en todos los elementos */
+* {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none; /* estándar */
+
+  -webkit-user-drag: none; /* Safari */
+  -khtml-user-drag: none; /* Konqueror HTML */
+  -moz-user-drag: none; /* Firefox */
+  -o-user-drag: none; /* Opera */
+  user-drag: none; /* estándar */
+ }
+
+    .back-button {
+    position: fixed;
+    top: 10px; /* Distancia desde la parte superior */
+    left: 10px; /* Distancia desde el borde izquierdo */
+    background-color: #16a085; /* Color de fondo */
+    color: #fff; /* Color del texto y del icono */
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s; /* Transición suave para el color de fondo */
+    z-index: 1000; /* Asegura que el botón esté sobre otros elementos */
+}
+
+.back-button i {
+    margin-right: 8px; /* Espacio entre el icono y el texto */
+}
+
+.back-button:hover {
+    background-color: #2c2e50; /* Color de fondo al pasar el ratón */
+}
+
+    
+  </style>
+</head>
+<body>
+  <header>
+        <button class="back-button" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i> Volver
+    </button>  
+    
+    <h1>Configuración de Permisos</h1>
+  </header>
+  <main>
+    <div id="alert" class="alert"></div>
+    
+    <h2>Lista de Usuarios</h2>
+    <div id="userListContainer"></div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, addDoc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+      authDomain: "inventario-35d6b.firebaseapp.com",
+      projectId: "inventario-35d6b",
+      storageBucket: "inventario-35d6b.appspot.com",
+      messagingSenderId: "266100399659",
+      appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    function showAlert(alertContent) {
+      const alert = document.getElementById("alert");
+      alert.innerHTML = alertContent;
+      alert.classList.add("show");
+      setTimeout(() => {
+        alert.classList.remove("show");
+      }, 7000);
+    }
+
+    // Cargar usuarios y permisos en tiempo real
+    function loadUsers() {
+      const userListContainer = document.getElementById("userListContainer");
+
+      onSnapshot(collection(db, "users"), (snapshot) => {
+        userListContainer.innerHTML = "";  
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const userCard = document.createElement('div');
+          userCard.classList.add('user-card');
+
+          const userId = doc.id;
+
+          // Escuchar cambios en tiempo real en los permisos de cada usuario
+          onSnapshot(doc.ref, (userDoc) => {
+            const userData = userDoc.data();
+            const hasPermission = userData.grantedUsers && userData.grantedUsers.includes(userId); // Chequea permisos del usuario seleccionado, no del actual
+            const buttonText = hasPermission ? "Quitar Permiso" : "Dar Permiso";
+
+            userCard.innerHTML = `
+              <img src="${userData.photoURL || 'default-avatar.png'}" alt="${userData.name}">
+              <span>${userData.name}</span>
+              <button id="permiso-${userId}" onclick="togglePermission('${userId}', '${userData.name}')">${buttonText}</button>
+            `;
+          });
+
+          userListContainer.appendChild(userCard);
+        });
+      });
+    }
+
+    // Función para otorgar o revocar permisos
+    window.togglePermission = async (userId, userName) => {
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        showAlert("Error: Usuario no autenticado.");
+        return;
+      }
+
+      const userRef = doc(db, "users", userId);
+      const button = document.getElementById(`permiso-${userId}`);
+      const hasPermission = button.innerText === "Quitar Permiso";
+
+      try {
+        if (hasPermission) {
+          // Quitar permiso
+          await updateDoc(userRef, {
+            grantedUsers: arrayRemove(userId)  // Quitar permisos del usuario seleccionado
+          });
+          await addDoc(collection(db, "permissions"), {
+            userId: userId,
+            action: 'revoked',
+            grantedBy: currentUser.uid,
+            timestamp: new Date()
+          });
+          showAlert(`Permiso revocado para ${userName} con éxito.`);
+        } else {
+          // Dar permiso
+          await updateDoc(userRef, {
+            grantedUsers: arrayUnion(userId)  // Dar permisos al usuario seleccionado
+          });
+          await addDoc(collection(db, "permissions"), {
+            userId: userId,
+            action: 'granted',
+            grantedBy: currentUser.uid,
+            timestamp: new Date()
+          });
+          showAlert(`Permiso otorgado a ${userName} con éxito.`);
+        }
+      } catch (error) {
+        showAlert("Error al actualizar permiso: " + error);
+      }
+    };
+
+    // Verificar autenticación y cargar usuarios en tiempo real
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loadUsers();
+      } else {
+        showAlert("Error: Usuario no autenticado.");
+      } 
+    });
+  </script>   
+</body>
+</html>
+
+
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
+
+
+    
+
+
+  <!-- BLOQUEO DE CLIC DERECHO, F12 ETC. -->
+
+  <script>
+        // Bloquear el clic derecho
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquear teclas específicas (F12, Ctrl+Shift+I, Ctrl+U)
+        document.addEventListener('keydown', function(e) {
+            // F12
+            if (e.key === "F12") {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+I (inspeccionar)
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+            }
+
+            // Ctrl+U (ver código fuente)
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+J (consola)
+            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                e.preventDefault();
+            }
+        });
+    </script>
+
+
+
+
+
+
+
+  <!-- BLOQUEO DE CLIC DERECHO, F12 ETC. -->
+
+  <script>
+        // Bloquear el clic derecho
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquear teclas específicas (F12, Ctrl+Shift+I, Ctrl+U)
+        document.addEventListener('keydown', function(e) {
+            // F12
+            if (e.key === "F12") {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+I (inspeccionar)
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+            }
+
+            // Ctrl+U (ver código fuente)
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+J (consola)
+            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                e.preventDefault();
+            }
+        });
+    </script>
+
+
+
+
+
+<!-- Accesos Directos -->
+
+
+    <script>
+        document.addEventListener('keydown', function(event) {
+            // Ctrl + A: Ir a archivos.html
+            if (event.ctrlKey && event.key === 'a') {
+                event.preventDefault();
+                window.location.href = 'archivos.html';
+            }
+            
+            // Ctrl + N: Ir a Negocio.html
+            if (event.ctrlKey && event.key === 'n') {
+                event.preventDefault();
+                window.location.href = 'Negocio.html';
+            }
+            
+            // Ctrl + P: Ir a Producto.html
+            if (event.ctrlKey && event.key === 'p') {
+                event.preventDefault();
+                window.location.href = 'Producto.html';
+            }
+            
+            // Ctrl + S: Ir a soporte.html
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+                window.location.href = 'soporte.html';
+            }
+            
+            // Ctrl + Alt + C: Ir a permisos.html
+            if (event.ctrlKey && event.altKey && event.key === 'c') {
+                event.preventDefault();
+                window.location.href = 'permisos.html';
+            }
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- LOGUIADOS -->
+
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+        authDomain: "inventario-35d6b.firebaseapp.com",
+        projectId: "inventario-35d6b",
+        storageBucket: "inventario-35d6b.appspot.com",
+        messagingSenderId: "266100399659",
+        appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Verifica si el usuario está autenticado
+    onAuthStateChanged(auth, user => {
+        if (!user) {
+            // Si el usuario no está autenticado, redirigir a index.html
+            window.location.href = "index.html";
+        } else {
+            // El usuario está autenticado, puedes mostrar contenido o permitir acceso a la página
+            console.log("Usuario autenticado:", user);
+        }
+    });
+</script>

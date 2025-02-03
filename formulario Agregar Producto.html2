@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agregar Producto</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #2c3e50;
+    }
+    header {
+      background-color: #2c3e50;
+      color: #fff;
+      padding: 10px 0;
+      text-align: center;
+    }
+    main {
+      padding: 20px;
+    }
+    .form-section {
+      margin-bottom: 20px;
+    }
+    .form-section h2 {
+      margin-top: 0;
+    }
+    form {
+      background: #fff;
+      padding: 15px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    form select, form input, form button {
+      display: block;
+      width: 99%;
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    form button {
+      background-color: #16a085;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    form button:hover {
+      background-color: #2c3e50;
+    }
+    h2 {
+      color:#fff;
+    }
+    .input-group {
+      position: relative;
+    }
+    .input-group .icon {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #28a745;
+    }
+    #imageFile {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 5px;
+      background: #fff;
+    }
+    #imageFile::file-selector-button {
+      background: #16a085;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #imageFile::file-selector-button:hover {
+      background: #2c3e50;
+    }
+    #pricePerUnit, #pricePerPackage {
+      display: none;
+    }
+    #productType {
+      margin-bottom: 10px;
+    }
+
+          .back-button {
+    position: fixed;
+    top: 10px; /* Distancia desde la parte superior */
+    left: 10px; /* Distancia desde el borde izquierdo */
+    background-color: #16a085; /* Color de fondo */
+    color: #fff; /* Color del texto y del icono */
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s; /* Transición suave para el color de fondo */
+    z-index: 1000; /* Asegura que el botón esté sobre otros elementos */
+}
+
+.back-button i {
+    margin-right: 8px; /* Espacio entre el icono y el texto */
+}
+
+.back-button:hover {
+    background-color: #2c2e50; /* Color de fondo al pasar el ratón */
+}
+  </style>
+</head>
+<body>
+  <header>
+
+      <button class="back-button" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i> Volver
+    </button>  
+
+    <h1>Agregar Producto</h1>
+  </header>
+  <main>
+    <section class="form-section">
+      <h2>Agregar Producto</h2>
+      <form id="addProductForm">
+        <label for="productBusinessName">Nombre del Negocio:</label>
+        <select id="productBusinessName" required></select>
+        
+        <label for="productName">Nombre del Producto:</label>
+        <input type="text" id="productName" required>
+        
+        <label for="productType">Tipo de Producto:</label>
+        <select id="productType">
+          <option value="">Selecciona un tipo</option>
+          <option value="unidad">Unidad</option>
+          <option value="paquete">Paquete</option>
+          <option value="fardo">Fardo</option>
+          <option value="libras">Libras</option>
+        </select>
+        
+        <div id="priceFields">
+          <label for="pricePerUnit">Precio por Unidad:</label>
+          <input type="number" step="0.01" id="pricePerUnit">
+          
+          <label for="pricePerPackage">Precio por Paquete:</label>
+          <input type="number" step="0.01" id="pricePerPackage">
+        </div>
+        
+        <label for="productUnit">Unidad/Paquete/Fardo/Libras:</label>
+        <input type="text" id="productUnit">
+        
+        <label for="expirationDate">Fecha de Vencimiento:</label>
+        <input type="date" id="expirationDate">
+
+        <label for="eanUpcCode">Código EAN/UPC:</label>
+        <input type="text" id="eanUpcCode" placeholder="Ingrese el código EAN o UPC">
+        
+        <label for="productCode">Código del Producto:</label>
+        <div class="input-group">
+          <input type="text" id="productCode" readonly>
+          <i class="fa-solid fa-refresh icon" id="generateCodeIcon"></i>
+        </div>
+        
+        <label for="imageFile">Imagen del Producto:</label>
+        <input type="file" id="imageFile" accept="image/*">
+        
+        <button type="submit">Agregar Producto</button>
+      </form>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getFirestore, collection, addDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+    apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+    authDomain: "inventario-35d6b.firebaseapp.com",
+    databaseURL: "https://inventario-35d6b-default-rtdb.firebaseio.com",
+    projectId: "inventario-35d6b",
+    storageBucket: "inventario-35d6b.appspot.com",
+    messagingSenderId: "266100399659",
+    appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
+  };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+    const auth = getAuth(app);
+
+    let currentUser = null;
+
+    // Identificar al usuario actualmente logueado 
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+      } else {
+        currentUser = null;
+        alert("Por favor, inicia sesión para agregar productos.");
+      }
+    });
+
+    async function loadBusinesses() {
+      const businessesQuerySnapshot = await getDocs(collection(db, "businesses"));
+      const productBusinessNameSelect = document.getElementById("productBusinessName");
+      productBusinessNameSelect.innerHTML = "";  // Limpiar opciones previas
+
+      businessesQuerySnapshot.forEach((businessDoc) => {
+        const option = document.createElement("option");
+        option.value = businessDoc.id;
+        option.textContent = businessDoc.data().name;
+        productBusinessNameSelect.appendChild(option);
+      });
+    }
+
+    function generateUniqueCode() {
+      return ('000000' + Math.floor(Math.random() * 1000000)).slice(-6);
+    }
+
+    document.getElementById("generateCodeIcon").addEventListener("click", () => {
+      const uniqueCode = generateUniqueCode();
+      document.getElementById("productCode").value = uniqueCode;
+    });
+
+    document.getElementById("productType").addEventListener("change", function() {
+      const type = this.value;
+      const unitField = document.getElementById("productUnit");
+      const pricePerUnit = document.getElementById("pricePerUnit");
+      const pricePerPackage = document.getElementById("pricePerPackage");
+
+      unitField.placeholder = type.charAt(0).toUpperCase() + type.slice(1);
+      
+      if (type === "unidad") {
+        pricePerUnit.style.display = "block";
+        pricePerPackage.style.display = "none";
+      } else if (type === "paquete") {
+        pricePerUnit.style.display = "none";
+        pricePerPackage.style.display = "block";
+      } else {
+        pricePerUnit.style.display = "none";
+        pricePerPackage.style.display = "none";
+      }
+    });
+
+    document.getElementById("addProductForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const businessName = document.getElementById("productBusinessName").value.trim();
+      const productName = document.getElementById("productName").value.trim();
+      const productType = document.getElementById("productType").value.trim();
+      const productUnit = document.getElementById("productUnit").value.trim();
+      const expirationDate = document.getElementById("expirationDate").value.trim();
+      const pricePerUnit = document.getElementById("pricePerUnit").value.trim();
+      const pricePerPackage = document.getElementById("pricePerPackage").value.trim();
+      const eanUpcCode = document.getElementById("eanUpcCode").value.trim();
+      const imageFile = document.getElementById("imageFile").files[0];
+      const uniqueCode = document.getElementById("productCode").value.trim();
+      
+      if (!currentUser) {
+        alert("Debes estar logueado para agregar productos.");
+        return;
+      }
+
+      const userName = currentUser.displayName || currentUser.email;  // Usar displayName si está disponible
+
+      if (businessName && productName) {
+        let imageUrl = '';
+
+        if (imageFile) {
+          const imageRef = ref(storage, `images/${imageFile.name}`);
+          await uploadBytes(imageRef, imageFile);
+          imageUrl = await getDownloadURL(imageRef);
+        }
+
+        await addDoc(collection(db, "businesses", businessName, "products"), {
+          code: uniqueCode,
+          name: productName,
+          type: productType,
+          unit: productUnit,
+          pricePerUnit: pricePerUnit || null,
+          pricePerPackage: pricePerPackage || null,
+          expirationDate: expirationDate,
+          eanUpcCode: eanUpcCode || null,
+          imageUrl: imageUrl,
+          addedDate: new Date().toISOString(),
+          lastUpdated: new Date().toISOString(),
+          userName: userName
+        });
+
+        alert("Producto agregado exitosamente.");
+      } else {
+        alert("Por favor, completa los campos obligatorios.");
+      }
+    }); 
+
+    loadBusinesses();
+  </script>
+</body>
+</html>
+
+
+
+
+    <!-- Incluye FontAwesome CDN para los iconos -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
+
+
+     
+
+
+  <!-- BLOQUEO DE CLIC DERECHO, F12 ETC. -->
+
+  <script>
+        // Bloquear el clic derecho
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquear teclas específicas (F12, Ctrl+Shift+I, Ctrl+U)
+        document.addEventListener('keydown', function(e) {
+            // F12
+            if (e.key === "F12") {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+I (inspeccionar)
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+            }
+
+            // Ctrl+U (ver código fuente)
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+J (consola)
+            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                e.preventDefault();
+            }
+        });
+    </script>
+
+
+
+
+
+<!-- Accesos Directos -->
+
+
+    <script>
+        document.addEventListener('keydown', function(event) {
+            // Ctrl + A: Ir a archivos.html
+            if (event.ctrlKey && event.key === 'a') {
+                event.preventDefault();
+                window.location.href = 'archivos.html';
+            }
+            
+            // Ctrl + N: Ir a Negocio.html
+            if (event.ctrlKey && event.key === 'n') {
+                event.preventDefault();
+                window.location.href = 'Negocio.html';
+            }
+            
+            // Ctrl + P: Ir a Producto.html
+            if (event.ctrlKey && event.key === 'p') {
+                event.preventDefault();
+                window.location.href = 'Producto.html';
+            }
+            
+            // Ctrl + S: Ir a soporte.html
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+                window.location.href = 'soporte.html';
+            }
+            
+            // Ctrl + Alt + C: Ir a permisos.html
+            if (event.ctrlKey && event.altKey && event.key === 'c') {
+                event.preventDefault();
+                window.location.href = 'permisos.html';
+            }
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- LOGUIADOS -->
+
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+        authDomain: "inventario-35d6b.firebaseapp.com",
+        projectId: "inventario-35d6b",
+        storageBucket: "inventario-35d6b.appspot.com",
+        messagingSenderId: "266100399659",
+        appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Verifica si el usuario está autenticado
+    onAuthStateChanged(auth, user => {
+        if (!user) {
+            // Si el usuario no está autenticado, redirigir a index.html
+            window.location.href = "index.html";
+        } else {
+            // El usuario está autenticado, puedes mostrar contenido o permitir acceso a la página
+            console.log("Usuario autenticado:", user);
+        }
+    });
+</script>

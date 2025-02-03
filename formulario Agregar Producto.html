@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agregar Producto</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #2c3e50;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  header {
+    background-color: #2c3e50;
+    padding: 20px;
+    text-align: center;
+  }
+
+  main {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  form {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    color: #333;
+    box-sizing: border-box;
+  }
+
+  .form-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    flex: 1 1 100%;
+    margin-bottom: 10px;
+  }
+
+  .form-group input, .form-group select {
+    flex: 1 1 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+
+  button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #16a085;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+    max-width: 200px;
+    margin-top: 10px;
+    align-self: center;
+  }
+
+  button:hover {
+    background-color: #2c3e50;
+  }
+
+  #imagePreview {
+    display: block;
+    width: 100px;
+    height: 100px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    object-fit: cover;
+    margin-left: 10px;
+  }
+
+  #imageFile {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    background: #fff;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  #imageFile::file-selector-button {
+    background: #16a085;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 5px 10px;
+    margin-right: 10px;
+  }
+
+  #imageFile::file-selector-button:hover {
+    background: #2c3e50;
+  }
+
+  .image-upload-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+
+  @media (min-width: 600px) {
+    .form-group {
+      flex-wrap: nowrap;
+    }
+
+    .form-group label {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    .form-group input, .form-group select {
+      flex: 2;
+    }
+
+    .image-upload-group {
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+
+  .back-button {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background-color: #16a085;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s;
+    z-index: 1000;
+  }
+
+  .back-button i {
+    margin-right: 8px;
+  }
+
+  .back-button:hover {
+    background-color: #2c3e50;
+  }
+</style>
+</head>
+<body>
+  <header>
+    <button class="back-button" onclick="goBack()">
+      <i class="fas fa-arrow-left"></i> Volver
+    </button>
+    <h1></h1>
+  </header>
+  <main>
+    <section class="form-section">
+      <h2>Agregar Producto</h2>
+      <form id="addProductForm">
+        <div class="form-group">
+          <label for="productBusinessName">Nombre del Negocio:</label>
+          <select id="productBusinessName" required></select>
+        </div>
+
+        <div class="form-group">
+          <label for="productName">Nombre del Producto:</label>
+          <input type="text" id="productName" required>
+        </div>
+
+        <div class="form-group">
+          <label for="productType">Tipo de Producto:</label>
+          <select id="productType">
+            <option value="">Selecciona un tipo</option>
+            <option value="unidad">Unidad</option>
+            <option value="paquete">Paquete</option>
+            <option value="fardo">Fardo</option>
+            <option value="libras">Libras</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="priceFields">
+          <label for="pricePerUnit">Precio por Unidad:</label>
+          <input type="number" step="0.01" id="pricePerUnit">
+        </div>
+ 
+        <div class="form-group">
+          <label for="expirationDate">Fecha de Vencimiento:</label>
+          <input type="date" id="expirationDate">
+        </div>
+
+        <div class="form-group">
+          <label for="eanUpcCode">Código EAN/UPC:</label>
+          <input type="text" id="eanUpcCode" placeholder="Ingrese el código EAN o UPC">
+        </div>
+
+        <div class="form-group">
+          <label for="productCode">Código del Producto:</label>
+          <div class="input-group">
+            <input type="text" id="productCode" readonly>
+            <i class="fa-solid fa-refresh icon" id="generateCodeIcon"></i>
+          </div>
+        </div>
+
+        <div class="form-group image-upload-group">
+          <label for="imageFile">Imagen del Producto:</label>
+          <input type="file" id="imageFile" accept="image/*">
+          <img id="imagePreview" src="https://firebasestorage.googleapis.com/v0/b/inventario-35d6b.appspot.com/o/34649.png.png?alt=media&token=71f5d60d-15fc-4960-b6df-b95b224500bd" alt="Vista previa">
+        </div>
+
+        <button type="submit">Agregar Producto</button>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    document.getElementById('imageFile').addEventListener('change', function (event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          document.getElementById('imagePreview').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    
+  </script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+      authDomain: "inventario-35d6b.firebaseapp.com",
+      databaseURL: "https://inventario-35d6b-default-rtdb.firebaseio.com",
+      projectId: "inventario-35d6b",
+      storageBucket: "inventario-35d6b.appspot.com",
+      messagingSenderId: "266100399659",
+      appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+    const auth = getAuth(app);
+
+    let currentUser = null;
+
+    // Identificar al usuario actualmente logueado 
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+      } else {
+        currentUser = null;
+        alert("Por favor, inicia sesión para agregar productos.");
+      }
+    });
+
+    async function loadBusinesses() {
+      const businessesQuerySnapshot = await getDocs(collection(db, "businesses"));
+      const productBusinessNameSelect = document.getElementById("productBusinessName");
+      productBusinessNameSelect.innerHTML = "";  // Limpiar opciones previas
+
+      businessesQuerySnapshot.forEach((businessDoc) => {
+        const option = document.createElement("option");
+        option.value = businessDoc.id;
+        option.textContent = businessDoc.data().name;
+        productBusinessNameSelect.appendChild(option);
+      });
+    }
+
+    function generateUniqueCode() {
+      return ('000000' + Math.floor(Math.random() * 1000000)).slice(-6);
+    }
+
+    document.getElementById("generateCodeIcon").addEventListener("click", function () {
+      document.getElementById("productCode").value = generateUniqueCode();
+    });
+
+    document.getElementById("addProductForm").addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      const businessId = document.getElementById("productBusinessName").value;
+      const productName = document.getElementById("productName").value;
+      const productType = document.getElementById("productType").value;
+      const pricePerUnit = document.getElementById("pricePerUnit").value;
+      const expirationDate = document.getElementById("expirationDate").value;
+      const eanUpcCode = document.getElementById("eanUpcCode").value;
+      const productCode = document.getElementById("productCode").value;
+      const imageFile = document.getElementById("imageFile").files[0];
+
+      try {
+        // Subir imagen a Firebase Storage
+        let imageUrl = "";
+        if (imageFile) {
+          const storageRef = ref(storage, `products/${imageFile.name}`);
+          const snapshot = await uploadBytes(storageRef, imageFile);
+          imageUrl = await getDownloadURL(snapshot.ref);
+        }
+
+        // Guardar los datos del producto en Firestore
+        await addDoc(collection(db, "businesses", businessId, "products"), {
+          name: productName,
+          type: productType,
+          pricePerUnit: parseFloat(pricePerUnit),
+          expirationDate: expirationDate,
+          eanUpcCode: eanUpcCode,
+          productCode: productCode,
+          imageUrl: imageUrl,
+          userId: currentUser.uid,
+        });
+
+        alert("Producto agregado exitosamente");
+        document.getElementById("addProductForm").reset();  // Limpiar formulario
+      } catch (error) {
+        console.error("Error al agregar el producto:", error);
+        alert("Hubo un error al agregar el producto. Inténtalo de nuevo.");
+      }
+    });
+
+    // Cargar los negocios al cargar la página
+    loadBusinesses();
+
+    // Función para volver atrás
+    function goBack() {
+      window.history.back();
+    }
+  </script>
+</body>
+</html>
+
+
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
+
+
+
+     
+
+  <!-- BLOQUEO DE CLIC DERECHO, F12 ETC. -->
+
+  <script>
+        // Bloquear el clic derecho
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquear teclas específicas (F12, Ctrl+Shift+I, Ctrl+U)
+        document.addEventListener('keydown', function(e) {
+            // F12
+            if (e.key === "F12") {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+I (inspeccionar)
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+            }
+
+            // Ctrl+U (ver código fuente)
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+J (consola)
+            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                e.preventDefault();
+            }
+        });
+    </script>
+
+
+
+
+
+<!-- Accesos Directos -->
+
+
+    <script>
+        document.addEventListener('keydown', function(event) {
+            // Ctrl + A: Ir a archivos.html
+            if (event.ctrlKey && event.key === 'a') {
+                event.preventDefault();
+                window.location.href = 'archivos.html';
+            }
+            
+            // Ctrl + N: Ir a Negocio.html
+            if (event.ctrlKey && event.key === 'n') {
+                event.preventDefault();
+                window.location.href = 'Negocio.html';
+            }
+            
+            // Ctrl + P: Ir a Producto.html
+            if (event.ctrlKey && event.key === 'p') {
+                event.preventDefault();
+                window.location.href = 'Producto.html';
+            }
+            
+            // Ctrl + S: Ir a soporte.html
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+                window.location.href = 'soporte.html';
+            }
+            
+            // Ctrl + Alt + C: Ir a permisos.html
+            if (event.ctrlKey && event.altKey && event.key === 'c') {
+                event.preventDefault();
+                window.location.href = 'permisos.html';
+            }
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- LOGUIADOS -->
+
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+        authDomain: "inventario-35d6b.firebaseapp.com",
+        projectId: "inventario-35d6b",
+        storageBucket: "inventario-35d6b.appspot.com",
+        messagingSenderId: "266100399659",
+        appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Verifica si el usuario está autenticado
+    onAuthStateChanged(auth, user => {
+        if (!user) {
+            // Si el usuario no está autenticado, redirigir a index.html
+            window.location.href = "index.html";
+        } else {
+            // El usuario está autenticado, puedes mostrar contenido o permitir acceso a la página
+            console.log("Usuario autenticado:", user);
+        }
+    });
+</script>

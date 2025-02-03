@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facturación</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">  
+  <style>
+    body {
+      font-family: "Arial", sans-serif;
+      background: linear-gradient(135deg, #2c3e50, #34495e);
+      color: #ecf0f1;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header, footer {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: #47627d;
+      padding: 10px 0;
+    }
+    header a, footer a {
+      text-decoration: none;
+      color: white;
+      font-size: 1.2em;
+    }
+    .container {
+      margin: 20px auto;
+      max-width: 800px;
+      background: #34495e;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      flex-grow: 1;
+    }
+    .invoice-container {
+      padding: 15px;
+      background: #2c3e50;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .invoice-item {
+      padding: 8px;
+      border-bottom: 1px solid #95a5a6;
+    }
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+    }
+    .button {
+      padding: 10px 20px;
+      margin-top: 15px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 1em;
+      transition: 0.3s;
+    } 
+    .button-efectivo {
+      background-color: #27ae60;
+      color: #ecf0f1;
+    }
+    .button-efectivo:hover {
+      background-color: #2ecc71;
+    }
+    .button-tarjeta {
+      background-color: #2980b9;
+      color: #ecf0f1;
+    }
+    .button-tarjeta:hover {
+      background-color: #3498db;
+    }
+    .payment-type {
+      margin-top: 10px;
+      font-weight: bold;
+      font-size: 1.2em;
+      color: #ecf0f1;
+    }
+    @media print {
+      body {
+        background: white;
+      }
+      header, footer, .buttons {
+        display: none;
+      }
+      .invoice-container {
+        width: 80mm;
+        margin: 0 auto;
+        border: none;
+      }
+    }
+
+.icon {
+  color: #15a086;
+  font-size: 1.8em;
+  cursor: pointer;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.icon:hover {
+  transform: scale(1.2);
+  color: #16e086;
+}
+
+     /* Desactivar la selección de texto y el efecto de arrastre en todos los elementos */
+    * {
+        -webkit-user-select: none; /* Safari */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* IE 10+ */
+        user-select: none; /* estándar */
+
+        -webkit-user-drag: none; /* Safari */
+        -khtml-user-drag: none; /* Konqueror HTML */
+        -moz-user-drag: none; /* Firefox */
+        -o-user-drag: none; /* Opera */
+        user-drag: none; /* estándar */
+    }
+  </style>
+</head>
+<body>
+  <header>
+  <!--   <a href="#"><i class="fa-solid fa-house icon"></i></a>
+    <a href="#"><i class="fa-solid fa-house icon"></i></a>
+    <a href="#"><i class="fa-solid fa-house icon"></i></a>-->
+  </header>
+  
+  <div class="container">
+    <h1>Facturación</h1>
+     <div id="invoiceUser"></div> <!-- Aquí se muestra el nombre del usuario -->
+
+    <div class="invoice-container" id="invoiceContainer">
+      <h2>Productos:</h2>
+      <div id="invoiceItems"></div>
+      <h3 id="invoiceTotal"></h3>
+      <div class="buttons">
+        <button class="button button-efectivo" id="btnEfectivo">Pagar en Efectivo</button>
+        <button class="button button-tarjeta" id="btnTarjeta">Pagar con Tarjeta</button>
+      </div>
+      <div class="payment-type" id="paymentType"></div>
+    </div>
+  </div>
+  
+  <footer>
+    <a href="punto-de-venta.html"><i class="fa-solid fa-house icon"></i>
+  <!--    <a href="#"><i class="fa-solid fa-cart-plus icon"></i>
+    <a href="#"><i class="fa-solid fa-cart-plus icon"></i>-->
+  </footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    query,
+    orderBy,
+    limit,
+    getDocs,
+    updateDoc,
+    doc,
+    getDoc,
+    addDoc,
+    Timestamp,
+    where
+  } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js"; // Importa Firebase Auth
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+    authDomain: "inventario-35d6b.firebaseapp.com",
+    projectId: "inventario-35d6b",
+    storageBucket: "inventario-35d6b.appspot.com",
+    messagingSenderId: "266100399659",
+    appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app); // Inicializa Firebase Auth
+
+  const invoiceItems = document.getElementById("invoiceItems");
+  const invoiceTotal = document.getElementById("invoiceTotal");
+  const invoiceUser = document.getElementById("invoiceUser"); // Contenedor del nombre del usuario
+  const btnEfectivo = document.getElementById("btnEfectivo");
+  const btnTarjeta = document.getElementById("btnTarjeta");
+  const paymentType = document.getElementById("paymentType");
+
+  let invoice = null;
+  let currentUser = null; // Para almacenar el usuario actual
+
+  // Obtenemos el usuario actual
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      currentUser = user; // Guardamos el usuario actual
+      invoiceUser.textContent = `Responsable de Servicio: ${user.displayName || user.email}`; // Muestra el nombre o email del usuario
+    } else {
+      invoiceUser.textContent = "No se ha iniciado sesión"; // Si no hay usuario autenticado 
+    }
+  });
+
+  const getLatestInvoice = async () => {
+    try {
+      const invoicesRef = collection(db, "invoices");
+      const invoicesQuery = query(invoicesRef, orderBy("date", "desc"), limit(1));
+      const querySnapshot = await getDocs(invoicesQuery);
+
+      if (!querySnapshot.empty) {
+        querySnapshot.forEach((doc) => {
+          invoice = doc.data();
+          renderInvoice();
+        });
+      } else {
+        invoiceItems.innerHTML = "<p>No hay facturas recientes.</p>";
+      }
+    } catch (error) {
+      console.error("Error al obtener la factura más reciente:", error);
+    }
+  };
+
+  const renderInvoice = () => {
+    invoiceItems.innerHTML = "";
+    let total = 0;
+
+    invoice.items.forEach((item) => {
+      const itemDiv = document.createElement("div");
+      itemDiv.classList.add("invoice-item");
+      const itemTotal = item.quantity * item.pricePerUnit;
+      const itbis = itemTotal * 0.18;
+      total += itemTotal + itbis;
+      itemDiv.textContent = `${item.name} x ${item.quantity} - Subtotal: $${itemTotal.toFixed(2)} + ITBIS: $${itbis.toFixed(2)}`;
+      invoiceItems.appendChild(itemDiv);
+    });
+
+    invoiceTotal.textContent = `Total con ITBIS: $${total.toFixed(2)}`;
+  };
+
+  const recordSaleHistory = async (item, paymentTypeValue) => {
+    try {
+      const salesHistoryRef = collection(db, "salesHistory");
+      const q = query(salesHistoryRef, where("productName", "==", item.name), where("paymentType", "==", paymentTypeValue));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        querySnapshot.forEach(async (doc) => {
+          const existingSale = doc.data();
+          const newQuantity = existingSale.quantitySold + item.quantity;
+          await updateDoc(doc.ref, { quantitySold: newQuantity });
+        });
+      } else {
+        const saleData = {
+          productName: item.name,
+          quantitySold: item.quantity,
+          paymentType: paymentTypeValue,
+          date: Timestamp.now(),
+        };
+        await addDoc(salesHistoryRef, saleData);
+      }
+    } catch (error) {
+      console.error("Error al registrar el historial de ventas:", error);
+    }
+  };
+
+  const processPayment = async (paymentTypeValue) => {
+    try {
+      if (!invoice) {
+        alert("No hay factura para pagar.");
+        return;
+      }
+
+      for (const item of invoice.items) {
+        const productRef = doc(db, "businesses", item.businessName, "products", item.productId);
+        const productDoc = await getDoc(productRef);
+
+        if (productDoc.exists()) {
+          const productData = productDoc.data();
+          const currentQuantity = productData.quantity || 0;
+          const newQuantity = currentQuantity - item.quantity;
+
+          if (newQuantity < 0) {
+            alert(`No hay suficiente stock de ${item.name}.`);
+            return;
+          } 
+
+          await updateDoc(productRef, { quantity: newQuantity });
+          await recordSaleHistory(item, paymentTypeValue);
+        }
+      }
+
+      paymentType.textContent = `Pago realizado con ${paymentTypeValue}.`;
+      window.print(); // Imprime el ticket automáticamente
+    } catch (error) {
+      console.error("Error al procesar el pago:", error);
+    }
+  }; 
+
+  btnEfectivo.addEventListener("click", () => processPayment("Efectivo"));
+  btnTarjeta.addEventListener("click", () => processPayment("Tarjeta"));
+
+  getLatestInvoice();  
+</script>
+
+
+</body>
+</html> 
+
+ 
+
+
+
+  <!-- BLOQUEO DE CLIC DERECHO, F12 ETC. -->
+
+  <script>
+        // Bloquear el clic derecho
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquear teclas específicas (F12, Ctrl+Shift+I, Ctrl+U)
+        document.addEventListener('keydown', function(e) {
+            // F12
+            if (e.key === "F12") {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+I (inspeccionar)
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+            }
+
+            // Ctrl+U (ver código fuente)
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+J (consola)
+            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                e.preventDefault();
+            }
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- LOGUIADOS -->
+
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+        authDomain: "inventario-35d6b.firebaseapp.com",
+        projectId: "inventario-35d6b",
+        storageBucket: "inventario-35d6b.appspot.com",
+        messagingSenderId: "266100399659",
+        appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Verifica si el usuario está autenticado
+    onAuthStateChanged(auth, user => {
+        if (!user) {
+            // Si el usuario no está autenticado, redirigir a index.html
+            window.location.href = "index.html";
+        } else {
+            // El usuario está autenticado, puedes mostrar contenido o permitir acceso a la página
+            console.log("Usuario autenticado:", user);
+        }
+    });
+</script>

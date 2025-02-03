@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Productos Vendidos</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Incluir Font Awesome para usar iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+      /* General body styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #2c3e50;
+    color: #eaeaea;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Evitar centrado vertical */
+    height: auto; /* Permitir que el contenido crezca dinámicamente */
+    overflow-y: auto; /* Agregar scroll si el contenido excede la altura de la pantalla */
+    position: relative;
+}
+
+h1 {
+    text-align: center;
+    font-size: 2.5rem;
+    color: #fff;
+    margin-bottom: 30px;
+}
+
+.container {
+    width: 85%;
+    max-width: 1200px;
+    background-color: #2c3e50;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    margin-top: 50px; /* Espaciado superior */
+    margin-bottom: 50px; /* Espaciado inferior adicional */
+}
+
+.section {
+    margin: 20px 0;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+}
+
+h2 {
+    font-size: 1.6rem;
+    color: #15a086;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+canvas {
+    width: 100% !important;
+    height: 250px !important;
+}
+
+table {
+    width: 100%;
+    margin-top: 15px;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px;
+    text-align: center;
+    border: 1px solid #444;
+}
+
+th {
+    background-color: #2c3e50;
+    color: #66f0ff;
+}
+
+td {
+    background-color: #2c3e50;
+    color: #eaeaea;
+}
+
+td:hover {
+    background-color: #15a086;
+    cursor: pointer;
+}
+
+/* Estilos para el ícono flotante de impresión */
+.print-icon {
+    position: fixed; /* Mantener el ícono visible mientras se hace scroll */
+    top: 20px;
+    right: 20px;
+    font-size: 30px;
+    color: #66f0ff;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+/* Media Query para ocultar el ícono de impresión durante la impresión */
+@media print {
+    .print-icon {
+        display: none;
+    }
+}
+
+
+   /* Desactivar la selección de texto y el efecto de arrastre en todos los elementos */
+* {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none; /* estándar */
+
+  -webkit-user-drag: none; /* Safari */
+  -khtml-user-drag: none; /* Konqueror HTML */
+  -moz-user-drag: none; /* Firefox */
+  -o-user-drag: none; /* Opera */
+  user-drag: none; /* estándar */
+ }
+
+    .back-button {
+      position: fixed;
+      top: 10px; 
+      left: 10px; 
+      background-color: #16a085; 
+      color: #fff; 
+      border: none;
+      border-radius: 4px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.3s; 
+      z-index: 1000; 
+    }
+
+    .back-button i {
+      margin-right: 8px; 
+    }
+
+    .back-button:hover {
+      background-color: #2c2e50; 
+    }
+    </style>
+</head>
+<body>
+       <button class="back-button" onclick="goBack()">
+      <i class="fas fa-arrow-left"></i> Volver
+    </button>
+<br><br><br><br>
+
+    <!-- Ícono de impresión flotante -->
+    <i class="fas fa-print print-icon" onclick="window.print()"></i>
+
+    <div class="container">
+        <h1>Reporte de Productos Vendidos</h1>
+
+        <div class="section">
+            <h2>Productos Más Vendidos</h2>
+            <canvas id="bestSellingChart"></canvas>
+            <table id="bestSellingTable">
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad Vendida</th>
+                    <th>Fecha</th>
+                    <th>Tipo de Pago</th> <!-- Nueva columna para 'paymentType' -->
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+        import {
+            getFirestore,
+            collection,
+            query,
+            getDocs,
+            orderBy
+        } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+            authDomain: "inventario-35d6b.firebaseapp.com",
+            projectId: "inventario-35d6b",
+            storageBucket: "inventario-35d6b.appspot.com",
+            messagingSenderId: "266100399659",
+            appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const bestSellingTable = document.getElementById("bestSellingTable");
+        const bestSellingChartCtx = document.getElementById("bestSellingChart").getContext("2d");
+
+        const getSalesData = async () => {
+            const salesRef = collection(db, "salesHistory");
+            const salesQuery = query(salesRef, orderBy("date", "desc"));
+            const querySnapshot = await getDocs(salesQuery);
+
+            const salesData = {};
+
+            querySnapshot.forEach(doc => {
+                const sale = doc.data();
+                const date = sale.date ? sale.date.toDate().toLocaleDateString() : "Desconocida";
+
+                if (!sale.productName || !sale.quantitySold || !sale.paymentType) {
+                    return; // Si falta alguno de estos campos, ignorar el registro
+                }
+
+                if (!salesData[sale.productName]) {
+                    salesData[sale.productName] = [];
+                }
+
+                salesData[sale.productName].push({ date, quantitySold: sale.quantitySold, paymentType: sale.paymentType });
+            });
+
+            return salesData;
+        };
+
+        const renderChart = (salesData) => {
+            const products = Object.keys(salesData);
+            const quantities = products.map(product => {
+                return salesData[product].reduce((acc, sale) => acc + sale.quantitySold, 0);
+            });
+
+            const sortedData = Object.entries(salesData)
+                .sort((a, b) => b[1].reduce((acc, sale) => acc + sale.quantitySold, 0) - a[1].reduce((acc, sale) => acc + sale.quantitySold, 0));
+
+            const topSellingProducts = sortedData.slice(0, 5);
+
+            new Chart(bestSellingChartCtx, { 
+                type: "bar",
+                data: { 
+                    labels: topSellingProducts.map(item => item[0]),
+                    datasets: [{ 
+                        label: 'Cantidad Vendida',
+                        data: topSellingProducts.map(item => item[1].reduce((acc, sale) => acc + sale.quantitySold, 0)), 
+                        backgroundColor: '#15a086',
+                        borderColor: '#16e086',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#333'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#333'
+                            }
+                        }
+                    }
+                }
+            });
+
+            renderTable(topSellingProducts);
+        };
+
+        const renderTable = (topSellingProducts) => {
+            bestSellingTable.innerHTML = "<tr><th>Producto</th><th>Cantidad Vendida</th><th>Fecha</th><th>Tipo de Pago</th></tr>"; // Nueva columna en el encabezado
+
+            topSellingProducts.forEach(([product, sales]) => {
+                sales.forEach(sale => {
+                    const row = bestSellingTable.insertRow();
+                    row.insertCell(0).textContent = product;
+                    row.insertCell(1).textContent = sale.quantitySold;
+                    row.insertCell(2).textContent = sale.date;
+                    row.insertCell(3).textContent = sale.paymentType; // Mostrar el tipo de pago
+                });
+            });
+        };
+
+        (async function loadData() {
+            const salesData = await getSalesData();
+            renderChart(salesData);
+        })();
+    </script>
+
+</body>
+</html>
+
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
+
+
+
+
+
+
+
+    <style>
+    /* Estilos generales */
+    /* Botón flotante */
+    .floating-button {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background-color: #15a086;
+      color: #fff;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      font-size: 24px;
+      cursor: pointer;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+      text-decoration: none;
+    }
+    .floating-button:hover {
+      transform: scale(1.1);
+      background-color: #2c3e50;
+    }
+
+    /* Estilo de enlaces ocultos */
+    .links {
+      position: fixed;
+      bottom: 100px;
+      right: 35px;
+      display: none;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .links a {
+      background-color: #15a086;
+      color: #fff;
+      padding: 10px 15px;
+      border-radius: 5px;
+      margin: 5px 0;
+      text-decoration: none;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.3s;
+    }
+    .links a:hover {
+      background-color: #2c3e50;
+    }
+    .links a i {
+      margin-right: 8px;
+    }
+
+    /* Animación de despliegue de enlaces */
+    .show-links .links {
+      display: flex;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    /* Animación de aparición */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+  
+
+
+  <!-- Botón flotante -->
+<a href="#" class="floating-button" onclick="toggleLinks()">
+  <i class="fa-solid fa-chart-column"></i>
+</a>
+
+<!-- Enlaces ocultos que aparecen al hacer clic en el botón -->
+<div class="links">
+  <a href="detalles-de-mas-vendido.html"><i class="fa-solid fa-chart-column"></i> Estadísticas</a>
+  
+</div>
+</script>
+
+
+    <script>
+  function toggleLinks() {
+    document.body.classList.toggle('show-links');
+  }
+</script>

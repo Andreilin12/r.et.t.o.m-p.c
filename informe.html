@@ -1,0 +1,484 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subir Texto y Fotos a Firebase</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Material Icons for Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    body {
+      background-color: #2C3E50;
+      color: #fff;
+    }
+    .container {
+      margin-top: 20px;
+    }
+    .upload-item {
+      background: #2C3E50;
+      border-radius: 5px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .upload-item img {
+      border-radius: 5px;
+      max-width: 100px;
+      max-height: 100px;
+      object-fit: cover;
+      cursor: pointer;
+    }
+    .btn-icon {
+      background: none;
+      border: none;
+      color: #28a745;
+      font-size: 1.5em;
+      margin: 0 5px;
+    }
+    .btn-icon:hover {
+      color: #00ff80;
+    }
+    .btn-icon:focus {
+      outline: none;
+    }
+    .comment-form {
+      margin-top: 10px;
+    }
+    .preview-img {
+      max-width: 100px;
+      max-height: 100px;
+      object-fit: cover;
+      display: none;
+    }
+    .custom-file-input ~ .custom-file-label::after {
+      content: "Browse";
+      background: #28a745;
+      color: #FFF;
+    }
+
+    .btn-primary {
+      background: #28a745;
+      border: none;
+      color: #fff;
+      font-size: 1.5em;
+      margin: 0 5px;
+    }
+
+    .btn-primary:hover {
+      background: #02d16a;
+    }
+
+
+   .back-button {
+    position: fixed;
+    top: 10px; /* Distancia desde la parte superior */
+    left: 10px; /* Distancia desde el borde izquierdo */
+    background-color: #16a085; /* Color de fondo */
+    color: #fff; /* Color del texto y del icono */
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s; /* Transición suave para el color de fondo */
+    z-index: 1000; /* Asegura que el botón esté sobre otros elementos */
+}
+
+.back-button i {
+    margin-right: 8px; /* Espacio entre el icono y el texto */
+}
+
+.back-button:hover {
+    background-color: #2c2e50; /* Color de fondo al pasar el ratón */
+}
+
+ /* Desactivar la selección de texto y el efecto de arrastre en todos los elementos */
+* {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none; /* estándar */
+
+  -webkit-user-drag: none; /* Safari */
+  -khtml-user-drag: none; /* Konqueror HTML */
+  -moz-user-drag: none; /* Firefox */
+  -o-user-drag: none; /* Opera */
+  user-drag: none; /* estándar */
+}
+  </style>
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, updateDoc, doc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-storage.js";
+  import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+    authDomain: "inventario-35d6b.firebaseapp.com",
+    databaseURL: "https://inventario-35d6b-default-rtdb.firebaseio.com",
+    projectId: "inventario-35d6b",
+    storageBucket: "inventario-35d6b.appspot.com",
+    messagingSenderId: "266100399659",
+    appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
+  const auth = getAuth(app);
+
+  async function getCurrentUser() {
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          return userDoc.data();
+        } else {
+          console.error('User document not found!');
+          return { name: 'Unknown' };
+        }
+      } catch (error) {
+        console.error('Error getting user document:', error);
+        return { name: 'Unknown' };
+      }
+    } else {
+      return { name: 'Guest' };
+    }
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+
+    const name = document.getElementById('name').value;
+    const text = document.getElementById('text').value;
+    const file = document.getElementById('file').files[0];
+
+    try {
+      const user = await getCurrentUser();
+      const userId = auth.currentUser.uid;
+
+      const storageRef = ref(storage, 'uploads/' + file.name);
+      await uploadBytes(storageRef, file);
+      const fileURL = await getDownloadURL(storageRef);
+
+      await addDoc(collection(db, 'uploads'), {
+        name: name,
+        text: text,
+        fileURL: fileURL,
+        userId: userId,
+        timestamp: new Date(),
+        likes: [],
+        comments: []
+      });
+
+      alert('Texto y foto subidos con éxito!');
+      document.getElementById('uploadForm').reset();
+      document.getElementById('preview').style.display = 'none'; // Hide preview
+      document.getElementById('fileLabel').innerText = 'Choose file';
+    } catch (error) {
+      console.error('Error uploading file: ', error);
+      alert('Error al subir el texto y la foto. Por favor, inténtalo de nuevo.');
+    } 
+  }
+
+  async function handleLike(docId) {
+    const docRef = doc(db, 'uploads', docId);
+    const docSnapshot = await getDoc(docRef);
+    const data = docSnapshot.data();
+    const currentLikes = data.likes;
+    const userId = auth.currentUser.uid;
+
+    if (!currentLikes.includes(userId)) {
+      await updateDoc(docRef, {
+        likes: arrayUnion(userId)
+      });
+    } else {
+      await updateDoc(docRef, {
+        likes: arrayRemove(userId)
+      });
+    }
+  }
+
+  async function handleComment(docId, comment) {
+    const docRef = doc(db, 'uploads', docId);
+    await updateDoc(docRef, {
+      comments: arrayUnion(comment)
+    });
+  }
+
+  function formatTimestamp(timestamp) {
+    const date = timestamp.toDate();
+    const formattedDate = date.toLocaleDateString();
+    const formattedTime = date.toLocaleTimeString();
+    return `Subido el ${formattedDate} a las ${formattedTime}`;
+  }
+
+  function renderUploads(snapshot) {
+    const uploadList = document.getElementById('uploadList');
+    uploadList.innerHTML = '';
+
+    snapshot.forEach(doc => {
+      const upload = doc.data();
+      const listItem = document.createElement('li');
+      listItem.className = 'upload-item';
+      listItem.innerHTML = `
+        <div>
+          <div class="mb-2">
+            <img src="${upload.fileURL}" alt="Uploaded Image" onclick="showPreview('${upload.fileURL}')">
+          </div>
+          <div class="mb-2">
+            <strong>${upload.name}</strong>
+          </div>
+          <div class="mb-2">
+            ${upload.text}
+          </div>
+          <div class="mb-2">
+            <small>${formatTimestamp(upload.timestamp)}</small>
+          </div>
+          <button class="btn-icon" onclick="handleLike('${doc.id}')"><i class="material-icons">thumb_up</i> (${(upload.likes || []).length})</button>
+          <button class="btn-icon" onclick="toggleCommentForm('${doc.id}')"><i class="material-icons">comment</i></button>
+          <div id="commentForm-${doc.id}" class="comment-form" style="display:none;">
+            <textarea id="commentText-${doc.id}" class="form-control" rows="2" placeholder="Escribe un comentario..."></textarea><br>
+            <button class="btn btn-primary" onclick="submitComment('${doc.id}')">Enviar</button>
+          </div>
+          <ul id="commentList-${doc.id}">
+            ${upload.comments ? upload.comments.map(comment => `<li>${comment}</li>`).join('') : ''}
+          </ul>
+        </div>
+      `;
+      uploadList.appendChild(listItem);
+    });
+  }
+
+  function toggleCommentForm(docId) {
+    const commentForm = document.getElementById(`commentForm-${docId}`);
+    commentForm.style.display = commentForm.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function submitComment(docId) {
+    const commentText = document.getElementById(`commentText-${docId}`).value;
+    handleComment(docId, commentText);
+    document.getElementById(`commentText-${docId}`).value = '';
+  }
+
+  function showPreview(imageUrl) {
+    const modalImage = document.getElementById('modalImage');
+    modalImage.src = imageUrl;
+    $('#imageModal').modal('show');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('uploadForm').addEventListener('submit', handleSubmit);
+    document.getElementById('file').addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          document.getElementById('preview').src = e.target.result;
+          document.getElementById('preview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+        document.getElementById('fileLabel').innerText = file.name; // Update file name label
+      } else {
+        document.getElementById('preview').style.display = 'none';
+        document.getElementById('fileLabel').innerText = 'Choose file'; // Reset file name label
+      }
+    });
+
+    const q = query(collection(db, 'uploads'), orderBy('timestamp', 'desc'));
+    onSnapshot(q, (snapshot) => {
+      renderUploads(snapshot);
+    });
+  });
+
+  window.handleLike = handleLike;
+  window.toggleCommentForm = toggleCommentForm;
+  window.submitComment = submitComment;
+  window.showPreview = showPreview;
+</script>
+
+</head>
+<body>
+  <div class="container">
+
+        <button class="back-button" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i> Volver
+    </button> 
+    <h1 class="text-center">INFORME</h1>
+    <form id="uploadForm">
+      <div class="form-group">
+        <input type="text" id="name" class="form-control" placeholder="Nombre" required>
+      </div>
+      <div class="form-group">
+        <textarea id="text" class="form-control" rows="3" placeholder="Escribe tu texto aquí..." required></textarea>
+      </div>
+      <div class="form-group">
+        <div class="custom-file">
+          <input type="file" id="file" class="custom-file-input" required>
+          <label id="fileLabel" class="custom-file-label" for="file">Choose file</label>
+        </div>
+        <img id="preview" class="preview-img" alt="Vista previa de la imagen">
+      </div>
+      <button type="submit" class="btn btn-primary">Publicar Ahora</button>
+    </form>
+    <ul id="uploadList" class="list-unstyled mt-4"></ul>
+  </div>
+  
+  <!-- Image Modal -->
+  <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="imageModalLabel">Vista previa de la imagen</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <img id="modalImage" class="img-fluid" alt="Vista previa de la imagen">
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Bootstrap JS and dependencies -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
+
+
+        <!-- Incluye FontAwesome CDN para los iconos -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
+
+
+
+     
+
+
+  <!-- BLOQUEO DE CLIC DERECHO, F12 ETC. -->
+
+  <script>
+        // Bloquear el clic derecho
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquear teclas específicas (F12, Ctrl+Shift+I, Ctrl+U)
+        document.addEventListener('keydown', function(e) {
+            // F12
+            if (e.key === "F12") {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+I (inspeccionar)
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+            }
+
+            // Ctrl+U (ver código fuente)
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+J (consola)
+            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                e.preventDefault();
+            }
+        });
+    </script>
+
+
+
+
+
+<!-- Accesos Directos -->
+
+
+    <script>
+        document.addEventListener('keydown', function(event) {
+            // Ctrl + A: Ir a archivos.html
+            if (event.ctrlKey && event.key === 'a') {
+                event.preventDefault();
+                window.location.href = 'archivos.html';
+            }
+            
+            // Ctrl + N: Ir a Negocio.html
+            if (event.ctrlKey && event.key === 'n') {
+                event.preventDefault();
+                window.location.href = 'Negocio.html';
+            }
+            
+            // Ctrl + P: Ir a Producto.html
+            if (event.ctrlKey && event.key === 'p') {
+                event.preventDefault();
+                window.location.href = 'Producto.html';
+            }
+            
+            // Ctrl + S: Ir a soporte.html
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+                window.location.href = 'soporte.html';
+            }
+            
+            // Ctrl + Alt + C: Ir a permisos.html
+            if (event.ctrlKey && event.altKey && event.key === 'c') {
+                event.preventDefault();
+                window.location.href = 'permisos.html';
+            }
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- LOGUIADOS -->
+
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+        authDomain: "inventario-35d6b.firebaseapp.com",
+        projectId: "inventario-35d6b",
+        storageBucket: "inventario-35d6b.appspot.com",
+        messagingSenderId: "266100399659",
+        appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Verifica si el usuario está autenticado
+    onAuthStateChanged(auth, user => {
+        if (!user) {
+            // Si el usuario no está autenticado, redirigir a index.html
+            window.location.href = "index.html";
+        } else {
+            // El usuario está autenticado, puedes mostrar contenido o permitir acceso a la página
+            console.log("Usuario autenticado:", user);
+        }
+    });
+</script>

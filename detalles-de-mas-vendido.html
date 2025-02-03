@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facturas del Día</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #2c3e50, #2c3e50);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.5);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 2rem;
+            color: #15a086;
+            margin: 0;
+        }
+        .icon-button {
+            background: transparent;
+            border: none;
+            color: #15a086;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .icon-button:hover {
+            transform: scale(1.2);
+        }
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .search-input {
+            flex: 1;
+            padding: 10px 15px;
+            border-radius: 25px;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+        .search-button {
+            background: #15a086;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 15px;
+            font-size: 1rem;
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .search-button:hover {
+            background: #16e086;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #444;
+            padding: 5px;
+            text-align: center;
+        }
+        th {
+            background-color: #15a086;
+            color: #000;
+        }
+        td {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+ @media print {
+    /* Ocultar elementos no deseados durante la impresión */
+    .floating-buttons, 
+    .search-container,
+    .header, 
+    .back-button { /* Asegurarnos de que el botón flotante no se imprima */
+        display: none !important;
+    }
+
+    /* Ajuste del contenedor principal para impresión */
+    .container {
+        width: 100%;
+        box-shadow: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Ajuste de la tabla */
+    table {
+        font-size: 12px;
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 4px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #00c9ff;
+    }
+
+    td {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Eliminar cualquier margen de impresión */
+    body {
+        background: #fff;
+        color: #000;
+        margin: 0;
+        padding: 0;
+    }
+}
+
+
+            /* Desactivar la selección de texto y el efecto de arrastre en todos los elementos */
+* {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none; /* estándar */
+
+  -webkit-user-drag: none; /* Safari */
+  -khtml-user-drag: none; /* Konqueror HTML */
+  -moz-user-drag: none; /* Firefox */
+  -o-user-drag: none; /* Opera */
+  user-drag: none; /* estándar */
+ }
+
+        .back-button {
+    position: fixed;
+    top: 10px; /* Distancia desde la parte superior */
+    left: 10px; /* Distancia desde el borde izquierdo */
+    background-color: #16a085; /* Color de fondo */
+    color: #fff; /* Color del texto y del icono */
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s; /* Transición suave para el color de fondo */
+    z-index: 1000; /* Asegura que el botón esté sobre otros elementos */
+}
+
+.back-button i {
+    margin-right: 8px; /* Espacio entre el icono y el texto */
+}
+
+.back-button:hover {
+    background-color: #2c2e50; /* Color de fondo al pasar el ratón */
+}
+        
+    </style>
+</head>
+<body>
+
+     <button class="back-button" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i> Volver
+    </button>  
+
+
+<div class="container">
+    <div class="header">
+        <h1>Facturas del Día</h1>
+        <button class="icon-button" onclick="window.print()">
+            <i class="fas fa-print"></i>
+        </button>
+    </div>
+    <div class="search-container">
+        <input type="date" id="searchDate" class="search-input" placeholder="Buscar por fecha">
+        <button class="search-button" id="searchButton">Buscar</button>
+    </div>
+    <table id="invoiceTable"></table>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import {
+        getFirestore,
+        collection,
+        query,
+        where,
+        getDocs,
+        Timestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+    // Configuración de Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+        authDomain: "inventario-35d6b.firebaseapp.com",
+        projectId: "inventario-35d6b",
+        storageBucket: "inventario-35d6b.appspot.com",
+        messagingSenderId: "266100399659",
+        appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const invoiceTable = document.getElementById("invoiceTable");
+    const searchButton = document.getElementById("searchButton");
+
+    // Cargar datos iniciales
+    const loadSalesData = async () => {
+        const salesRef = collection(db, "salesHistory");
+        const querySnapshot = await getDocs(salesRef);
+
+        renderTable(querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            date: doc.data().date?.toDate().toLocaleString() || "Sin fecha",
+        })));
+    };
+
+    const renderTable = (salesData) => {
+        invoiceTable.innerHTML = `
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Fecha y Hora</th>
+                <th>Tipo de Pago</th>
+            </tr>
+        `;
+        salesData.forEach(sale => {
+            const row = invoiceTable.insertRow();
+            row.insertCell(0).textContent = sale.productName || "Sin nombre";
+            row.insertCell(1).textContent = sale.quantitySold || "0";
+            row.insertCell(2).textContent = sale.date || "Sin fecha";
+            row.insertCell(3).textContent = sale.paymentType || "Desconocido";
+        });
+    };
+
+    // Buscar datos por fecha
+    const searchByDate = async () => {
+        const searchDate = document.getElementById("searchDate").value;
+        if (!searchDate) {
+            alert("Por favor, selecciona una fecha.");
+            return;
+        }
+        const startDate = new Date(searchDate + "T00:00:00");
+        const endDate = new Date(searchDate + "T23:59:59");
+
+        const salesRef = collection(db, "salesHistory");
+        const salesQuery = query(
+            salesRef,
+            where("date", ">=", Timestamp.fromDate(startDate)),
+            where("date", "<=", Timestamp.fromDate(endDate))
+        );
+        const querySnapshot = await getDocs(salesQuery);
+
+        renderTable(querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            date: doc.data().date?.toDate().toLocaleString() || "Sin fecha",
+        })));
+    };
+
+    // Agregar evento al botón de buscar
+    searchButton.addEventListener("click", searchByDate);
+
+    // Cargar datos iniciales
+    loadSalesData();
+</script>
+
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
+</body>
+</html>

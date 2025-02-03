@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Productos</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #2C3E50;
+    }
+    header {
+      background-color: #2C3E50;
+      color: #fff;
+      padding: 10px 0;
+      text-align: center;
+    }
+    main {
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex; /* Flexbox para dividir la página */
+    }
+    .left-panel, .right-panel {
+      flex: 1; /* Ambos paneles ocupan el mismo espacio */
+      padding: 20px;
+    }
+    .left-panel {
+      background-color: #5c7d9e;
+      border-radius: 8px;
+      margin-right: 10px;
+    }
+    .right-panel {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .search-container {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .search-container input {
+      width: 100%;
+      max-width: 250px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    .icon-btn {
+      background: none;
+      border: none;
+      color: #FFF;
+      cursor: pointer;
+      font-size: 1.2em;
+    }
+    .icon-btn:hover {
+      color: #16a085;
+    }
+    .products-section {
+      margin-top: 20px;
+    }
+    .product {
+      margin-bottom: 10px;
+      background: #fff;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .product img {
+      max-width: 100px;
+      height: auto;
+      display: block;
+      margin-right: 10px;
+    }
+    .product p {
+      margin: 0;
+    }
+    .btn {
+      background-color: #16a085;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .btn:hover {
+      background-color: #2c3e50;
+    }
+    .delete-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      padding: 5px 10px;
+    }
+    .delete-btn:hover {
+      background-color: #c82333;
+    }
+    .alert {
+      display: none;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #dc3545;
+      color: #fff;
+      padding: 15px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      width: 300px;
+    }
+    .alert.show {
+      display: block;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 80mm;
+      text-align: left;
+      font-size: 12px;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    .modal-content h2 {
+       margin-top: 0;
+      text-align: center;
+      font-size: 14px;
+    }
+    .invoice-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+    .invoice-footer { 
+      margin-top: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none; 
+      border: none;
+      font-size: 1.5em;
+      cursor: pointer;
+    }
+    .close-btn:hover {
+      color: #dc3545;
+    }
+    @media print {
+      .modal {
+        display: none;
+      }
+      .print-button {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Gestión de Productos</h1>
+  </header>
+  <main>
+    <div class="left-panel">
+      <div class="search-container">
+        <input type="text" id="searchEAN" placeholder="Buscar por EAN/UPC">
+      </div>
+
+      <div style="display: flex; gap: 10px;"> 
+        <button id="payButton" class="btn"> <i class="fa-solid fa-credit-card"></i> Pagar</button>
+        <button id="resetButton" class="btn"> <i class="fa-solid fa-arrow-rotate-left"></i> Reiniciar Total General</button>
+        <button id="clearListButton" class="icon-btn"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <section id="productsSection" class="products-section"></section>
+    </div>
+  </main>
+
+  <div id="alert" class="alert"></div>
+
+  <div id="invoiceModal" class="modal">
+    <div class="modal-content">
+      <h2>Factura</h2>
+      <div id="invoiceItems"></div> 
+      <div id="invoiceFooter" class="invoice-footer"></div>
+      <button class="btn print-button" onclick="window.print()">Imprimir</button>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+  </div>
+
+ <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, addDoc, query, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+    const firebaseConfig = {
+    piKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+    authDomain: "inventario-35d6b.firebaseapp.com",
+    databaseURL: "https://inventario-35d6b-default-rtdb.firebaseio.com",
+    projectId: "inventario-35d6b",
+    storageBucket: "inventario-35d6b.appspot.com",
+    messagingSenderId: "266100399659",
+    appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
+  };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let invoiceItems = [];
+    let totalInvoicePrice = 0;
+    let currentProducts = [];
+    let totalGeneralPrice = 0;
+
+    document.getElementById('searchEAN').addEventListener('input', async (event) => {
+      const ean = event.target.value;
+      if (!ean) return;
+
+      const businessesQuerySnapshot = await getDocs(collection(db, "businesses"));
+      let totalPrice = 0;
+
+      for (const businessDoc of businessesQuerySnapshot.docs) {
+        const businessName = businessDoc.data().name;
+        const productsRef = collection(db, "businesses", businessName, "products");
+        const productsQuerySnapshot = await getDocs(productsRef);
+
+        productsQuerySnapshot.forEach(async (productDoc) => {
+          const productData = productDoc.data();
+          
+          if (productData.eanUpcCode === ean) {
+            const quantityToAdd = 1;  // Asume que se añade una unidad por cada escaneo
+            const price = productData.pricePerUnit || 0;
+            totalPrice += price;
+
+            // Display the product details
+            const productDiv = document.createElement('div');
+            productDiv.className = 'product';
+            productDiv.innerHTML = `
+              <img src="${productData.imageUrl || 'default.jpg'}" alt="${productData.name}">
+              <p>Nombre: ${productData.name}</p>
+              <p>Precio: ${price}</p>
+              <p>Cantidad: ${quantityToAdd}</p>
+            `;
+
+            document.getElementById('productsSection').appendChild(productDiv);
+
+            // Add or update product in currentProducts
+            const existingProduct = currentProducts.find(p => p.productId === productDoc.id);
+            if (existingProduct) {
+              existingProduct.quantity += quantityToAdd;
+              existingProduct.totalPrice = existingProduct.quantity * price;
+            } else {
+              currentProducts.push({
+                productId: productDoc.id,
+                name: productData.name,
+                quantity: quantityToAdd,
+                totalPrice: price * quantityToAdd,
+                businessName
+              });
+            }
+
+            // Update Firebase with the total price
+            await addDoc(collection(db, 'invoiceTotals'), {
+              ean,
+              totalPrice,
+              timestamp: new Date()
+            });
+            generateInvoice();
+          }
+        });
+      }
+    });
+
+    document.getElementById('payButton').addEventListener('click', async () => {
+      const invoiceRef = collection(db, 'invoices');
+      for (const product of currentProducts) {
+        const productRef = doc(db, "businesses", product.businessName, "products", product.productId);
+        const productDoc = await getDoc(productRef);
+        if (productDoc.exists()) {
+          const productData = productDoc.data();
+          if (productData.quantity >= product.quantity) {
+            await updateDoc(productRef, {
+              quantity: productData.quantity - product.quantity
+            });
+          } else {
+            showAlert('Cantidad insuficiente para el producto: ' + product.name);
+          }
+        }
+      }
+
+      totalGeneralPrice += totalInvoicePrice;
+      generateInvoice();
+      document.getElementById('invoiceModal').style.display = 'flex';
+
+      // Reset totalInvoicePrice and currentProducts after payment
+      totalInvoicePrice = 0;
+      currentProducts = [];
+      updateTotalGeneral();
+    });
+
+    document.getElementById('resetButton').addEventListener('click', async () => {
+      // Reset totalGeneralPrice to 0 in Firestore
+      const invoiceTotalsRef = collection(db, 'invoiceTotals');
+      const q = query(invoiceTotalsRef);
+      const snapshot = await getDocs(q);
+
+      snapshot.docs.forEach(async (doc) => {
+        await updateDoc(doc.ref, { totalPrice: 0 });MODAL
+      });MODA
+
+      updateTotalGeneral();
+    });
+
+    document.getElementById('clearListButton').addEventListener('click', () => {
+      document.getElementById('productsSection').innerHTML = '';
+      currentProducts = [];
+      totalInvoicePrice = 0;
+      generateInvoice();
+    });
+
+    function generateInvoice() {
+      const invoiceItemsContainer = document.getElementById('invoiceItems');
+      invoiceItemsContainer.innerHTML = '';
+      let total = 0;
+
+      currentProducts.forEach(product => {
+        total += product.totalPrice;
+        invoiceItemsContainer.innerHTML += `
+          <div class="invoice-item">
+            <p>Negocio: ${product.businessName}</p>
+            <p>Producto: ${product.name}</p>
+            <p>Cantidad: ${product.quantity}</p>
+            <p>Precio Total: ${product.totalPrice.toFixed(2)}</p>
+          </div>
+        `;
+      });
+
+      totalInvoicePrice = total;
+      document.getElementById('invoiceFooter').innerHTML = `<p>Total Factura: ${totalInvoicePrice.toFixed(2)}</p>`;
+    }
+
+    function showAlert(message) { 
+      const alertDiv = document.getElementById('alert');
+      alertDiv.textContent = message;
+      alertDiv.classList.add('show');
+      setTimeout(() => alertDiv.classList.remove('show'), 3000);
+    }
+
+    function closeModal() {
+      document.getElementById('invoiceModal').style.display = 'none';
+    }
+
+    function updateTotalGeneral() {
+      const invoiceTotalsRef = collection(db, 'invoiceTotals');
+      const q = query(invoiceTotalsRef);
+
+      onSnapshot(q, (snapshot) => {
+        let totalGeneralPrice = 0;
+        snapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          totalGeneralPrice += data.totalPrice;
+        });
+        document.getElementById('totalGeneral').textContent = totalGeneralPrice.toFixed(2);
+      });
+    }
+
+    function printInvoice() {
+      window.print();
+    }
+// Close modal when clicking outside of it
+    window.onclick = function(event) {
+      if (event.target === document.getElementById('invoiceModal')) {
+        document.getElementById('invoiceModal').style.display = 'none';
+      }
+    };
+  </script>
+</body>
+</html>
+
+
+
+
+       <!-- BLOQUEO DE CLIC DERECHO, F12 ETC. -->
+
+  <script>
+        // Bloquear el clic derecho
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquear teclas específicas (F12, Ctrl+Shift+I, Ctrl+U)
+        document.addEventListener('keydown', function(e) {
+            // F12
+            if (e.key === "F12") {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+I (inspeccionar)
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+            }
+
+            // Ctrl+U (ver código fuente)
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+J (consola)
+            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                e.preventDefault();
+            }
+        });
+    </script>
+
+
+
+
+
+<!-- Accesos Directos -->
+
+
+    <script>
+        document.addEventListener('keydown', function(event) {
+            // Ctrl + A: Ir a archivos.html
+            if (event.ctrlKey && event.key === 'a') {
+                event.preventDefault();
+                window.location.href = 'archivos.html';
+            }
+            
+            // Ctrl + N: Ir a Negocio.html
+            if (event.ctrlKey && event.key === 'n') {
+                event.preventDefault();
+                window.location.href = 'Negocio.html';
+            }
+            
+            // Ctrl + P: Ir a Producto.html
+            if (event.ctrlKey && event.key === 'p') {
+                event.preventDefault();
+                window.location.href = 'Producto.html';
+            }
+            
+            // Ctrl + S: Ir a soporte.html
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+                window.location.href = 'soporte.html';
+            }
+            
+            // Ctrl + Alt + C: Ir a permisos.html
+            if (event.ctrlKey && event.altKey && event.key === 'c') {
+                event.preventDefault();
+                window.location.href = 'permisos.html';
+            }
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- LOGUIADOS -->
+
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+        authDomain: "inventario-35d6b.firebaseapp.com",
+        projectId: "inventario-35d6b",
+        storageBucket: "inventario-35d6b.appspot.com",
+        messagingSenderId: "266100399659",
+        appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Verifica si el usuario está autenticado
+    onAuthStateChanged(auth, user => {
+        if (!user) {
+            // Si el usuario no está autenticado, redirigir a index.html
+            window.location.href = "index.html";
+        } else {
+            // El usuario está autenticado, puedes mostrar contenido o permitir acceso a la página
+            console.log("Usuario autenticado:", user);
+        }
+    });
+</script>

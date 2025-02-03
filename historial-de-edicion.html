@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historial de Ediciones</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #2c3e50, #2c3e50);
+      color: #ecf0f1;
+      overflow-x: hidden;
+    }
+    header {
+      background: linear-gradient(90deg, #2c3e50, #2c3e50);
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+      font-size: 1.8em;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+    .back-button {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: #1abc9c;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: all 0.3s ease-in-out;
+      z-index: 1000;
+    }
+    .back-button i {
+      margin-right: 8px;
+    }
+    .back-button:hover {
+      background: #16a085;
+      transform: scale(1.1);
+    }
+    main {
+      padding: 30px;
+      max-width: 1200px;
+      margin: auto;
+    }
+    .filters {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .filters input, .filters select {
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #ecf0f1;
+      font-size: 1em;
+      outline: none;
+      width: 300px;
+      transition: box-shadow 0.3s ease;
+    }
+    .filters input:hover, .filters select:hover {
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+      margin-bottom: 20px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      color: #ecf0f1;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
+    }
+    .card h3 {
+      margin: 0;
+      color: #f39c12;
+    }
+    .label {
+      font-weight: bold;
+      color: #ecf0f1;
+    }
+    .print-buttons button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #15a086, #15a086);
+      color: #fff;
+      cursor: pointer;
+      font-size: 1em;
+      transition: all 0.3s ease;
+    }
+    .print-buttons button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); 
+    }
+    .alert {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(90deg, #e74c3c, #c0392b);
+      color: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+      z-index: 1000;
+      max-width: 300px;
+      display: none;
+    }
+    .alert.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <header>
+         <button class="back-button" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i> Volver
+    </button>  
+
+    <h1>Historial de Ediciones</h1>
+  </header>
+  <main>
+    <!-- Campos de búsqueda -->
+    <div class="filters">
+      <input type="text" id="searchBusinessName" placeholder="Buscar por nombre de negocio">
+      <input type="text" id="searchProductName" placeholder="Buscar por nombre de producto">
+      <select id="sortSelect">
+        <option value="default">Ordenar por</option>
+        <option value="businessName">Nombre de negocio</option>
+        <option value="editDate">Fecha de edición</option>
+        <option value="editHour">Hora de edición</option>
+      </select>
+    </div>
+    
+    <div id="historyContainer"></div>
+    <div id="alert" class="alert"></div>
+    
+    <div class="print-buttons">
+      <button id="printTicket">Imprimir tipo Ticket</button>
+      <button id="printNormal">Imprimir tamaño Normal</button>
+    </div>
+    
+    <div id="invoice" class="invoice"></div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+      authDomain: "inventario-35d6b.firebaseapp.com",
+      databaseURL: "https://inventario-35d6b-default-rtdb.firebaseio.com",
+      projectId: "inventario-35d6b",
+      storageBucket: "inventario-35d6b.appspot.com",
+      messagingSenderId: "266100399659",
+      appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    let historyData = []; // Variable global para almacenar datos del historial
+
+    function showAlert(alertContent) {
+      const alert = document.getElementById("alert");
+      alert.innerHTML = alertContent;
+      alert.classList.add("show");
+
+      setTimeout(() => {
+        alert.classList.remove("show");
+      }, 7000);
+    }
+
+    function loadHistory() {
+      const historyContainer = document.getElementById("historyContainer");
+
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          const userId = user.uid;
+
+          onSnapshot(collection(db, "productsHistory"), (snapshot) => {
+            historyContainer.innerHTML = ""; // Limpiar antes de cargar nuevos datos
+            historyData = []; // Limpiar datos anteriores
+
+            if (snapshot.empty) {
+              showAlert('No hay datos en el historial.');
+              return;
+            }
+
+            snapshot.forEach((doc) => {
+              const data = doc.data();
+              const card = document.createElement('div');
+              card.classList.add('card');
+
+              const businessName = data.businessName || "Sin nombre de negocio";
+              const productName = data.productName || "Sin nombre de producto";
+              const quantity = data.quantity || "Sin cantidad";
+              const editDate = data.editDate ? new Date(data.editDate) : new Date();
+              const addedBy = data.userName || "Desconocido";
+              const lastEditedBy = data.editedBy || "Desconocido";
+
+              card.innerHTML = `
+                <h3>${businessName}</h3>
+                <p><span class="label">Producto:</span> ${productName}</p>      
+                <p><span class="label">Cantidad:</span> ${quantity}</p>
+                <p><span class="label">Fecha y Hora:</span> ${editDate.toLocaleString()}</p>
+                <p><span class="label">Agregado por:</span> ${addedBy}</p>
+                <p><span class="label">Editado por última vez por:</span> ${lastEditedBy}</p>
+              `;
+
+              historyData.push({ businessName, editDate, card });
+            });
+
+            applyFiltersAndSort(); // Aplicar filtros y ordenamiento después de cargar
+          });
+        } else {
+          showAlert("Usuario no autenticado.");
+        }
+      });
+    }
+
+    function applyFiltersAndSort() {
+      const historyContainer = document.getElementById("historyContainer");
+      const businessNameFilter = document.getElementById("searchBusinessName").value.toLowerCase();
+      const productNameFilter = document.getElementById("searchProductName").value.toLowerCase();
+      const sortValue = document.getElementById("sortSelect").value;
+
+      // Filtrar datos
+      const filteredData = historyData.filter(data => {
+        const businessMatch = !businessNameFilter || data.businessName.toLowerCase().includes(businessNameFilter);
+        const productMatch = !productNameFilter || data.card.querySelector('p').textContent.toLowerCase().includes(productNameFilter);
+        return businessMatch && productMatch;
+      });
+
+      // Ordenar datos
+      if (sortValue === "businessName") {
+        filteredData.sort((a, b) => a.businessName.localeCompare(b.businessName));
+      } else if (sortValue === "editDate") {
+        filteredData.sort((a, b) => b.editDate - a.editDate);
+      } else if (sortValue === "editHour") {
+        filteredData.sort((a, b) => b.editDate.getHours() - a.editDate.getHours());
+      }
+
+      // Mostrar datos filtrados y ordenados
+      historyContainer.innerHTML = "";
+      filteredData.forEach(data => {
+        historyContainer.appendChild(data.card);
+      });
+    }
+
+    // Función para imprimir el historial en formato de ticket
+    function printTicket() {
+      const printWindow = window.open('', '', 'height=600,width=400');
+      printWindow.document.write('<html><head><title>Historial de Ediciones</title></head><body>');
+      printWindow.document.write('<h1>Historial de Ediciones</h1>');
+      historyData.forEach(data => {
+        printWindow.document.write(`<div>${data.businessName}<br>${data.card.innerHTML}</div><hr>`);
+      });
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      printWindow.print();
+    }
+
+    // Función para imprimir el historial en tamaño normal
+    function printNormal() {
+      const invoice = document.getElementById("invoice");
+      invoice.innerHTML = `
+        <h1>Historial de Ediciones</h1>
+        <table class="invoice-table">
+          <thead>
+            <tr>
+              <th>Nombre de Negocio</th>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Fecha y Hora</th>
+              <th>Agregado por</th>
+              <th>Editado por última vez por</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${historyData.map(data => `
+              <tr>
+                <td>${data.businessName}</td>
+                <td>${data.card.querySelector('p').textContent.split(': ')[1]}</td>
+                <td>${data.quantity}</td>
+                <td>${data.editDate.toLocaleString()}</td>
+                <td>${data.card.querySelectorAll('p')[3].textContent.split(': ')[1]}</td>
+                <td>${data.card.querySelectorAll('p')[4].textContent.split(': ')[1]}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      `;
+      const printWindow = window.open('', '', 'height=600,width=800');
+      printWindow.document.write('<html><head><title>Historial de Ediciones</title>');
+      printWindow.document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">');
+      printWindow.document.write('</head><body>');
+      printWindow.document.write(invoice.innerHTML);
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      printWindow.print();
+    }
+
+    document.getElementById("printTicket").onclick = printTicket;
+    document.getElementById("printNormal").onclick = printNormal;
+
+    document.getElementById("searchBusinessName").addEventListener("input", applyFiltersAndSort);
+    document.getElementById("searchProductName").addEventListener("input", applyFiltersAndSort);
+    document.getElementById("sortSelect").addEventListener("change", applyFiltersAndSort);
+
+    loadHistory();
+  </script>
+</body>
+</html>
+
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
+
+
+
+
+    
+
+
+
+
+  <!-- BLOQUEO DE CLIC DERECHO, F12 ETC. -->
+
+  <script>
+        // Bloquear el clic derecho
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquear teclas específicas (F12, Ctrl+Shift+I, Ctrl+U)
+        document.addEventListener('keydown', function(e) {
+            // F12
+            if (e.key === "F12") {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+I (inspeccionar)
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+            }
+
+            // Ctrl+U (ver código fuente)
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+J (consola)
+            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                e.preventDefault();
+            }
+        });
+    </script>
+
+
+
+
+
+<!-- Accesos Directos -->
+
+
+    <script>
+        document.addEventListener('keydown', function(event) {
+            // Ctrl + A: Ir a archivos.html
+            if (event.ctrlKey && event.key === 'a') {
+                event.preventDefault();
+                window.location.href = 'archivos.html';
+            }
+            
+            // Ctrl + N: Ir a Negocio.html
+            if (event.ctrlKey && event.key === 'n') {
+                event.preventDefault();
+                window.location.href = 'Negocio.html';
+            }
+            
+            // Ctrl + P: Ir a Producto.html
+            if (event.ctrlKey && event.key === 'p') {
+                event.preventDefault();
+                window.location.href = 'Producto.html';
+            }
+            
+            // Ctrl + S: Ir a soporte.html
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+                window.location.href = 'soporte.html';
+            }
+            
+            // Ctrl + Alt + C: Ir a permisos.html
+            if (event.ctrlKey && event.altKey && event.key === 'c') {
+                event.preventDefault();
+                window.location.href = 'permisos.html';
+            }
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- LOGUIADOS -->
+
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+        authDomain: "inventario-35d6b.firebaseapp.com",
+        projectId: "inventario-35d6b",
+        storageBucket: "inventario-35d6b.appspot.com",
+        messagingSenderId: "266100399659",
+        appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Verifica si el usuario está autenticado
+    onAuthStateChanged(auth, user => {
+        if (!user) {
+            // Si el usuario no está autenticado, redirigir a index.html
+            window.location.href = "index.html";
+        } else {
+            // El usuario está autenticado, puedes mostrar contenido o permitir acceso a la página
+            console.log("Usuario autenticado:", user);
+        }
+    });
+</script>

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historial de Ingresos</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #2C3E50;
+      color: #fff;
+    }
+    header {
+      background-color: #2C3E50;
+      padding: 10px 0;
+      text-align: center;
+      position: relative;
+    }
+    .button-container {
+      position: absolute;
+      right: 10px;
+      top: 80px;
+    }
+    .button-container button {
+      background-color: #3498db;
+      color: #fff;
+      border: none;
+      padding: 10px 15px;
+      margin: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .button-container button:hover {
+      background-color: #2980b9;
+    }
+    main {
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background-color: rgba(255, 255, 255, 0.1); /* Fondo semi-transparente */
+      border-radius: 8px; /* Bordes redondeados */
+      overflow: hidden; /* Esconde el desbordamiento */
+    }
+    .history-table th, .history-table td {
+      padding: 10px;
+      text-align: left;
+    }
+    .history-table th {
+      background-color: #34495e;
+      color: #ffffff; /* Color del texto */
+      font-weight: bold;
+    }
+    .history-table tr {
+      transition: background-color 0.3s; /* Transición al pasar el ratón */
+    }
+    .history-table tr:hover {
+      background-color: rgba(255, 255, 255, 0.2); /* Color al pasar el ratón */
+    }
+    
+    /* Estilos para el modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 300px; 
+      text-align: left;
+      font-size: 12px;  
+      font-family: 'Courier New', Courier, monospace;
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      max-height: 80%;
+      overflow-y: auto;
+    }
+    .modal-header {
+      color: #000; 
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .modal-body {
+      color: #000;
+      margin-bottom: 20px;
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .modal-footer button {
+      background-color: #3498db;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      margin-left: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .modal-footer button:hover {
+      background-color: #2980b9;
+    }
+
+    @media print {
+      body {
+        background-color: #fff;
+      }
+      .button-container, .modal-footer {
+        display: none;
+      }
+      .modal-body {
+        width: 100%; 
+        max-width: 80mm;
+        margin: 0 auto;
+        font-size: 12px; 
+      }
+      header {
+        display: none;
+      }
+      main {
+        text-align: center;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+      }
+      th, td {
+        border: none; /* Eliminar bordes al imprimir */
+        padding: 5px;
+        text-align: left;
+      }
+      @page {
+        size: A4;
+        margin: 10mm;
+      }
+    }
+
+     /* Desactivar la selección de texto y el efecto de arrastre en todos los elementos */
+* {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none; /* estándar */
+
+  -webkit-user-drag: none; /* Safari */
+  -khtml-user-drag: none; /* Konqueror HTML */
+  -moz-user-drag: none; /* Firefox */
+  -o-user-drag: none; /* Opera */
+  user-drag: none; /* estándar */
+ }
+
+    .back-button {
+      position: fixed;
+      top: 10px; 
+      left: 10px; 
+      background-color: #16a085; 
+      color: #fff; 
+      border: none;
+      border-radius: 4px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.3s; 
+      z-index: 1000; 
+    }
+
+    .back-button i {
+      margin-right: 8px; 
+    }
+
+    .back-button:hover {
+      background-color: #2c2e50; 
+    }
+
+</style>
+
+</head>
+<body>
+  <header>
+    <button class="back-button" onclick="goBack()">
+      <i class="fas fa-arrow-left"></i> Volver
+    </button>  
+    <h1>Historial de Ingresos</h1>
+    <div class="button-container">
+      <button id="printButton"><i class="fas fa-print"></i></button>
+<a href="graficos-de-ngrsos.html">
+    <button><i class="fas fa-chart-bar"></i></button>
+</a>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <table class="history-table" id="historyTable">
+      <thead>
+        <tr>
+          <th>Monto Reducido</th>
+          <th>Total Después de Reducción</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody id="historyBody">
+        <!-- Las filas de historial se llenarán aquí -->
+      </tbody>
+    </table>
+  </main>
+
+  <!-- Modal para seleccionar mes -->
+  <div id="monthModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">Seleccionar Mes</div>
+      <div class="modal-body">
+        <label for="monthSelect">Seleccione un mes:</label>
+        <select id="monthSelect">
+          <!-- Opciones de meses -->
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button id="confirmMonth">Confirmar</button>
+        <button id="closeMonthModal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para imprimir factura -->
+  <div id="myModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">Factura</div>
+      <div class="modal-body" id="modalBody">
+        <!-- Aquí se llenarán los datos de la factura -->
+      </div>
+      <div class="modal-footer">
+        <button id="closeModal">Cerrar</button>
+        <button id="printInvoice">Imprimir</button>
+      </div>
+    </div>
+  </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+        import { getFirestore, collection, query, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+        // Inicializar Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+            authDomain: "inventario-35d6b.firebaseapp.com",
+            databaseURL: "https://inventario-35d6b-default-rtdb.firebaseio.com",
+            projectId: "inventario-35d6b",
+            storageBucket: "inventario-35d6b.appspot.com",
+            messagingSenderId: "266100399659",
+            appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const historyBody = document.getElementById('historyBody');
+        const modal = document.getElementById('myModal');
+        const modalBody = document.getElementById('modalBody');
+        const monthModal = document.getElementById('monthModal');
+        const monthSelect = document.getElementById('monthSelect');
+        const confirmMonthButton = document.getElementById('confirmMonth');
+
+        // Cargar meses en el select
+        const loadMonths = () => {
+            const months = [
+                "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+            ];
+            months.forEach((month, index) => {
+                const option = document.createElement('option');
+                option.value = index + 1; // Mes como número
+                option.textContent = month;
+                monthSelect.appendChild(option);
+            });
+        };
+
+        // Mostrar el historial completo
+        function displayHistory() {
+            const historyRef = collection(db, 'totalHistory');
+            const q = query(historyRef);
+
+            onSnapshot(q, (snapshot) => {
+                historyBody.innerHTML = ''; 
+
+                snapshot.docs.forEach((doc) => {
+                    const data = doc.data();
+                    const date = new Date(data.date);
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${data.amountReduced}</td>
+                        <td>${data.totalAfterReduction}</td>
+                        <td>${date.toLocaleDateString()} ${date.toLocaleTimeString()}</td>
+                       
+                    `;
+                    historyBody.appendChild(row);
+                });
+            });
+        }
+
+        // Filtrar por mes
+        function printHistory(month) {
+            modal.style.display = 'block';
+            modalBody.innerHTML = ''; 
+
+            const historyRef = collection(db, 'totalHistory');
+            const q = query(historyRef);
+            const filteredData = [];
+
+            onSnapshot(q, (snapshot) => {
+                snapshot.docs.forEach((doc) => {
+                    const data = doc.data();
+                    const date = new Date(data.date);
+                    if (date.getMonth() + 1 === month) {
+                        filteredData.push(data);
+                    }
+                });
+
+                if (filteredData.length > 0) {
+                    filteredData.forEach((data) => {
+                        const date = new Date(data.date);
+                        modalBody.innerHTML += `
+                            <p>Monto Reducido: ${data.amountReduced}</p>
+                            <p>Total Después de Reducción: ${data.totalAfterReduction}</p>
+                            <p>Fecha: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}</p> <!-- Hora del dato -->
+                            <hr>
+                        `;
+                    });
+                } else {
+                    modalBody.innerHTML = '<p>No hay datos disponibles para este mes.</p>';
+                }
+            });
+        }
+
+        // Función para convertir a Word
+        function convertToWord() {
+            let table = `<table><tr><th>Monto Reducido</th><th>Total Después de Reducción</th><th>Fecha</th><th>Hora</th></tr>`;
+            historyBody.querySelectorAll('tr').forEach(row => {
+                table += `<tr>${row.innerHTML}</tr>`;
+            });
+            table += `</table>`;
+
+            const blob = new Blob([table], { type: "application/msword" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'historial.doc';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Eventos de los botones
+        document.getElementById('printButton').addEventListener('click', () => {
+            monthModal.style.display = 'block'; 
+        });
+
+        document.getElementById('closeModal').addEventListener('click', () => {
+            modal.style.display = 'none'; 
+        });
+
+        document.getElementById('closeMonthModal').addEventListener('click', () => {
+            monthModal.style.display = 'none'; 
+        });
+
+        confirmMonthButton.addEventListener('click', () => {
+            const month = parseInt(monthSelect.value);
+            printHistory(month); 
+            monthModal.style.display = 'none'; 
+        });
+
+        document.getElementById('printInvoice').addEventListener('click', () => {
+            window.print(); 
+        });
+
+        // Inicializar la aplicación
+        loadMonths();
+        displayHistory();
+    </script>
+</html>
+
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
+
+
+
+     
+
+
+  <!-- BLOQUEO DE CLIC DERECHO, F12 ETC. -->
+
+  <script>
+        // Bloquear el clic derecho
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquear teclas específicas (F12, Ctrl+Shift+I, Ctrl+U)
+        document.addEventListener('keydown', function(e) {
+            // F12
+            if (e.key === "F12") {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+I (inspeccionar)
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+            }
+
+            // Ctrl+U (ver código fuente)
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+J (consola)
+            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                e.preventDefault();
+            }
+        });
+    </script>
+
+
+
+
+
+<!-- Accesos Directos -->
+
+
+    <script>
+        document.addEventListener('keydown', function(event) {
+            // Ctrl + A: Ir a archivos.html
+            if (event.ctrlKey && event.key === 'a') {
+                event.preventDefault();
+                window.location.href = 'archivos.html';
+            }
+            
+            // Ctrl + N: Ir a Negocio.html
+            if (event.ctrlKey && event.key === 'n') {
+                event.preventDefault();
+                window.location.href = 'Negocio.html';
+            }
+            
+            // Ctrl + P: Ir a Producto.html
+            if (event.ctrlKey && event.key === 'p') {
+                event.preventDefault();
+                window.location.href = 'Producto.html';
+            }
+            
+            // Ctrl + S: Ir a soporte.html
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+                window.location.href = 'soporte.html';
+            }
+            
+            // Ctrl + Alt + C: Ir a permisos.html
+            if (event.ctrlKey && event.altKey && event.key === 'c') {
+                event.preventDefault();
+                window.location.href = 'permisos.html';
+            }
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- LOGUIADOS -->
+
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+        authDomain: "inventario-35d6b.firebaseapp.com",
+        projectId: "inventario-35d6b",
+        storageBucket: "inventario-35d6b.appspot.com",
+        messagingSenderId: "266100399659",
+        appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Verifica si el usuario está autenticado
+    onAuthStateChanged(auth, user => {
+        if (!user) {
+            // Si el usuario no está autenticado, redirigir a index.html
+            window.location.href = "index.html";
+        } else {
+            // El usuario está autenticado, puedes mostrar contenido o permitir acceso a la página
+            console.log("Usuario autenticado:", user);
+        }
+    });
+</script>
