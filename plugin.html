@@ -1,1 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Enlace Futurista</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, #2c3e50, #2c3e50, #2c3e50);
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+        .icon {
+            margin: 20px;
+            cursor: pointer;
+            font-size: 48px;
+            transition: transform 0.3s;
+        }
+        .icon:hover {
+            transform: scale(1.2);
+            color: #16e086;
+        }
+        .loader {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #15a086;
+            z-index: 10;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .loader span {
+            font-size: 24px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+        }
+        .modal-content {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            position: relative;
+            color: #fff;
+        }
+        .close {
+            cursor: pointer;
+            color: #fff;
+            font-size: 24px;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+        }
+        .btn-download {
+            padding: 10px 20px;
+            background-color: #15a086;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+        .btn-download:hover {
+            background-color: #16e086;
+        }
+        .btn-download i {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="icon" onclick="showLink('Punto de Venta', 'https://example.com/punto_de_venta')">
+        <i class="fas fa-store"></i> Punto de Venta
+    </div>
+    <div class="icon" onclick="showLink('Escáner de Precios', 'www.google.com.do')">
+        <i class="fas fa-barcode"></i> Verificar Precio
+    </div>
+    <div class="icon" onclick="showLink('Totales en Tiempo Real', 'https://example.com/totales_en_tiempo_real')">
+        <i class="fas fa-calculator"></i> Ver Totales
+    </div>
+     
+    <div class="loader" id="loader">
+        <span>Cargando <i class="fas fa-spinner fa-spin"></i></span>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <img src="https://via.placeholder.com/100" alt="Icono" />
+            <p>Enlace generado:</p>
+            <a id="downloadLink" class="btn-download" href="#" download>
+                <i class="fas fa-download"></i> Descargar Enlace
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function showLink(iconName, link) {
+            document.getElementById('loader').style.display = 'flex';
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('downloadLink').href = link; // Usar el enlace específico
+                document.getElementById('modal').style.display = 'flex';
+            }, 2000); // Simulando el tiempo de carga
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+    </script>
+
+</body>
+</html>
 
