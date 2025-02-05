@@ -604,3 +604,74 @@
       }
     });
   </script>  -->
+
+
+
+
+
+<style>
+        
+#alert {
+    display: none;
+    background-color: #e63946;
+    color: white;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 5px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    transition: opacity 0.3s;
+    animation: fadeIn 0.5s;
+}
+#offline-image {
+    display: none; /* Ocultar imagen por defecto */
+    max-width: 150px; /* Imagen más reducida */
+    height: auto;
+    margin: 20px auto; /* Centrar imagen */
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    animation: slideIn 0.5s;
+}
+h1 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+    </style>
+</head>
+<body>
+    
+
+    <script>
+        function updateConnectionStatus() {
+            const alertDiv = document.getElementById('alert');
+            const offlineImage = document.getElementById('offline-image');
+            if (navigator.onLine) {
+                alertDiv.style.display = 'none'; // Ocultar alerta si hay conexión
+                offlineImage.style.display = 'none'; // Ocultar imagen
+            } else {
+                alertDiv.style.display = 'block'; // Mostrar alerta si no hay conexión
+                offlineImage.style.display = 'block'; // Mostrar imagen
+            }
+        }
+
+        // Detectar cambios en la conexión
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+
+        // Verificar estado inicial de conexión
+        updateConnectionStatus();
+    </script>
+</body>
+</html>
+
