@@ -14,6 +14,7 @@
       align-items: center;
       height: 100vh;
       margin: 0;
+      position: relative; /* Añadido para el posicionamiento del teclado */
     }
 
     .slider {
@@ -41,6 +42,12 @@
       object-fit: cover;
     }
 
+    .logo {
+      width: 100px;
+      height: auto;
+      margin: 1rem 0;
+    }
+
     .container {
       text-align: center;
       background: rgba(255, 255, 255, 0.1);
@@ -50,6 +57,7 @@
       backdrop-filter: blur(10px);
       max-width: 400px;
       width: 100%;
+      position: relative; /* Posicionamiento relativo para el teclado */
     }
 
     h1 {
@@ -75,10 +83,15 @@
     }
 
     .numeric-keyboard {
-      display: grid;
+      display: none;
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
       margin-top: 1rem;
+      width: 100%; /* Cambiado a 100% para ocupar todo el ancho */
+      position: absolute; /* Cambiado a absoluto */
+      bottom: -220px; /* Ajusta según el tamaño del teclado */
+      left: 0; /* Para que empiece desde el borde izquierdo */
+      z-index: 100; /* Asegura que esté por encima de otros elementos */
     }
 
     .numeric-btn {
@@ -158,6 +171,12 @@
     .modal-content button:hover {
       background: #00e6b8;
     }
+
+    @media (orientation: landscape) {
+      .numeric-keyboard {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
   </style>
 </head>
 <body>
@@ -167,10 +186,12 @@
     </div>
   </div>
 
+  <img src="https://firebasestorage.googleapis.com/v0/b/inventario-35d6b.appspot.com/o/pngwing.com%20(2).png?alt=media&token=36f98ac5-e01e-444c-84ec-24a56812ff3b" alt="Logo" class="logo">
+
   <div class="container">
     <h1>Buscador EAN/UPC</h1>
     <input type="text" id="searchInput" placeholder="Ingrese el código EAN/UPC" autofocus>
-    <div class="numeric-keyboard">
+    <div class="numeric-keyboard" id="numericKeyboard">
       <button class="numeric-btn" data-value="1">1</button>
       <button class="numeric-btn" data-value="2">2</button>
       <button class="numeric-btn" data-value="3">3</button>
@@ -220,6 +241,7 @@
 
     const slides = document.getElementById('slides');
     const searchInput = document.getElementById("searchInput");
+    const numericKeyboard = document.getElementById("numericKeyboard");
     const numericButtons = document.querySelectorAll(".numeric-btn");
     const backspaceBtn = document.getElementById("backspaceBtn");
     const acceptBtn = document.getElementById("acceptBtn");
@@ -227,6 +249,18 @@
     const productName = document.getElementById("productName");
     const productPrice = document.getElementById("productPrice");
     const closeModalBtn = document.getElementById("closeModalBtn");
+
+    // Mostrar el teclado al hacer clic en el buscador
+    searchInput.addEventListener("focus", () => {
+      numericKeyboard.style.display = "grid";
+    });
+
+    // Ocultar el teclado al hacer clic fuera del buscador
+    document.addEventListener("click", (event) => {
+      if (!searchInput.contains(event.target) && !numericKeyboard.contains(event.target)) {
+        numericKeyboard.style.display = "none";
+      }
+    });
 
     // Función para cargar imágenes del slider desde Firestore
     const loadImages = async () => {
