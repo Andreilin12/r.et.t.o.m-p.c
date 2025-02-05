@@ -618,12 +618,18 @@
     background-color: #e63946;
     color: white;
     padding: 20px;
-    margin: 20px 0;
+    margin: 20px auto;
     border-radius: 5px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     transition: opacity 0.3s;
     animation: fadeIn 0.5s;
+    position: fixed; /* Fija el elemento en la pantalla */
+    top: 20px; /* Distancia desde la parte superior */
+    left: 50%; /* Centra horizontalmente */
+    transform: translateX(-50%); /* Ajusta el centro */
+    z-index: 1000; /* Asegura que esté por encima */
 }
+
 #offline-image {
     display: none; /* Ocultar imagen por defecto */
     max-width: 150px; /* Imagen más reducida */
@@ -632,11 +638,22 @@
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     animation: slideIn 0.5s;
+    position: fixed; /* Fija el elemento en la pantalla */
+    top: 80px; /* Distancia desde la parte superior */
+    left: 50%; /* Centra horizontalmente */
+    transform: translateX(-50%); /* Ajusta el centro */
+    z-index: 1000; /* Asegura que esté por encima */
 }
+
 h1 {
     font-size: 2.5em;
     margin-bottom: 20px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    position: fixed; /* Fija el elemento en la pantalla */
+    top: 140px; /* Distancia desde la parte superior */
+    left: 50%; /* Centra horizontalmente */
+    transform: translateX(-50%); /* Ajusta el centro */
+    z-index: 1000; /* Asegura que esté por encima */
 }
 
 @keyframes fadeIn {
