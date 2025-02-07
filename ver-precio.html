@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Buscador EAN/UPC</title>
+  <title>Consultar precio de productos</title>
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -14,12 +14,11 @@
       align-items: center;
       height: 100vh;
       margin: 0;
-      position: relative; /* Añadido para el posicionamiento del teclado */
     }
 
     .slider {
       width: 300px;
-      height: 200px;
+      height: 400px;
       overflow: hidden;
       position: relative;
       margin-bottom: 1rem;
@@ -38,7 +37,7 @@
 
     .slide img {
       width: 100%;
-      height: 100%;
+      height: 50%;
       object-fit: cover;
     }
 
@@ -57,7 +56,6 @@
       backdrop-filter: blur(10px);
       max-width: 400px;
       width: 100%;
-      position: relative; /* Posicionamiento relativo para el teclado */
     }
 
     h1 {
@@ -87,11 +85,7 @@
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
       margin-top: 1rem;
-      width: 100%; /* Cambiado a 100% para ocupar todo el ancho */
-      position: absolute; /* Cambiado a absoluto */
-      bottom: -220px; /* Ajusta según el tamaño del teclado */
-      left: 0; /* Para que empiece desde el borde izquierdo */
-      z-index: 100; /* Asegura que esté por encima de otros elementos */
+      width: 100%;
     }
 
     .numeric-btn {
@@ -103,6 +97,7 @@
       color: #fff;
       cursor: pointer;
       transition: background 0.3s ease;
+      flex: 1;
     }
 
     .numeric-btn:hover {
@@ -175,19 +170,32 @@
     @media (orientation: landscape) {
       .numeric-keyboard {
         grid-template-columns: repeat(6, 1fr);
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      .numeric-btn {
+        padding: 1.5rem;
+        font-size: 1.5rem;
+      }
+
+      #backspaceBtn, #acceptBtn {
+        grid-column: span 3;
       }
     }
   </style>
 </head>
 <body>
+<img src="logo.png" alt="Logo" class="logo">
+
   <div class="slider">
     <div class="slides" id="slides">
       <!-- Las imágenes se agregarán aquí dinámicamente -->
     </div>
   </div>
 
-  <img src="https://firebasestorage.googleapis.com/v0/b/inventario-35d6b.appspot.com/o/coigo%20barra%20logo.png?alt=media&token=f021e62e-2674-4752-a99b-ff2dfcdf3782" alt="Logo" class="logo">
-
+  
   <div class="container">
     <h1>Buscador EAN/UPC</h1>
     <input type="text" id="searchInput" placeholder="Ingrese el código EAN/UPC" autofocus>
@@ -255,9 +263,12 @@
       numericKeyboard.style.display = "grid";
     });
 
-    // Ocultar el teclado al hacer clic fuera del buscador
+    // Ocultar el teclado solo si se hace clic fuera del campo de búsqueda y del teclado
     document.addEventListener("click", (event) => {
-      if (!searchInput.contains(event.target) && !numericKeyboard.contains(event.target)) {
+      const isClickInsideInput = searchInput.contains(event.target);
+      const isClickInsideKeyboard = numericKeyboard.contains(event.target);
+
+      if (!isClickInsideInput && !isClickInsideKeyboard) {
         numericKeyboard.style.display = "none";
       }
     });
