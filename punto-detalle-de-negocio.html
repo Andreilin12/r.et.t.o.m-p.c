@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formulario de Negocio</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: "Arial", sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+      color: #ecf0f1;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header, footer {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: #47627d;
+      padding: 10px 0;
+    }
+    header a, footer a {
+      text-decoration: none;
+      color: white;
+      font-size: 1.2em;
+    }
+    .container {
+      margin: 20px auto;
+      max-width: 800px;
+      background: #34495e;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      flex-grow: 1;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    .form-group input {
+      width: 93%;
+      padding: 10px;
+      border: 1px solid #ecf0f1;
+      border-radius: 5px;
+      background: #2c3e50;
+      color: #ecf0f1;
+    }
+    .button {
+      padding: 10px 20px;
+      margin-top: 15px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 1em;
+      transition: 0.3s;
+      background-color: #27ae60;
+      color: #ecf0f1;
+    }
+    .button:hover {
+      background-color: #2ecc71;
+    }
+  </style>
+</head>
+<body>
+  <!--
+  <header>
+    <a href="punto-de-venta.html"><i class="fa-solid fa-house icon"></i></a>
+  </header>
+    -->
+  <div class="container">
+    <h1>Detalles del Negocio</h1>
+    <div class="form-group">
+      <label for="businessName">Nombre del Negocio:</label>
+      <input type="text" id="businessName" placeholder="Ingrese el nombre del negocio">
+    </div>
+    <div class="form-group">
+      <label for="businessAddress">Dirección:</label>
+      <input type="text" id="businessAddress" placeholder="Ingrese la dirección del negocio">
+    </div>
+    <button class="button" id="saveBusiness">Guardar</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+      authDomain: "inventario-35d6b.firebaseapp.com",
+      projectId: "inventario-35d6b",
+      storageBucket: "inventario-35d6b.appspot.com",
+      messagingSenderId: "266100399659",
+      appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    document.getElementById("saveBusiness").addEventListener("click", async () => {
+      const name = document.getElementById("businessName").value;
+      const address = document.getElementById("businessAddress").value;
+
+      if (name && address) {
+        try {
+          await setDoc(doc(db, "businessDetails", "info"), {
+            name: name,
+            address: address
+          });
+          alert("Detalles del negocio guardados correctamente.");
+        } catch (error) {
+          console.error("Error al guardar los detalles del negocio:", error);
+          alert("Error al guardar los detalles del negocio. Intente de nuevo.");
+        }
+      } else {
+        alert("Por favor, complete todos los campos.");
+      }
+    });
+  </script>
+</body>
+</html>
