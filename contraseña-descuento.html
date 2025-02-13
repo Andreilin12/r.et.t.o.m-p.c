@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurar Contraseña</title>
+  <style>
+    body {
+      font-family: "Arial", sans-serif;
+      background: #2c3e50;
+      color: #ecf0f1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: #34495e;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+    input {
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 5px;
+      width: 100%;
+    }
+    button {
+      padding: 10px;
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #2ecc71;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Configurar Contraseña</h2>
+    <input type="password" id="password" placeholder="Ingrese una contraseña de 6 dígitos">
+    <button id="btnSetPassword">Guardar Contraseña</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+      authDomain: "inventario-35d6b.firebaseapp.com",
+      projectId: "inventario-35d6b",
+      storageBucket: "inventario-35d6b.appspot.com",
+      messagingSenderId: "266100399659",
+      appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const passwordInput = document.getElementById("password");
+    const btnSetPassword = document.getElementById("btnSetPassword");
+
+    btnSetPassword.addEventListener("click", async () => {
+      const password = passwordInput.value;
+      if (password.length === 6) {
+        try {
+          await setDoc(doc(db, "settings", "discount"), {
+            password: password,
+            discount: 10 // Descuento del 10%
+          });
+          alert("Contraseña guardada correctamente.");
+          passwordInput.value = ""; // Limpiar el campo
+        } catch (error) {
+          console.error("Error al guardar la contraseña:", error);
+        }
+      } else {
+        alert("La contraseña debe tener exactamente 6 dígitos.");
+      }
+    });
+  </script>
+</body>
