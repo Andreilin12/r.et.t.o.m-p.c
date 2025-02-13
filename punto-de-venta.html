@@ -282,7 +282,8 @@ footer .icon:hover {
     <a href="faturacion.html"><i class="fa-solid fa-cart-plus icon"></i></a>
 </footer>
 
-<script type="module">
+
+      <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
   import {
     getFirestore,
@@ -294,6 +295,10 @@ footer .icon:hover {
     setDoc,
     doc,
   } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+  import {
+    getAuth,
+    onAuthStateChanged,
+  } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
@@ -306,6 +311,7 @@ footer .icon:hover {
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const auth = getAuth(app);
 
   const searchInput = document.getElementById("searchInput");
   const searchByNameInput = document.getElementById("searchByNameInput");
@@ -320,14 +326,27 @@ footer .icon:hover {
 
   let invoice = [];
   let totalPrice = 0;
+  let currentUser = null;
 
-  // Almacena la referencia al documento que contendrá el total
-  const totalRef = doc(db, "totals", "currentTotal"); // Cambia "totals" y "currentTotal" según tu estructura
+  // Observador de autenticación
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      currentUser = user;
+      console.log("Usuario autenticado:", user.uid);
+      renderProducts(); // Renderizar productos al autenticarse
+    } else {
+      console.log("No hay usuario autenticado.");
+      // Redirigir al usuario a la página de inicio de sesión o mostrar un mensaje
+    }
+  });
 
   // Función para actualizar el total en Firebase
   const updateTotalInFirebase = async () => {
+    if (!currentUser) return;
+
+    const totalRef = doc(db, "users", currentUser.uid, "totals", "currentTotal");
     try {
-      await setDoc(totalRef, { total: totalPrice.toFixed(2) }); // Reemplaza el total
+      await setDoc(totalRef, { total: totalPrice.toFixed(2) });
     } catch (error) {
       console.error("Error al actualizar el total en Firebase:", error);
     }
@@ -361,6 +380,8 @@ footer .icon:hover {
   });
 
   const renderProducts = async (eanTerm = "", nameTerm = "") => {
+    if (!currentUser) return;
+
     try {
       const businessesRef = collection(db, "businesses");
       const businessesSnapshot = await getDocs(businessesRef);
@@ -490,13 +511,15 @@ footer .icon:hover {
   };
 
   payButton.addEventListener("click", async () => {
+    if (!currentUser) return;
+
     if (invoice.length === 0) {
       alert("No hay productos en la factura.");
       return;
     }
 
     try {
-      const invoiceRef = collection(db, "invoices");
+      const invoiceRef = collection(db, "users", currentUser.uid, "invoices");
       await addDoc(invoiceRef, {
         items: invoice,
         total: totalPrice.toFixed(2),
@@ -509,6 +532,7 @@ footer .icon:hover {
       renderInvoice();
 
       // Limpiar el total en Firebase al pagar
+      const totalRef = doc(db, "users", currentUser.uid, "totals", "currentTotal");
       await setDoc(totalRef, { total: "0.00" }); // Establece el total a cero
     } catch (error) {
       console.error("Error al guardar la factura:", error);
@@ -521,9 +545,8 @@ footer .icon:hover {
     searchInput.select(); // Selecciona el campo para que el teclado se abra
   };
 
-  renderProducts();
+  renderProducts(); 
 </script>
-
 <style>
  .numeric-keyboard {
     display: none;
@@ -599,188 +622,3 @@ footer .icon:hover {
 </style>
 
 
-
-
-  <!-- BLOQUEO DE CLIC DERECHO, F12 ETC. -->
-
-  <script>
-        // Bloquear el clic derecho
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-        });
-
-        // Bloquear teclas específicas (F12, Ctrl+Shift+I, Ctrl+U)
-        document.addEventListener('keydown', function(e) {
-            // F12
-            if (e.key === "F12") {
-                e.preventDefault();
-            }
-
-            // Ctrl+Shift+I (inspeccionar)
-            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-                e.preventDefault();
-            }
-
-            // Ctrl+U (ver código fuente)
-            if (e.ctrlKey && e.key === 'u') {
-                e.preventDefault();
-            }
-
-            // Ctrl+Shift+J (consola)
-            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-                e.preventDefault();
-            }
-        });
-    </script>
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- LOGUIADOS -->
-
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
-        authDomain: "inventario-35d6b.firebaseapp.com",
-        projectId: "inventario-35d6b",
-        storageBucket: "inventario-35d6b.appspot.com",
-        messagingSenderId: "266100399659",
-        appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    // Verifica si el usuario está autenticado
-    onAuthStateChanged(auth, user => {
-        if (!user) {
-            // Si el usuario no está autenticado, redirigir a index.html
-            window.location.href = "login-punto-de-venta.html";
-        } else {
-            // El usuario está autenticado, puedes mostrar contenido o permitir acceso a la página
-            console.log("Usuario autenticado:", user);
-        }
-    });
-</script>
-
-
-
-
-
-
-  <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-  import {
-    getFirestore,
-    collection,
-    query,
-    where,
-    getDocs,
-    doc,
-    getDoc,
-    addDoc,
-  } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
-
-  // Configuración de Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
-    authDomain: "inventario-35d6b.firebaseapp.com",
-    projectId: "inventario-35d6b",
-    storageBucket: "inventario-35d6b.appspot.com",
-    messagingSenderId: "266100399659",
-    appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
-  };
-    
-  // Inicializar Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
-
-  // Elementos del DOM
-  const invoiceItems = document.getElementById("invoiceItems");
-  const invoiceUser = document.getElementById("invoiceUser");
-
-  // Estado global
-  let currentUser = null;
-
-  // Escuchar cambios en la autenticación
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      // Usuario logueado
-      currentUser = user;
-      invoiceUser.textContent = `Usuario: ${user.email}`;
-
-      // Obtener y mostrar datos específicos del usuario
-      await getUserData(user.uid);
-    } else {
-      // Usuario no logueado
-      invoiceUser.textContent = "No has iniciado sesión";
-      invoiceItems.innerHTML = "<p>Inicia sesión para ver tus datos.</p>";
-    }
-  });
-
-  // Obtener datos del usuario actual
-  const getUserData = async (userId) => {
-    try {
-      // Consultar Firestore para obtener datos del usuario actual
-      const userDataRef = collection(db, "userData"); // Colección donde se almacenan los datos del usuario
-      const userQuery = query(userDataRef, where("userId", "==", userId)); // Filtrar por userId
-      const querySnapshot = await getDocs(userQuery);
-
-      if (!querySnapshot.empty) {
-        // Mostrar los datos del usuario
-        invoiceItems.innerHTML = ""; // Limpiar contenido anterior
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          const itemDiv = document.createElement("div");
-          itemDiv.textContent = `Producto: ${data.productName}, Cantidad: ${data.quantity}, Precio: $${data.price}`;
-          invoiceItems.appendChild(itemDiv);
-        });
-      } else {
-        invoiceItems.innerHTML = "<p>No hay datos para mostrar.</p>";
-      }
-    } catch (error) {
-      console.error("Error al obtener datos del usuario:", error);
-    }
-  };
-
-  // Función para agregar datos al carrito (ejemplo)
-  const addToCart = async (productName, quantity, price) => {
-    if (!currentUser) {
-      alert("Debes iniciar sesión para agregar productos al carrito.");
-      return;
-    }
-
-    try {
-      // Guardar datos en Firestore asociados al usuario actual
-      await addDoc(collection(db, "userData"), {
-        userId: currentUser.uid, // Asociar el dato al usuario actual
-        productName,
-        quantity,
-        price,
-        timestamp: new Date(),
-      });
-
-      alert("Producto agregado al carrito.");
-      await getUserData(currentUser.uid); // Actualizar la vista con los nuevos datos
-    } catch (error) {
-      console.error("Error al agregar producto al carrito:", error);
-    }
-  };
-
-  // Ejemplo de uso: agregar un producto al carrito
-  // addToCart("Producto Ejemplo", 2, 100);
-  </script>
