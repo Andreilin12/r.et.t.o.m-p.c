@@ -260,116 +260,172 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      query,
-      orderBy,
-      limit,
-      getDocs,
-      doc,
-      getDoc,
-      updateDoc,
-      addDoc,
-      Timestamp,
-    } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    query,
+    orderBy,
+    limit,
+    getDocs,
+    doc,
+    getDoc,
+    updateDoc,
+    addDoc,
+    Timestamp,
+  } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
-      authDomain: "inventario-35d6b.firebaseapp.com",
-      projectId: "inventario-35d6b",
-      storageBucket: "inventario-35d6b.appspot.com",
-      messagingSenderId: "266100399659",
-      appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+    authDomain: "inventario-35d6b.firebaseapp.com",
+    projectId: "inventario-35d6b",
+    storageBucket: "inventario-35d6b.appspot.com",
+    messagingSenderId: "266100399659",
+    appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
 
-    const invoiceItems = document.getElementById("invoiceItems");
-    const invoiceTotal = document.getElementById("invoiceTotal");
-    const invoiceUser = document.getElementById("invoiceUser");
-    const btnEfectivo = document.getElementById("btnEfectivo");
-    const btnTarjeta = document.getElementById("btnTarjeta");
-    const paymentType = document.getElementById("paymentType");
-    const printModal = document.getElementById("printModal");
-    const modalInvoiceItems = document.getElementById("modalInvoiceItems");
-    const modalInvoiceTotal = document.getElementById("modalInvoiceTotal");
-    const modalItbisTotal = document.getElementById("modalItbisTotal");
-    const modalDiscountTotal = document.getElementById("modalDiscountTotal"); // Elemento para el descuento
-    const modalPaymentType = document.getElementById("modalPaymentType");
-    const modalUser = document.getElementById("modalUser");
-    const closeModal = document.getElementById("closeModal");
-    const btnPrint = document.getElementById("btnPrint");
-    const exchangeRatesDisplay = document.getElementById("exchangeRatesDisplay");
-    const btnApplyDiscount = document.getElementById("btnApplyDiscount");
+  const invoiceItems = document.getElementById("invoiceItems");
+  const invoiceTotal = document.getElementById("invoiceTotal");
+  const invoiceUser = document.getElementById("invoiceUser");
+  const btnEfectivo = document.getElementById("btnEfectivo");
+  const btnTarjeta = document.getElementById("btnTarjeta");
+  const paymentType = document.getElementById("paymentType");
+  const printModal = document.getElementById("printModal");
+  const modalInvoiceItems = document.getElementById("modalInvoiceItems");
+  const modalInvoiceTotal = document.getElementById("modalInvoiceTotal");
+  const modalItbisTotal = document.getElementById("modalItbisTotal");
+  const modalDiscountTotal = document.getElementById("modalDiscountTotal");
+  const modalPaymentType = document.getElementById("modalPaymentType");
+  const modalUser = document.getElementById("modalUser");
+  const closeModal = document.getElementById("closeModal");
+  const btnPrint = document.getElementById("btnPrint");
+  const exchangeRatesDisplay = document.getElementById("exchangeRatesDisplay");
+  const btnApplyDiscount = document.getElementById("btnApplyDiscount");
 
-    const passwordModal = document.getElementById("passwordModal");
-    const closePasswordModal = document.getElementById("closePasswordModal");
-    const passwordInput = document.getElementById("passwordInput");
-    const submitPassword = document.getElementById("submitPassword");
-    const passwordError = document.getElementById("passwordError");
+  const passwordModal = document.getElementById("passwordModal");
+  const closePasswordModal = document.getElementById("closePasswordModal");
+  const passwordInput = document.getElementById("passwordInput");
+  const submitPassword = document.getElementById("submitPassword");
+  const passwordError = document.getElementById("passwordError");
 
-    const discountAppliedModal = document.getElementById("discountAppliedModal");
-    const closeDiscountModal = document.getElementById("closeDiscountModal");
-    const discountMessage = document.getElementById("discountMessage");
+  const discountAppliedModal = document.getElementById("discountAppliedModal");
+  const closeDiscountModal = document.getElementById("closeDiscountModal");
+  const discountMessage = document.getElementById("discountMessage");
 
-    let invoice = null;
-    let currentUser = null;
-    let exchangeRates = { usd: 62.15, eur: 64.42 }; // Valores iniciales
-    let discount = 0; // Inicializar descuento
-    let discountedTotal = 0; // Inicializar total con descuento
+  let invoice = null;
+  let currentUser = null;
+  let exchangeRates = { usd: 62.15, eur: 64.42 };
+  let discount = 0;
+  let discountedTotal = 0;
 
-    // Obtener detalles del negocio desde Firebase
-    const getBusinessDetails = async () => {
-      const businessRef = doc(db, "businessDetails", "info");
-      const businessDoc = await getDoc(businessRef);
-      if (businessDoc.exists()) {
-        const businessData = businessDoc.data();
-        document.getElementById("businessName").textContent = businessData.name;
-        document.getElementById("businessAddress").textContent = businessData.address;
+  // Obtener detalles del negocio desde Firebase
+  const getBusinessDetails = async () => {
+    const businessRef = doc(db, "businessDetails", "info");
+    const businessDoc = await getDoc(businessRef);
+    if (businessDoc.exists()) {
+      const businessData = businessDoc.data();
+      document.getElementById("businessName").textContent = businessData.name;
+      document.getElementById("businessAddress").textContent = businessData.address;
+    }
+  };
+
+  // Obtener tasas de cambio desde Firebase
+  const getExchangeRates = async () => {
+    const ratesRef = doc(db, "exchangeRates", "rates");
+    const ratesDoc = await getDoc(ratesRef);
+    if (ratesDoc.exists()) {
+      exchangeRates = ratesDoc.data();
+      exchangeRatesDisplay.textContent = `USD: $${exchangeRates.usd}, EUR: €${exchangeRates.eur}`;
+    }
+  };
+
+  // Obtener la factura más reciente del usuario autenticado
+  const getLatestInvoice = async () => {
+    if (!currentUser) return;
+
+    try {
+      const invoicesRef = collection(db, "users", currentUser.uid, "invoices");
+      const invoicesQuery = query(invoicesRef, orderBy("date", "desc"), limit(1));
+      const querySnapshot = await getDocs(invoicesQuery);
+
+      if (!querySnapshot.empty) {
+        querySnapshot.forEach((doc) => {
+          invoice = doc.data();
+          renderInvoice();
+        });
+      } else {
+        invoiceItems.innerHTML = "<p>No hay facturas recientes.</p>";
       }
-    };
+    } catch (error) {
+      console.error("Error al obtener la factura más reciente:", error);
+    }
+  };
 
-    // Obtener tasas de cambio desde Firebase
-    const getExchangeRates = async () => {
-      const ratesRef = doc(db, "exchangeRates", "rates");
-      const ratesDoc = await getDoc(ratesRef);
-      if (ratesDoc.exists()) {
-        exchangeRates = ratesDoc.data();
-        exchangeRatesDisplay.textContent = `USD: $${exchangeRates.usd}, EUR: €${exchangeRates.eur}`;
+  // Renderizar factura
+  const renderInvoice = async () => {
+    invoiceItems.innerHTML = "";
+    modalInvoiceItems.innerHTML = "";
+    let total = 0;
+    let totalITBIS = 0;
+
+    for (const item of invoice.items) {
+      const productRef = doc(db, "businesses", item.businessName, "products", item.productId);
+      const productDoc = await getDoc(productRef);
+
+      if (productDoc.exists()) {
+        const productData = productDoc.data();
+        const profitPercentage = productData.profitPercentage / 100 || 0.10;
+        const itemTotal = item.quantity * item.pricePerUnit;
+        const itbis = itemTotal * 0.18;
+        const subtotal = itemTotal + itbis;
+        const additional = subtotal * profitPercentage;
+        const finalTotal = subtotal + additional;
+
+        total += finalTotal;
+        totalITBIS += itbis;
+
+        const itemDiv = document.createElement("div");
+        itemDiv.classList.add("invoice-item");
+        itemDiv.textContent = `${item.name} x ${item.quantity} - Precio: DOP $${itemTotal.toFixed(2)} | ITBIS: $${itbis.toFixed(2)} | Adicional: $${additional.toFixed(2)} | Total: DOP $${finalTotal.toFixed(2)}`;
+        invoiceItems.appendChild(itemDiv);
+
+        const modalItemDiv = document.createElement("div");
+        modalItemDiv.textContent = `${item.name} x ${item.quantity} - Precio: DOP $${itemTotal.toFixed(2)} | ITBIS: $${itbis.toFixed(2)} | Adicional: $${additional.toFixed(2)} | Total: DOP $${finalTotal.toFixed(2)}`;
+        modalInvoiceItems.appendChild(modalItemDiv);
       }
-    };
+    }
 
-    // Obtener la factura más reciente
-    const getLatestInvoice = async () => {
-      try {
-        const invoicesRef = collection(db, "invoices");
-        const invoicesQuery = query(invoicesRef, orderBy("date", "desc"), limit(1));
-        const querySnapshot = await getDocs(invoicesQuery);
+    const totalUSD = (total / exchangeRates.usd).toFixed(2);
+    const totalEUR = (total / exchangeRates.eur).toFixed(2);
 
-        if (!querySnapshot.empty) {
-          querySnapshot.forEach((doc) => {
-            invoice = doc.data();
-            renderInvoice();
-          });
-        } else {
-          invoiceItems.innerHTML = "<p>No hay facturas recientes.</p>";
-        }
-      } catch (error) {
-        console.error("Error al obtener la factura más reciente:", error);
+    invoiceTotal.textContent = `Total: DOP $${total.toFixed(2)} (USD: $${totalUSD}, EUR: €${totalEUR})`;
+    modalInvoiceTotal.textContent = `Total a Pagar: DOP $${total.toFixed(2)}`;
+    modalItbisTotal.textContent = `Total ITBIS: $${totalITBIS.toFixed(2)}`;
+
+    if (discount > 0) {
+      discountedTotal = total - (total * discount / 100);
+      modalDiscountTotal.textContent = `Descuento aplicado: DOP $${(total * discount / 100).toFixed(2)}`;
+      modalInvoiceTotal.textContent = `Total a Pagar (con descuento): DOP $${discountedTotal.toFixed(2)}`;
+    } else {
+      modalDiscountTotal.textContent = "";
+    }
+
+    modalPaymentType.textContent = `Método de Pago: ${paymentType.textContent}`;
+    modalUser.textContent = `Responsable de Servicio: ${currentUser.displayName || currentUser.email}`;
+  };
+
+  // Procesar pago
+  const processPayment = async (paymentTypeValue) => {
+    try {
+      if (!invoice) {
+        alert("No hay factura para pagar.");
+        return;
       }
-    };
-
-    // Renderizar factura
-    const renderInvoice = async () => {
-      invoiceItems.innerHTML = "";
-      modalInvoiceItems.innerHTML = "";
-      let total = 0;
-      let totalITBIS = 0;
 
       for (const item of invoice.items) {
         const productRef = doc(db, "businesses", item.businessName, "products", item.productId);
@@ -377,300 +433,134 @@
 
         if (productDoc.exists()) {
           const productData = productDoc.data();
-          const profitPercentage = productData.profitPercentage / 100 || 0.10; // Recuperar el porcentaje de ganancia y convertirlo a decimal
-          const itemTotal = item.quantity * item.pricePerUnit;
-          const itbis = itemTotal * 0.18; // ITBIS del 18%
-          const subtotal = itemTotal + itbis; // Sumar precio y ITBIS
-          const additional = subtotal * profitPercentage; // Calcular el 10% sobre el subtotal
-          const finalTotal = subtotal + additional; // Total final
+          const currentQuantity = productData.quantity || 0;
+          const newQuantity = currentQuantity - item.quantity;
 
-          total += finalTotal; // Sumar al total general
-          totalITBIS += itbis;
-
-          const itemDiv = document.createElement("div");
-          itemDiv.classList.add("invoice-item");
-          itemDiv.textContent = `${item.name} x ${item.quantity} - Precio: DOP $${itemTotal.toFixed(2)} | ITBIS: $${itbis.toFixed(2)} | Adicional: $${additional.toFixed(2)} | Total: DOP $${finalTotal.toFixed(2)}`;
-          invoiceItems.appendChild(itemDiv);
-
-          const modalItemDiv = document.createElement("div");
-          modalItemDiv.textContent = `${item.name} x ${item.quantity} - Precio: DOP $${itemTotal.toFixed(2)} | ITBIS: $${itbis.toFixed(2)} | Adicional: $${additional.toFixed(2)} | Total: DOP $${finalTotal.toFixed(2)}`;
-          modalInvoiceItems.appendChild(modalItemDiv);
-        }
-      }
-
-      // Calcular el total y aplicar descuento si existe
-      const totalUSD = (total / exchangeRates.usd).toFixed(2);
-      const totalEUR = (total / exchangeRates.eur).toFixed(2);
-      
-      invoiceTotal.textContent = `Total: DOP $${total.toFixed(2)} (USD: $${totalUSD}, EUR: €${totalEUR})`;
-      modalInvoiceTotal.textContent = `Total a Pagar: DOP $${total.toFixed(2)}`;
-      modalItbisTotal.textContent = `Total ITBIS: $${totalITBIS.toFixed(2)}`;
-      
-      // Mostrar descuento si se aplicó
-      if (discount > 0) {
-        discountedTotal = total - (total * discount / 100);
-        modalDiscountTotal.textContent = `Descuento aplicado: DOP $${(total * discount / 100).toFixed(2)}`;
-        modalInvoiceTotal.textContent = `Total a Pagar (con descuento): DOP $${discountedTotal.toFixed(2)}`;
-      } else {
-        modalDiscountTotal.textContent = ""; // Limpiar descuento si no se aplica
-      }
-
-      modalPaymentType.textContent = `Método de Pago: ${paymentType.textContent}`;
-      modalUser.textContent = `Responsable de Servicio: ${currentUser.displayName || currentUser.email}`;
-    };
-
-    // Procesar pago
-    const processPayment = async (paymentTypeValue) => {
-      try {
-        if (!invoice) {
-          alert("No hay factura para pagar.");
-          return;
-        }
-
-        for (const item of invoice.items) {
-          const productRef = doc(db, "businesses", item.businessName, "products", item.productId);
-          const productDoc = await getDoc(productRef);
-
-          if (productDoc.exists()) {
-            const productData = productDoc.data();
-            const currentQuantity = productData.quantity || 0;
-            const newQuantity = currentQuantity - item.quantity;
-
-            if (newQuantity < 0) {
-              alert(`No hay suficiente stock de ${item.name}.`);
-              return;
-            }
-
-            await updateDoc(productRef, { quantity: newQuantity });
-            await recordSaleHistory(item, paymentTypeValue);
+          if (newQuantity < 0) {
+            alert(`No hay suficiente stock de ${item.name}.`);
+            return;
           }
+
+          await updateDoc(productRef, { quantity: newQuantity });
+          await recordSaleHistory(item, paymentTypeValue);
         }
-
-        paymentType.textContent = `Pago realizado con ${paymentTypeValue}.`;
-        printModal.style.display = "block"; // Mostrar modal
-        renderInvoice(); // Actualizar vista
-
-        // Limpiar la factura
-        invoiceItems.innerHTML = ""; 
-        invoiceTotal.textContent = ""; 
-        paymentType.textContent = ""; 
-        modalInvoiceItems.innerHTML = ""; 
-        modalInvoiceTotal.textContent = ""; 
-        modalItbisTotal.textContent = ""; 
-        modalDiscountTotal.textContent = ""; // Limpiar descuento
-        modalPaymentType.textContent = ""; 
-        modalUser.textContent = ""; 
-
-      } catch (error) {
-        console.error("Error al procesar el pago:", error);
       }
-    };
 
-    // Función para registrar el historial de ventas
-    const recordSaleHistory = async (item, paymentTypeValue) => {
-      try {
-        const salesHistoryRef = collection(db, "salesHistory");
-        const q = query(salesHistoryRef, where("productName", "==", item.name), where("paymentType", "==", paymentTypeValue));
-        const querySnapshot = await getDocs(q);
+      paymentType.textContent = `Pago realizado con ${paymentTypeValue}.`;
+      printModal.style.display = "block";
+      renderInvoice();
 
-        if (!querySnapshot.empty) {
-          querySnapshot.forEach(async (doc) => {
-            const existingSale = doc.data();
-            const newQuantity = existingSale.quantitySold + item.quantity;
-            await updateDoc(doc.ref, { quantitySold: newQuantity });
-          });
-        } else {
-          const saleData = {
-            productName: item.name,
-            quantitySold: item.quantity,
-            paymentType: paymentTypeValue,
-            date: Timestamp.now(),
-          };
-          await addDoc(salesHistoryRef, saleData);
-        }
-      } catch (error) {
-        console.error("Error al registrar el historial de ventas:", error);
-      }
-    };
+      invoiceItems.innerHTML = "";
+      invoiceTotal.textContent = "";
+      paymentType.textContent = "";
+      modalInvoiceItems.innerHTML = "";
+      modalInvoiceTotal.textContent = "";
+      modalItbisTotal.textContent = "";
+      modalDiscountTotal.textContent = "";
+      modalPaymentType.textContent = "";
+      modalUser.textContent = "";
 
-    // Aplicar descuento
-    const applyDiscount = async () => {
-      passwordModal.style.display = "block";
-    };
-
-    // Manejar la entrada de la contraseña
-    submitPassword.addEventListener("click", async () => {
-      const password = passwordInput.value;
-      const discountRef = doc(db, "settings", "discount"); // Ajustar según tu estructura de Firebase
-      const discountDoc = await getDoc(discountRef);
-      
-      if (discountDoc.exists()) {
-        const storedPassword = discountDoc.data().password; // Recuperar contraseña almacenada
-        discount = discountDoc.data().discount; // Obtener descuento almacenado
-
-        if (password === storedPassword) {
-          // Aplicar descuento
-          renderInvoice(); // Re-renderizar la factura después de aplicar el descuento
-          passwordModal.style.display = "none";
-          discountMessage.textContent = `Descuento del ${discount}% aplicado.`;
-          discountAppliedModal.style.display = "block";
-        } else {
-          passwordError.style.display = "block";
-        }
-      } else {
-        console.error("No se encontró la configuración de descuento.");
-      }
-    });
-
-    // Cerrar modales
-    closePasswordModal.addEventListener("click", () => {
-      passwordModal.style.display = "none";
-      passwordError.style.display = "none";
-    });
-
-    closeDiscountModal.addEventListener("click", () => {
-      discountAppliedModal.style.display = "none";
-    });
-
-    // Inicializar
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        currentUser = user;
-        invoiceUser.textContent = `Responsable de Servicio: ${user.displayName || user.email}`;
-      } else {
-        invoiceUser.textContent = "No se ha iniciado sesión";
-      }
-    });
-
-    btnEfectivo.addEventListener("click", () => processPayment("Efectivo"));
-    btnTarjeta.addEventListener("click", () => processPayment("Tarjeta"));
-    btnApplyDiscount.addEventListener("click", applyDiscount); // Agregar evento para aplicar descuento
-    closeModal.addEventListener("click", () => printModal.style.display = "none");
-    
-    btnPrint.addEventListener("click", () => {
-      const printContent = printModal.querySelector('.modal-content').innerHTML;
-      const printWindow = window.open('', '', 'height=400,width=600');
-      printWindow.document.write('<html><head><title>Imprimir Factura</title>');
-      printWindow.document.write('<style>body { font-family: Arial; }</style></head><body>');
-      printWindow.document.write(printContent);
-      printWindow.document.write('</body></html>');
-      printWindow.document.close();
-      printWindow.print();
-      printWindow.close();
-    });
-
-    getBusinessDetails();
-    getExchangeRates();
-    getLatestInvoice();
-  </script>
-</body>
-</html>
-
-
-
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-  import {
-    getFirestore,
-    collection,
-    query,
-    where,
-    getDocs,
-    doc,
-    getDoc,
-    addDoc,
-  } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
-
-  // Configuración de Firebase
-  apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
-    authDomain: "inventario-35d6b.firebaseapp.com",
-    projectId: "inventario-35d6b",
-    storageBucket: "inventario-35d6b.appspot.com",
-    messagingSenderId: "266100399659",
-    appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    } catch (error) {
+      console.error("Error al procesar el pago:", error);
+    }
   };
-  
-  // Inicializar Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
 
-  // Elementos del DOM
-  const invoiceItems = document.getElementById("invoiceItems");
-  const invoiceUser = document.getElementById("invoiceUser");
+  // Función para registrar el historial de ventas
+  const recordSaleHistory = async (item, paymentTypeValue) => {
+    try {
+      const salesHistoryRef = collection(db, "users", currentUser.uid, "salesHistory");
+      const q = query(salesHistoryRef, where("productName", "==", item.name), where("paymentType", "==", paymentTypeValue));
+      const querySnapshot = await getDocs(q);
 
-  // Estado global
-  let currentUser = null;
+      if (!querySnapshot.empty) {
+        querySnapshot.forEach(async (doc) => {
+          const existingSale = doc.data();
+          const newQuantity = existingSale.quantitySold + item.quantity;
+          await updateDoc(doc.ref, { quantitySold: newQuantity });
+        });
+      } else {
+        const saleData = {
+          productName: item.name,
+          quantitySold: item.quantity,
+          paymentType: paymentTypeValue,
+          date: Timestamp.now(),
+        };
+        await addDoc(salesHistoryRef, saleData);
+      }
+    } catch (error) {
+      console.error("Error al registrar el historial de ventas:", error);
+    }
+  };
 
-  // Escuchar cambios en la autenticación
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      // Usuario logueado
-      currentUser = user;
-      invoiceUser.textContent = `Usuario: ${user.email}`;
+  // Aplicar descuento
+  const applyDiscount = async () => {
+    passwordModal.style.display = "block";
+  };
 
-      // Obtener y mostrar datos específicos del usuario
-      await getUserData(user.uid);
+  // Manejar la entrada de la contraseña
+  submitPassword.addEventListener("click", async () => {
+    const password = passwordInput.value;
+    const discountRef = doc(db, "settings", "discount");
+    const discountDoc = await getDoc(discountRef);
+
+    if (discountDoc.exists()) {
+      const storedPassword = discountDoc.data().password;
+      discount = discountDoc.data().discount;
+
+      if (password === storedPassword) {
+        renderInvoice();
+        passwordModal.style.display = "none";
+        discountMessage.textContent = `Descuento del ${discount}% aplicado.`;
+        discountAppliedModal.style.display = "block";
+      } else {
+        passwordError.style.display = "block";
+      }
     } else {
-      // Usuario no logueado
-      invoiceUser.textContent = "No has iniciado sesión";
-      invoiceItems.innerHTML = "<p>Inicia sesión para ver tus datos.</p>";
+      console.error("No se encontró la configuración de descuento.");
     }
   });
 
-  // Obtener datos del usuario actual
-  const getUserData = async (userId) => {
-    try {
-      // Consultar Firestore para obtener datos del usuario actual
-      const userDataRef = collection(db, "userData"); // Colección donde se almacenan los datos del usuario
-      const userQuery = query(userDataRef, where("userId", "==", userId)); // Filtrar por userId
-      const querySnapshot = await getDocs(userQuery);
+  // Cerrar modales
+  closePasswordModal.addEventListener("click", () => {
+    passwordModal.style.display = "none";
+    passwordError.style.display = "none";
+  });
 
-      if (!querySnapshot.empty) {
-        // Mostrar los datos del usuario
-        invoiceItems.innerHTML = ""; // Limpiar contenido anterior
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          const itemDiv = document.createElement("div");
-          itemDiv.textContent = `Producto: ${data.productName}, Cantidad: ${data.quantity}, Precio: $${data.price}`;
-          invoiceItems.appendChild(itemDiv);
-        });
-      } else {
-        invoiceItems.innerHTML = "<p>No hay datos para mostrar.</p>";
-      }
-    } catch (error) {
-      console.error("Error al obtener datos del usuario:", error);
+  closeDiscountModal.addEventListener("click", () => {
+    discountAppliedModal.style.display = "none";
+  });
+
+  // Inicializar
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      currentUser = user;
+      invoiceUser.textContent = `Responsable de Servicio: ${user.displayName || user.email}`;
+      getLatestInvoice();
+    } else {
+      invoiceUser.textContent = "No se ha iniciado sesión";
     }
-  };
+  });
 
-  // Función para agregar datos al carrito (ejemplo)
-  const addToCart = async (productName, quantity, price) => {
-    if (!currentUser) {
-      alert("Debes iniciar sesión para agregar productos al carrito.");
-      return;
-    }
+  btnEfectivo.addEventListener("click", () => processPayment("Efectivo"));
+  btnTarjeta.addEventListener("click", () => processPayment("Tarjeta"));
+  btnApplyDiscount.addEventListener("click", applyDiscount);
+  closeModal.addEventListener("click", () => printModal.style.display = "none");
 
-    try {
-      // Guardar datos en Firestore asociados al usuario actual
-      await addDoc(collection(db, "userData"), {
-        userId: currentUser.uid, // Asociar el dato al usuario actual
-        productName,
-        quantity,
-        price,
-        timestamp: new Date(),
-      });
+  btnPrint.addEventListener("click", () => {
+    const printContent = printModal.querySelector('.modal-content').innerHTML;
+    const printWindow = window.open('', '', 'height=400,width=600');
+    printWindow.document.write('<html><head><title>Imprimir Factura</title>');
+    printWindow.document.write('<style>body { font-family: Arial; }</style></head><body>');
+    printWindow.document.write(printContent);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.print();
+    printWindow.close();
+  });
 
-      alert("Producto agregado al carrito.");
-      await getUserData(currentUser.uid); // Actualizar la vista con los nuevos datos
-    } catch (error) {
-      console.error("Error al agregar producto al carrito:", error);
-    }
-  };
-
-  // Ejemplo de uso: agregar un producto al carrito
-  // addToCart("Producto Ejemplo", 2, 100);
+  getBusinessDetails();
+  getExchangeRates();
 </script>
 
-
+</body>
+</html>
