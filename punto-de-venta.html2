@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Punto de Ventas</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">  
+  <style>
+/* Estilo general */
+body {
+  font-family: 'Roboto', sans-serif;
+  background: linear-gradient(135deg, #2c3e50, #16e086, #2c3e50);
+  color: #fff;
+  margin: 0;
+  padding: 0; /* Asegúrate de que no haya margen */
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Ocupa toda la altura de la ventana */
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(44, 62, 80);
+  padding: 15px 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  position: fixed; /* Fijo en la parte superior */
+  top: 0;
+  width: 100%; /* Asegúrate de que ocupe todo el ancho */
+  z-index: 1000; /* Asegúrate de que esté por encima de otros elementos */
+}
+
+.icon {
+  color: #15a086;
+  font-size: 1.8em;
+  cursor: pointer;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.icon:hover {
+  transform: scale(1.2);
+  color: #16e086;
+}
+
+/* Layout principal */
+main {
+  display: flex;
+  height: calc(100vh - 120px); /* Espacio entre el header y el footer */
+  margin-top: 60px; /* Altura del header */
+  margin-bottom: 60px; /* Altura del footer */
+  overflow: hidden;
+}
+
+.left-section,
+.right-section {
+  width: 50%;
+  overflow-y: auto; /* Permitir desplazamiento vertical */
+  padding: 20px;
+}
+
+.left-section {
+  background: rgba(39, 60, 117, 0.8);
+  border-right: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.right-section {
+  background: rgba(25, 42, 86, 0.9);
+}
+
+/* Contenedor de búsqueda */
+.search-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.search-container input {
+  flex-grow: 1;
+  padding: 12px;
+  font-size: 16px;
+  border: none;
+  border-radius: 25px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #dfe6e9;
+  transition: background 0.3s ease;
+}
+
+.search-container input:focus {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.search-container button {
+  background: #0984e3;
+  color: #fff;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.search-container button:hover {
+  background: #74b9ff;
+}
+
+/* Listado de productos */
+.products-list,
+.invoice-list {
+  margin-top: 20px;
+}
+
+.product-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  margin-bottom: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.product-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-5px);
+}
+
+.invoice-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  transition: background 0.3s ease;
+}
+
+.invoice-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.remove-btn {
+  background-color: #d63031;
+  color: #fff;
+  padding: 5px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.remove-btn:hover {
+  background-color: #ff7675;
+}
+
+/* Footer */
+footer {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: rgba(45, 52, 54, 0.9);
+  padding: 15px 30px;
+  position: fixed; /* Fijo en la parte inferior */
+  bottom: 0;
+  width: 100%; /* Asegúrate de que ocupe todo el ancho */
+  box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.3);
+  z-index: 1000; /* Asegúrate de que esté por encima de otros elementos */
+}
+
+footer .icon {
+  font-size: 2em;
+}
+
+footer .icon:hover {
+  transform: scale(1.3);
+  color: #16e086;
+}
+
+/* Estilo del botón "Pagar" */
+#payButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #16e086, #15a086); /* Degradado azul */
+  color: #fff;
+  font-size: 18px;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+#payButton:hover {
+  background: linear-gradient(135deg, #15a086, #16e086); /* Degradado invertido */
+  transform: scale(1.05); /* Agranda ligeramente al pasar el mouse */
+}
+
+#payButton:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(41, 128, 185, 0.5); /* Sombra de enfoque */
+}
+
+.icon-btn i {
+  margin-right: 10px; /* Espacio entre el ícono y el texto */
+  font-size: 20px; /* Tamaño de ícono */
+}
+
+.btn {
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+/* Desactivar la selección de texto y el efecto de arrastre en todos los elementos */
+* {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none; /* estándar */
+
+  -webkit-user-drag: none; /* Safari */
+  -khtml-user-drag: none; /* Konqueror HTML */
+  -moz-user-drag: none; /* Firefox */
+  -o-user-drag: none; /* Opera */
+  user-drag: none; /* estándar */
+}
+
+
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="#"><i class="fa-solid fa-cash-register icon"></i></a>     
+    <a href="punto-acceso-a-inventario.htm"><i class="fa-solid fa-box icon"></i></a>
+    <a href="factura-pnto-del-dia.html"><i class="fa-solid fa-receipt icon"></i></a>
+    <a href="perfil.html"><i class="fa-solid fa-user icon"></i></a>
+  </header>
+
+  <main>
+    <!-- Left Section: Search and Invoice -->
+    <section class="left-section">
+      <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Buscar por EAN o UPC" autofocus>
+        <input type="text" id="searchByNameInput" placeholder="Buscar por nombre del producto">
+      </div>
+      <!-- Teclado numérico personalizado -->
+      <div id="numericKeyboard" class="numeric-keyboard">
+        <button class="numeric-btn" data-value="1">1</button>
+        <button class="numeric-btn" data-value="2">2</button>
+        <button class="numeric-btn" data-value="3">3</button>
+        <button class="numeric-btn" data-value="4">4</button>
+        <button class="numeric-btn" data-value="5">5</button>
+        <button class="numeric-btn" data-value="6">6</button>
+        <button class="numeric-btn" data-value="7">7</button>
+        <button class="numeric-btn" data-value="8">8</button>
+        <button class="numeric-btn" data-value="9">9</button>
+        <button class="numeric-btn" data-value="0">0</button>
+        <button class="numeric-btn" id="backspaceBtn">⌫</button>
+        <button class="numeric-btn" id="acceptBtn">Aceptar</button>
+      </div>
+      <div class="invoice" id="invoice">
+        <h3>Factura Actual</h3>
+        <div id="invoiceItems"></div>
+        <div class="total" id="invoiceTotal">Total: $0.00</div>
+      </div>
+      <button id="payButton" class="icon-btn btn"><i class="fa-solid fa-credit-card"></i> Facturar</button>
+    </section>
+
+    <!-- Right Section: Product List -->
+    <section class="right-section">
+      <h3>Todos los Productos</h3>
+      <div id="productList" class="products-list"></div>
+    </section>
+</main>
+
+<footer>
+    <a href="faturacion.html"><i class="fa-solid fa-cart-plus icon"></i></a>
+</footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    getDocs,
+    query,
+    where,
+    addDoc,
+    setDoc,
+    doc,
+  } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+    authDomain: "inventario-35d6b.firebaseapp.com",
+    projectId: "inventario-35d6b",
+    storageBucket: "inventario-35d6b.appspot.com",
+    messagingSenderId: "266100399659",
+    appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const searchInput = document.getElementById("searchInput");
+  const searchByNameInput = document.getElementById("searchByNameInput");
+  const productList = document.getElementById("productList");
+  const invoiceItems = document.getElementById("invoiceItems");
+  const invoiceTotal = document.getElementById("invoiceTotal");
+  const payButton = document.getElementById("payButton");
+  const numericKeyboard = document.getElementById("numericKeyboard");
+  const numericButtons = document.querySelectorAll(".numeric-btn");
+  const backspaceBtn = document.getElementById("backspaceBtn");
+  const acceptBtn = document.getElementById("acceptBtn");
+
+  let invoice = [];
+  let totalPrice = 0;
+
+  // Almacena la referencia al documento que contendrá el total
+  const totalRef = doc(db, "totals", "currentTotal"); // Cambia "totals" y "currentTotal" según tu estructura
+
+  // Función para actualizar el total en Firebase
+  const updateTotalInFirebase = async () => {
+    try {
+      await setDoc(totalRef, { total: totalPrice.toFixed(2) }); // Reemplaza el total
+    } catch (error) {
+      console.error("Error al actualizar el total en Firebase:", error);
+    }
+  };
+
+  searchInput.addEventListener("click", () => {
+    numericKeyboard.style.display = "grid";
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!searchInput.contains(e.target) && !numericKeyboard.contains(e.target)) {
+      numericKeyboard.style.display = "none";
+    }
+  });
+
+  numericButtons.forEach(button => {
+    button.addEventListener("click", () => {
+      if (button.id !== "backspaceBtn" && button.id !== "acceptBtn") {
+        searchInput.value += button.getAttribute("data-value");
+      }
+    });
+  });
+
+  backspaceBtn.addEventListener("click", () => {
+    searchInput.value = searchInput.value.slice(0, -1);
+  });
+
+  acceptBtn.addEventListener("click", () => {
+    renderProducts(searchInput.value, "");
+    numericKeyboard.style.display = "none";
+  });
+
+  const renderProducts = async (eanTerm = "", nameTerm = "") => {
+    try {
+      const businessesRef = collection(db, "businesses");
+      const businessesSnapshot = await getDocs(businessesRef);
+
+      productList.innerHTML = "";
+
+      if (businessesSnapshot.empty) {
+        productList.innerHTML = "<p>No hay productos disponibles.</p>";
+        return;
+      }
+
+      businessesSnapshot.forEach(async (businessDoc) => {
+        const productsRef = collection(db, "businesses", businessDoc.id, "products");
+        let productsQuery = query(productsRef);
+
+        if (eanTerm) {
+          productsQuery = query(productsRef, where("eanUpcCode", "==", eanTerm));
+        } else if (nameTerm) {
+          productsQuery = query(productsRef, where("name", ">=", nameTerm), where("name", "<=", nameTerm + '\uf8ff'));
+        }
+
+        const querySnapshot = await getDocs(productsQuery);
+        querySnapshot.forEach((doc) => {
+          const product = doc.data();
+          const productDiv = document.createElement("div");
+          productDiv.classList.add("product-item");
+          productDiv.innerHTML = `
+            <div>${product.name}</div>
+            <div>Precio: $${product.pricePerUnit}</div>
+            <div>Stock: ${product.quantity}</div>
+            <div>Código EAN/UPC: ${product.eanUpcCode}</div>
+          `;
+          productDiv.addEventListener("click", () => updateInvoice(product, businessDoc.id, doc.id));
+          productList.appendChild(productDiv);
+        });
+      });
+
+      if (eanTerm) addToInvoiceBySearch(eanTerm);
+    } catch (error) {
+      console.error("Error al obtener los productos:", error);
+    }
+  };
+
+  searchInput.addEventListener("input", (e) => {
+    if (e.target.value.trim() === "") {
+      productList.innerHTML = ""; // Limpia la lista de productos si el campo está vacío
+      return;
+    }
+    renderProducts(e.target.value, searchByNameInput.value);
+  });
+
+  searchByNameInput.addEventListener("input", (e) => {
+    if (e.target.value.trim() === "") {
+      productList.innerHTML = ""; // Limpia la lista de productos si el campo está vacío
+      return;
+    }
+    renderProducts(searchInput.value, e.target.value);
+  });
+
+  const addToInvoiceBySearch = (eanTerm) => {
+    const businessesRef = collection(db, "businesses");
+
+    getDocs(businessesRef).then((businessesSnapshot) => {
+      businessesSnapshot.forEach((businessDoc) => {
+        const productsRef = collection(db, "businesses", businessDoc.id, "products");
+        const productsQuery = query(productsRef, where("eanUpcCode", "==", eanTerm));
+
+        getDocs(productsQuery).then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {
+            const product = doc.data();
+            updateInvoice(product, businessDoc.id, doc.id);
+          });
+        });
+      });
+    });
+  };
+
+  const updateInvoice = (product, businessName, productId) => {
+    const existingProduct = invoice.find((item) => item.productId === productId);
+    if (existingProduct) {
+      existingProduct.quantity += 1;
+    } else {
+      invoice.push({ ...product, businessName, productId, quantity: 1 });
+    }
+
+    const profitPercentage = product.profitPercentage || 10; // Usar 10% si no está definido
+    const priceWithProfit = product.pricePerUnit * (1 + profitPercentage / 100);
+    totalPrice += priceWithProfit * 1.18; // Agregar IVA
+    renderInvoice();
+  };
+
+  const renderInvoice = () => {
+    invoiceItems.innerHTML = "";
+    totalPrice = 0;
+
+    invoice.forEach((item) => {
+      const profitPercentage = item.profitPercentage || 10; // Usar 10% si no está definido
+      const priceWithProfit = item.pricePerUnit * (1 + profitPercentage / 100);
+      const totalItemPrice = priceWithProfit * 1.18 * item.quantity;
+
+      const productDiv = document.createElement("div");
+      productDiv.classList.add("invoice-item");
+      productDiv.innerHTML = `
+        ${item.name} x ${item.quantity} - $${totalItemPrice.toFixed(2)}
+        <button class="remove-btn" onclick="removeProduct('${item.productId}')">Eliminar</button>
+      `;
+      invoiceItems.appendChild(productDiv);
+      totalPrice += totalItemPrice;
+    });
+
+    invoiceTotal.textContent = `Total: $${totalPrice.toFixed(2)}`;
+    updateTotalInFirebase(); // Actualiza el total en Firebase cada vez que se renderiza la factura
+  };
+
+  window.removeProduct = (productId) => {
+    const productIndex = invoice.findIndex((item) => item.productId === productId);
+    if (productIndex > -1) {
+      const profitPercentage = invoice[productIndex].profitPercentage || 10;
+      const priceWithProfit = invoice[productIndex].pricePerUnit * (1 + profitPercentage / 100);
+      totalPrice -= priceWithProfit * 1.18;
+      invoice[productIndex].quantity -= 1;
+      if (invoice[productIndex].quantity === 0) {
+        invoice.splice(productIndex, 1);
+      }
+      renderInvoice();
+    }
+  };
+
+  payButton.addEventListener("click", async () => {
+    if (invoice.length === 0) {
+      alert("No hay productos en la factura.");
+      return;
+    }
+
+    try {
+      const invoiceRef = collection(db, "invoices");
+      await addDoc(invoiceRef, {
+        items: invoice,
+        total: totalPrice.toFixed(2),
+        date: new Date(),
+      });
+
+      alert("Pago registrado exitosamente.");
+      invoice = [];
+      totalPrice = 0;
+      renderInvoice();
+
+      // Limpiar el total en Firebase al pagar
+      await setDoc(totalRef, { total: "0.00" }); // Establece el total a cero
+    } catch (error) {
+      console.error("Error al guardar la factura:", error);
+    }
+  });
+
+  // Enfocar automáticamente el campo de búsqueda EAN/UPC al cargar la página
+  window.onload = function() {
+    searchInput.focus();
+    searchInput.select(); // Selecciona el campo para que el teclado se abra
+  };
+
+  renderProducts();
+</script>
+
+<style>
+ .numeric-keyboard {
+    display: none;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 15px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    text-align: center;
+}
+
+.numeric-btn {
+    padding: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+    background: linear-gradient(145deg, #2c3e50, #222);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    box-shadow: 0 0 8px rgba(22, 224, 136);
+    transition: all 0.3s ease-in-out;
+}
+
+.numeric-btn:hover {
+    background: #16e086;
+    color: #000;
+    box-shadow: 0 0 15px rgba(22, 224, 134);
+    transform: scale(1.1);
+}
+
+/* Botón de borrar con el mismo tamaño que los números */
+#backspaceBtn {
+    background: #ff004c;
+    color: white;
+    box-shadow: 0 0 10px rgba(255, 0, 76, 0.6);
+}
+
+#backspaceBtn:hover {
+    background: #ff3366;
+    box-shadow: 0 0 20px rgba(255, 0, 76, 1); 
+    transform: scale(1.1);
+}
+
+/* Botón de aceptar alineado al centro y más abajo */
+.accept-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+#acceptBtn {
+    background: #15a086;
+    color: #fff;
+    font-size: 18px;
+    padding: 15px 50px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(21, 160, 135);
+}
+
+#acceptBtn:hover {
+    background: #16e086;
+    box-shadow: 0 0 20px rgba(22, 224, 134);
+    transform: scale(1.05);
+}
+
+
+</style>
+
+
+
+
+  <!-- BLOQUEO DE CLIC DERECHO, F12 ETC. -->
+
+  <script>
+        // Bloquear el clic derecho
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquear teclas específicas (F12, Ctrl+Shift+I, Ctrl+U)
+        document.addEventListener('keydown', function(e) {
+            // F12
+            if (e.key === "F12") {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+I (inspeccionar)
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+            }
+
+            // Ctrl+U (ver código fuente)
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+            }
+
+            // Ctrl+Shift+J (consola)
+            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                e.preventDefault();
+            }
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- LOGUIADOS -->
+
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+        authDomain: "inventario-35d6b.firebaseapp.com",
+        projectId: "inventario-35d6b",
+        storageBucket: "inventario-35d6b.appspot.com",
+        messagingSenderId: "266100399659",
+        appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Verifica si el usuario está autenticado
+    onAuthStateChanged(auth, user => {
+        if (!user) {
+            // Si el usuario no está autenticado, redirigir a index.html
+            window.location.href = "login-punto-de-venta.html";
+        } else {
+            // El usuario está autenticado, puedes mostrar contenido o permitir acceso a la página
+            console.log("Usuario autenticado:", user);
+        }
+    });
+</script>
+
+
+
+
+
+
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    query,
+    where,
+    getDocs,
+    doc,
+    getDoc,
+    addDoc,
+  } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+  // Configuración de Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+    authDomain: "inventario-35d6b.firebaseapp.com",
+    projectId: "inventario-35d6b",
+    storageBucket: "inventario-35d6b.appspot.com",
+    messagingSenderId: "266100399659",
+    appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+  };
+    
+  // Inicializar Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // Elementos del DOM
+  const invoiceItems = document.getElementById("invoiceItems");
+  const invoiceUser = document.getElementById("invoiceUser");
+
+  // Estado global
+  let currentUser = null;
+
+  // Escuchar cambios en la autenticación
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      // Usuario logueado
+      currentUser = user;
+      invoiceUser.textContent = `Usuario: ${user.email}`;
+
+      // Obtener y mostrar datos específicos del usuario
+      await getUserData(user.uid);
+    } else {
+      // Usuario no logueado
+      invoiceUser.textContent = "No has iniciado sesión";
+      invoiceItems.innerHTML = "<p>Inicia sesión para ver tus datos.</p>";
+    }
+  });
+
+  // Obtener datos del usuario actual
+  const getUserData = async (userId) => {
+    try {
+      // Consultar Firestore para obtener datos del usuario actual
+      const userDataRef = collection(db, "userData"); // Colección donde se almacenan los datos del usuario
+      const userQuery = query(userDataRef, where("userId", "==", userId)); // Filtrar por userId
+      const querySnapshot = await getDocs(userQuery);
+
+      if (!querySnapshot.empty) {
+        // Mostrar los datos del usuario
+        invoiceItems.innerHTML = ""; // Limpiar contenido anterior
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const itemDiv = document.createElement("div");
+          itemDiv.textContent = `Producto: ${data.productName}, Cantidad: ${data.quantity}, Precio: $${data.price}`;
+          invoiceItems.appendChild(itemDiv);
+        });
+      } else {
+        invoiceItems.innerHTML = "<p>No hay datos para mostrar.</p>";
+      }
+    } catch (error) {
+      console.error("Error al obtener datos del usuario:", error);
+    }
+  };
+
+  // Función para agregar datos al carrito (ejemplo)
+  const addToCart = async (productName, quantity, price) => {
+    if (!currentUser) {
+      alert("Debes iniciar sesión para agregar productos al carrito.");
+      return;
+    }
+
+    try {
+      // Guardar datos en Firestore asociados al usuario actual
+      await addDoc(collection(db, "userData"), {
+        userId: currentUser.uid, // Asociar el dato al usuario actual
+        productName,
+        quantity,
+        price,
+        timestamp: new Date(),
+      });
+
+      alert("Producto agregado al carrito.");
+      await getUserData(currentUser.uid); // Actualizar la vista con los nuevos datos
+    } catch (error) {
+      console.error("Error al agregar producto al carrito:", error);
+    }
+  };
+
+  // Ejemplo de uso: agregar un producto al carrito
+  // addToCart("Producto Ejemplo", 2, 100);
+  </script>
