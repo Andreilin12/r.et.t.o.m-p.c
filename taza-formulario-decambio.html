@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Actualizar Tasas de Cambio</title>
+  <style>
+    body {
+      font-family: "Arial", sans-serif;
+      background: linear-gradient(135deg, #2c3e50, #2c3e50);
+      color: #ecf0f1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: #34495e;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      text-align: center;
+    }
+    input {
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 5px;
+      width: 90%;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background: #15a086;
+      color: #ecf0f1;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #16e086;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Actualizar Tasas de Cambio</h1>
+    <input type="number" id="usdRate" placeholder="Precio del Dólar (USD)" step="0.01">
+    <input type="number" id="eurRate" placeholder="Precio del Euro (EUR)" step="0.01">
+    <button id="updateRates">Actualizar</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+      authDomain: "inventario-35d6b.firebaseapp.com",
+      projectId: "inventario-35d6b",
+      storageBucket: "inventario-35d6b.appspot.com",
+      messagingSenderId: "266100399659",
+      appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const usdRate = document.getElementById("usdRate");
+    const eurRate = document.getElementById("eurRate");
+    const updateRates = document.getElementById("updateRates");
+
+    updateRates.addEventListener("click", async () => {
+      const rates = {
+        usd: parseFloat(usdRate.value).toFixed(2),
+        eur: parseFloat(eurRate.value).toFixed(2),
+      };
+
+      if (isNaN(rates.usd) || isNaN(rates.eur)) {
+        alert("Ingrese valores válidos.");
+        return;
+      }
+
+      await setDoc(doc(db, "exchangeRates", "rates"), rates);
+      alert("Tasas de cambio actualizadas.");
+    });
+  </script>
+</body>
+</html>
