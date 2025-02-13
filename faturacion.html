@@ -565,3 +565,113 @@
   </script>
 </body>
 </html>
+
+
+
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    query,
+    where,
+    getDocs,
+    doc,
+    getDoc,
+    addDoc,
+  } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+  // Configuración de Firebase
+  const firebaseConfig = {
+    apiKey: "TU_API_KEY",
+    authDomain: "TU_AUTH_DOMAIN",
+    projectId: "TU_PROJECT_ID",
+    storageBucket: "TU_STORAGE_BUCKET",
+    messagingSenderId: "TU_MESSAGING_SENDER_ID",
+    appId: "TU_APP_ID",
+  };
+
+  // Inicializar Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // Elementos del DOM
+  const invoiceItems = document.getElementById("invoiceItems");
+  const invoiceUser = document.getElementById("invoiceUser");
+
+  // Estado global
+  let currentUser = null;
+
+  // Escuchar cambios en la autenticación
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      // Usuario logueado
+      currentUser = user;
+      invoiceUser.textContent = `Usuario: ${user.email}`;
+
+      // Obtener y mostrar datos específicos del usuario
+      await getUserData(user.uid);
+    } else {
+      // Usuario no logueado
+      invoiceUser.textContent = "No has iniciado sesión";
+      invoiceItems.innerHTML = "<p>Inicia sesión para ver tus datos.</p>";
+    }
+  });
+
+  // Obtener datos del usuario actual
+  const getUserData = async (userId) => {
+    try {
+      // Consultar Firestore para obtener datos del usuario actual
+      const userDataRef = collection(db, "userData"); // Colección donde se almacenan los datos del usuario
+      const userQuery = query(userDataRef, where("userId", "==", userId)); // Filtrar por userId
+      const querySnapshot = await getDocs(userQuery);
+
+      if (!querySnapshot.empty) {
+        // Mostrar los datos del usuario
+        invoiceItems.innerHTML = ""; // Limpiar contenido anterior
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const itemDiv = document.createElement("div");
+          itemDiv.textContent = `Producto: ${data.productName}, Cantidad: ${data.quantity}, Precio: $${data.price}`;
+          invoiceItems.appendChild(itemDiv);
+        });
+      } else {
+        invoiceItems.innerHTML = "<p>No hay datos para mostrar.</p>";
+      }
+    } catch (error) {
+      console.error("Error al obtener datos del usuario:", error);
+    }
+  };
+
+  // Función para agregar datos al carrito (ejemplo)
+  const addToCart = async (productName, quantity, price) => {
+    if (!currentUser) {
+      alert("Debes iniciar sesión para agregar productos al carrito.");
+      return;
+    }
+
+    try {
+      // Guardar datos en Firestore asociados al usuario actual
+      await addDoc(collection(db, "userData"), {
+        userId: currentUser.uid, // Asociar el dato al usuario actual
+        productName,
+        quantity,
+        price,
+        timestamp: new Date(),
+      });
+
+      alert("Producto agregado al carrito.");
+      await getUserData(currentUser.uid); // Actualizar la vista con los nuevos datos
+    } catch (error) {
+      console.error("Error al agregar producto al carrito:", error);
+    }
+  };
+
+  // Ejemplo de uso: agregar un producto al carrito
+  // addToCart("Producto Ejemplo", 2, 100);
+</script>
+
+
