@@ -12,7 +12,7 @@ body {
   background: linear-gradient(135deg, #2c3e50, #16e086, #2c3e50);
   color: #fff;
   margin: 0;
-  padding: 0; /* Asegúrate de que no haya margen */
+  padding: 0; /* Asegúrate de que no haya margen */ 
   display: flex;
   flex-direction: column;
   height: 100vh; /* Ocupa toda la altura de la ventana */
@@ -294,6 +294,8 @@ footer .icon:hover {
     addDoc,
     setDoc,
     doc,
+    updateDoc,
+    arrayUnion,
   } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
   import {
     getAuth,
@@ -349,6 +351,25 @@ footer .icon:hover {
       await setDoc(totalRef, { total: totalPrice.toFixed(2) });
     } catch (error) {
       console.error("Error al actualizar el total en Firebase:", error);
+    }
+  };
+
+  // Función para actualizar la colección totalApagarVentas en Firebase
+  const updateTotalApagarVentas = async (product) => {
+    if (!currentUser) return;
+
+    const totalApagarVentasRef = doc(db, "users", currentUser.uid, "totalApagarVentas", "currentVenta");
+    try {
+      await updateDoc(totalApagarVentasRef, {
+        productos: arrayUnion({
+          nombre: product.name,
+          precio: product.pricePerUnit,
+          cantidad: product.quantity,
+          total: totalPrice.toFixed(2),
+        }),
+      });
+    } catch (error) {
+      console.error("Error al actualizar totalApagarVentas en Firebase:", error);
     }
   };
 
@@ -471,6 +492,7 @@ footer .icon:hover {
     const priceWithProfit = product.pricePerUnit * (1 + profitPercentage / 100);
     totalPrice += priceWithProfit * 1.18; // Agregar IVA
     renderInvoice();
+    updateTotalApagarVentas(product); // Actualiza la colección totalApagarVentas en Firebase
   };
 
   const renderInvoice = () => {
@@ -547,6 +569,12 @@ footer .icon:hover {
 
   renderProducts(); 
 </script>
+
+
+
+
+
+
 <style>
  .numeric-keyboard {
     display: none;
@@ -620,5 +648,4 @@ footer .icon:hover {
 
 
 </style>
-
 
