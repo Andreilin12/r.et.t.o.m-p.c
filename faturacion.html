@@ -273,6 +273,7 @@
     updateDoc,
     addDoc,
     Timestamp,
+    where,
   } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 
@@ -323,7 +324,6 @@
   let discount = 0;
   let discountedTotal = 0;
 
-  // Obtener detalles del negocio desde Firebase
   const getBusinessDetails = async () => {
     const businessRef = doc(db, "businessDetails", "info");
     const businessDoc = await getDoc(businessRef);
@@ -334,7 +334,6 @@
     }
   };
 
-  // Obtener tasas de cambio desde Firebase
   const getExchangeRates = async () => {
     const ratesRef = doc(db, "exchangeRates", "rates");
     const ratesDoc = await getDoc(ratesRef);
@@ -344,7 +343,6 @@
     }
   };
 
-  // Obtener la factura más reciente del usuario autenticado
   const getLatestInvoice = async () => {
     if (!currentUser) return;
 
@@ -366,7 +364,6 @@
     }
   };
 
-  // Renderizar factura
   const renderInvoice = async () => {
     invoiceItems.innerHTML = "";
     modalInvoiceItems.innerHTML = "";
@@ -419,7 +416,6 @@
     modalUser.textContent = `Responsable de Servicio: ${currentUser.displayName || currentUser.email}`;
   };
 
-  // Procesar pago
   const processPayment = async (paymentTypeValue) => {
     try {
       if (!invoice) {
@@ -446,6 +442,15 @@
         }
       }
 
+      // Guardar la factura completa en el historial con fecha y hora
+      const invoiceHistoryRef = collection(db, "users", currentUser.uid, "invoiceHistory");
+      await addDoc(invoiceHistoryRef, {
+        ...invoice,
+        paymentType: paymentTypeValue,
+        user: currentUser.displayName || currentUser.email,
+        date: Timestamp.now(), // Fecha y hora exacta
+      });
+
       paymentType.textContent = `Pago realizado con ${paymentTypeValue}.`;
       printModal.style.display = "block";
       renderInvoice();
@@ -465,7 +470,6 @@
     }
   };
 
-  // Función para registrar el historial de ventas
   const recordSaleHistory = async (item, paymentTypeValue) => {
     try {
       const salesHistoryRef = collection(db, "users", currentUser.uid, "salesHistory");
@@ -483,7 +487,7 @@
           productName: item.name,
           quantitySold: item.quantity,
           paymentType: paymentTypeValue,
-          date: Timestamp.now(),
+          date: Timestamp.now(), // Fecha y hora exacta
         };
         await addDoc(salesHistoryRef, saleData);
       }
@@ -492,12 +496,10 @@
     }
   };
 
-  // Aplicar descuento
   const applyDiscount = async () => {
     passwordModal.style.display = "block";
   };
 
-  // Manejar la entrada de la contraseña
   submitPassword.addEventListener("click", async () => {
     const password = passwordInput.value;
     const discountRef = doc(db, "settings", "discount");
@@ -520,7 +522,6 @@
     }
   });
 
-  // Cerrar modales
   closePasswordModal.addEventListener("click", () => {
     passwordModal.style.display = "none";
     passwordError.style.display = "none";
@@ -530,7 +531,6 @@
     discountAppliedModal.style.display = "none";
   });
 
-  // Inicializar
   onAuthStateChanged(auth, (user) => {
     if (user) {
       currentUser = user;
@@ -561,6 +561,5 @@
   getBusinessDetails();
   getExchangeRates();
 </script>
-
 </body>
 </html>
