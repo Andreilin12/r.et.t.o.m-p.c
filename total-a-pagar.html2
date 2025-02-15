@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factura en Tiempo Real</title>
+    <style>
+        /* Estilos generales */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #2c3e50, #16213e);
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .total-display {
+            font-size: 4em; /* Tamaño de fuente grande */
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            width: 200px; /* Tamaño del logo */
+            height: 190px;
+            margin-bottom: 20px;
+            display: block; /* Asegura que el logo sea un bloque */
+            margin-left: auto; /* Centro horizontal */
+            margin-right: auto; /* Centro horizontal */
+        }
+    </style>
+</head>
+<body>
+
+<main>
+    <h1>Total a pagar</h1>
+    <img id="logo" class="logo" src="" alt="Logo" />
+    <div class="total-display" id="totalDisplay">Total: $0.00</div>
+</main>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+        authDomain: "inventario-35d6b.firebaseapp.com",
+        projectId: "inventario-35d6b",
+        storageBucket: "inventario-35d6b.appspot.com",
+        messagingSenderId: "266100399659",
+        appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    // Referencia al documento que contiene el total
+    const totalRef = doc(db, "totals", "currentTotal");
+
+    // Escuchar cambios en tiempo real
+    onSnapshot(totalRef, (doc) => {
+        if (doc.exists()) {
+            const data = doc.data();
+            document.getElementById('totalDisplay').textContent = `Total: $${data.total}`;
+        } else {
+            console.log("No hay datos en este documento.");
+        }
+    });
+
+    // Cargar el logo desde Firebase Storage
+    const loadLogo = async () => {
+        const logoRef = ref(storage, 'logo.png'); // Cambia 'logo.png' si usas otro nombre o path
+        try {
+            const url = await getDownloadURL(logoRef);
+            document.getElementById('logo').src = url;
+        } catch (error) {
+            console.error("Error al cargar el logo:", error);
+        }
+    };
+
+    loadLogo();
+</script>
+ 
+</body>
+</html>
