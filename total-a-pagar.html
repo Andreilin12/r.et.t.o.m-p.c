@@ -43,6 +43,27 @@
             margin-left: auto; /* Centro horizontal */
             margin-right: auto; /* Centro horizontal */
         }
+
+        .productos-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            width: 300px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .producto-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .producto-item p {
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
@@ -51,12 +72,17 @@
     <h1>Total a pagar</h1>
     <img id="logo" class="logo" src="" alt="Logo" />
     <div class="total-display" id="totalDisplay">Total: $0.00</div>
+    <div class="productos-container" id="productosContainer">
+        <h2>Productos seleccionados</h2>
+        <!-- Aquí se mostrarán los productos -->
+    </div>
 </main>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
     import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
     import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
@@ -70,19 +96,64 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const storage = getStorage(app);
+    const auth = getAuth(app);
 
-    // Referencia al documento que contiene el total
-    const totalRef = doc(db, "totals", "currentTotal");
+    let currentUser = null;
 
-    // Escuchar cambios en tiempo real
-    onSnapshot(totalRef, (doc) => {
-        if (doc.exists()) {
-            const data = doc.data();
-            document.getElementById('totalDisplay').textContent = `Total: $${data.total}`;
+    // Observador de autenticación
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            currentUser = user;
+            console.log("Usuario autenticado:", user.uid);
+            loadLogo();
+            listenToTotal();
+            listenToProducts();
         } else {
-            console.log("No hay datos en este documento.");
+            console.log("No hay usuario autenticado.");
         }
     });
+
+    // Escuchar cambios en el total
+    const listenToTotal = () => {
+        const totalRef = doc(db, "users", currentUser.uid, "totals", "currentTotal");
+        onSnapshot(totalRef, (doc) => {
+            if (doc.exists()) {
+                const data = doc.data();
+                document.getElementById('totalDisplay').textContent = `Total: $${data.total}`;
+            } else {
+                console.log("No hay datos en este documento.");
+            }
+        });
+    };
+
+    // Escuchar cambios en los productos seleccionados
+    const listenToProducts = () => {
+        const productosRef = doc(db, "users", currentUser.uid, "totalApagarVentas", "currentVenta");
+        onSnapshot(productosRef, (doc) => {
+            if (doc.exists()) {
+                const data = doc.data();
+                const productosContainer = document.getElementById('productosContainer');
+                productosContainer.innerHTML = "<h2>Productos seleccionados</h2>"; // Limpiar y agregar título
+
+                if (data.productos && data.productos.length > 0) {
+                    data.productos.forEach((producto) => {
+                        const productoItem = document.createElement('div');
+                        productoItem.classList.add('producto-item');
+                        productoItem.innerHTML = `
+                            <p><strong>Nombre:</strong> ${producto.nombre}</p>
+                            <p><strong>Cantidad:</strong> ${producto.cantidad}</p>
+                            <p><strong>Precio:</strong> $${producto.precio.toFixed(2)}</p>
+                        `;
+                        productosContainer.appendChild(productoItem);
+                    });
+                } else {
+                    productosContainer.innerHTML += "<p>No hay productos seleccionados.</p>";
+                }
+            } else {
+                console.log("No hay datos en este documento.");
+            }
+        });
+    };
 
     // Cargar el logo desde Firebase Storage
     const loadLogo = async () => {
@@ -94,8 +165,6 @@
             console.error("Error al cargar el logo:", error);
         }
     };
-
-    loadLogo();
 </script>
  
 </body>
