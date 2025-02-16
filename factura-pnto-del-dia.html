@@ -534,100 +534,311 @@
         });
 
         const itbis = subtotal * 0.18;
-        const additional = subtotal * 0.10;
-        const total = subtotal + itbis + additional - (subtotal * discount / 100);
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    query,
+    where,
+    getDocs,
+    Timestamp,
+    doc,
+    getDoc,
+    addDoc,
+    onSnapshot,
+    updateDoc,
+  } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 
-        modalSubtotal.textContent = `Subtotal: DOP $${subtotal.toFixed(2)}`;
-        modalItbis.textContent = `ITBIS (18%): DOP $${itbis.toFixed(2)}`;
-        modalAdditional.textContent = `Adicional (10%): DOP $${additional.toFixed(2)}`;
-        modalDiscount.textContent = discount > 0 ? `Descuento: DOP $${(subtotal * discount / 100).toFixed(2)}` : "Descuento: DOP $0.00";
-        modalTotal.textContent = `Total: DOP $${total.toFixed(2)}`;
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+    authDomain: "inventario-35d6b.firebaseapp.com",
+    projectId: "inventario-35d6b",
+    storageBucket: "inventario-35d6b.appspot.com",
+    messagingSenderId: "266100399659",
+    appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+  };
 
-        modal.style.display = "flex";
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  let currentUser = null;
+  let currentInvoiceId = null;
+
+  const showAlert = (message) => {
+    const alert = document.getElementById("customAlert");
+    alert.textContent = message;
+    alert.style.display = "block";
+    setTimeout(() => {
+      alert.style.display = "none";
+    }, 3000);
+  };
+
+  const getProductDiscount = async (businessName, productId) => {
+    const productRef = doc(db, "businesses", businessName, "productos", productId);
+    const productDoc = await getDoc(productRef);
+    if (productDoc.exists()) {
+      return productDoc.data().discount || 0;
+    }
+    return 0;
+  };
+
+  const formatDate = (timestamp) => {
+    const date = timestamp.toDate();
+    return date.toLocaleString("es-ES", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  };
+
+  const loadInvoiceHistory = async (filter = {}) => {
+    const invoiceBody = document.getElementById("invoiceBody");
+    invoiceBody.innerHTML = "";
+
+    if (!currentUser) return;
+
+    try {
+      const invoiceHistoryRef = collection(db, "users", currentUser.uid, "invoiceHistory");
+      let q = query(invoiceHistoryRef);
+
+      if (filter.user) {
+        q = query(invoiceHistoryRef, where("user", "==", filter.user));
       }
-    };
+      if (filter.date) {
+        const startDate = Timestamp.fromDate(new Date(filter.date));
+        const endDate = Timestamp.fromDate(new Date(filter.date + "T23:59:59"));
+        q = query(invoiceHistoryRef, where("date", ">=", startDate), where("date", "<=", endDate));
+      }
 
-    window.closeModal = () => {
-      const modal = document.getElementById("invoiceModal");
-      modal.style.display = "none";
-    };
+      const querySnapshot = await getDocs(q);
 
-    window.printInvoice = () => {
-      const printContent = document.querySelector(".modal-content").innerHTML;
-      const printWindow = window.open("", "", "width=300,height=600");
-      printWindow.document.write(`<html><head><title>Factura</title><style>@media print { body { margin: 0; padding: 0; } .modal-content { width: 80mm; padding: 10px; } .close-modal { display: none; } }</style></head><body>${printContent}</body></html>`);
-      printWindow.document.close();
-      printWindow.print();
-    };
+      if (!querySnapshot.empty) {
+        querySnapshot.forEach((doc) => {
+          const invoiceData = doc.data();
+          const row = document.createElement("tr");
 
-    window.openUserModal = async () => {
-      const userList = document.getElementById("userList");
-      userList.innerHTML = "";
+          const userCell = document.createElement("td");
+          userCell.textContent = invoiceData.user;
+          row.appendChild(userCell);
 
-      const usersRef = collection(db, "users");
-      const usersSnapshot = await getDocs(usersRef);
+          const dateCell = document.createElement("td");
+          dateCell.textContent = formatDate(invoiceData.date);
+          row.appendChild(dateCell);
 
-      if (!usersSnapshot.empty) {
-        usersSnapshot.forEach((doc) => {
-          const userData = doc.data();
-          if (userData.email !== currentUser.email) {
-            const userItem = document.createElement("div");
-            userItem.classList.add("user-item");
-            userItem.onclick = () => shareInvoice(doc.id);
+          const paymentCell = document.createElement("td");
+          paymentCell.textContent = invoiceData.paymentType;
+          row.appendChild(paymentCell);
 
-            const userImage = document.createElement("img");
-            userImage.src = userData.photoURL || "https://via.placeholder.com/40";
-            userImage.alt = userData.displayName;
+          const totalCell = document.createElement("td");
+          const total = invoiceData.items.reduce((sum, item) => sum + (item.quantity * item.pricePerUnit), 0).toFixed(2);
+          totalCell.textContent = `DOP $${total}`;
+          row.appendChild(totalCell);
 
-            const userName = document.createElement("span");
-            userName.textContent = userData.displayName || userData.email;
+          const detailsCell = document.createElement("td");
+          const button = document.createElement("button");
+          button.innerHTML = '<i class="fas fa-eye"></i>';
+          button.onclick = () => showDetails(doc.id);
+          detailsCell.appendChild(button);
+          row.appendChild(detailsCell);
 
-            userItem.appendChild(userImage);
-            userItem.appendChild(userName);
-            userList.appendChild(userItem);
-          }
+          invoiceBody.appendChild(row);
         });
       } else {
-        userList.innerHTML = "<p>No hay otros usuarios.</p>";
+        invoiceBody.innerHTML = `<tr><td colspan="5">No se encontraron facturas.</td></tr>`;
       }
+    } catch (error) {
+      console.error("Error al cargar el historial de facturas:", error);
+    }
+  };
 
-      const userModal = document.getElementById("userModal");
-      userModal.style.display = "flex";
-    };
+  window.searchByUser = () => {
+    const user = document.getElementById("searchUser").value.trim();
+    if (user) {
+      loadInvoiceHistory({ user });
+    } else {
+      alert("Por favor, ingrese un nombre de usuario.");
+    }
+  };
 
-    window.closeUserModal = () => {
-      const userModal = document.getElementById("userModal");
-      userModal.style.display = "none";
-    };
+  window.searchByDate = () => {
+    const date = document.getElementById("searchDate").value;
+    if (date) {
+      loadInvoiceHistory({ date });
+    } else {
+      alert("Por favor, seleccione una fecha.");
+    }
+  };
 
-    window.shareInvoice = async (recipientUid) => {
-      try {
-        const invoiceRef = doc(db, "users", currentUser.uid, "invoiceHistory", currentInvoiceId);
-        const invoiceDoc = await getDoc(invoiceRef);
+  window.clearSearch = () => {
+    document.getElementById("searchUser").value = "";
+    document.getElementById("searchDate").value = "";
+    loadInvoiceHistory();
+  };
 
-        if (invoiceDoc.exists()) {
-          const invoiceData = invoiceDoc.data();
-          const recipientInvoiceRef = collection(db, "users", recipientUid, "invoiceHistory");
-          await addDoc(recipientInvoiceRef, invoiceData);
-          alert("Factura compartida exitosamente.");
-          closeUserModal();
+  window.showDetails = async (invoiceId) => {
+    currentInvoiceId = invoiceId;
+    const invoiceRef = doc(db, "users", currentUser.uid, "invoiceHistory", invoiceId);
+    const invoiceDoc = await getDoc(invoiceRef);
+
+    if (invoiceDoc.exists()) {
+      const currentInvoice = invoiceDoc.data();
+      const modal = document.getElementById("invoiceModal");
+      const modalUser = document.getElementById("modalUser");
+      const modalDate = document.getElementById("modalDate");
+      const modalPaymentType = document.getElementById("modalPaymentType");
+      const modalItems = document.getElementById("modalItems");
+      const modalSubtotal = document.getElementById("modalSubtotal");
+      const modalItbis = document.getElementById("modalItbis");
+      const modalAdditional = document.getElementById("modalAdditional");
+      const modalDiscount = document.getElementById("modalDiscount");
+      const modalTotal = document.getElementById("modalTotal");
+
+      modalUser.textContent = `Usuario: ${currentInvoice.user}`;
+      modalDate.textContent = `Fecha: ${formatDate(currentInvoice.date)}`;
+      modalPaymentType.textContent = `Método de Pago: ${currentInvoice.paymentType}`;
+
+      modalItems.innerHTML = "";
+      let subtotal = 0;
+      let totalDiscount = 0;
+
+      for (const item of currentInvoice.items) {
+        const itemTotal = item.quantity * item.pricePerUnit;
+        const discount = await getProductDiscount(item.businessName, item.productId);
+        const itemDiscount = itemTotal * (discount / 100);
+        totalDiscount += itemDiscount;
+        subtotal += itemTotal - itemDiscount;
+
+        const itemDiv = document.createElement("p");
+        itemDiv.textContent = `${item.name} x ${item.quantity} - DOP $${itemTotal.toFixed(2)}`;
+        if (discount > 0) {
+          itemDiv.textContent += ` (Descuento: ${discount}%)`;
         }
-      } catch (error) {
-        console.error("Error al compartir la factura:", error);
-        alert("Hubo un error al compartir la factura.");
+        modalItems.appendChild(itemDiv);
       }
-    };
 
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        currentUser = user;
-        await getDiscount();
-        loadInvoiceHistory();
-      } else {
-        alert("Debe iniciar sesión para ver el historial de facturas.");
-        window.location.href = "login.html";
+      const itbis = subtotal * 0.18;
+      const additional = subtotal * 0.10;
+      const total = subtotal + itbis + additional;
+
+      modalSubtotal.textContent = `Subtotal: DOP $${subtotal.toFixed(2)}`;
+      modalItbis.textContent = `ITBIS (18%): DOP $${itbis.toFixed(2)}`;
+      modalAdditional.style.display = "none"; // Ocultar el adicional del 10%
+      modalDiscount.style.display = "none"; // Ocultar el descuento
+      modalTotal.textContent = `Total: DOP $${total.toFixed(2)}`;
+
+      modal.style.display = "flex";
+    }
+  };
+
+  window.closeModal = () => {
+    const modal = document.getElementById("invoiceModal");
+    modal.style.display = "none";
+  };
+
+  window.printInvoice = () => {
+    const printContent = document.querySelector(".modal-content").innerHTML;
+    const printWindow = window.open("", "", "width=300,height=600");
+    printWindow.document.write(`<html><head><title>Factura</title><style>@media print { body { margin: 0; padding: 0; } .modal-content { width: 80mm; padding: 10px; } .close-modal { display: none; } }</style></head><body>${printContent}</body></html>`);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  window.openUserModal = async () => {
+    const userList = document.getElementById("userList");
+    userList.innerHTML = "";
+
+    const usersRef = collection(db, "users");
+    const usersSnapshot = await getDocs(usersRef);
+
+    if (!usersSnapshot.empty) {
+      usersSnapshot.forEach((doc) => {
+        const userData = doc.data();
+        if (userData.email !== currentUser.email) {
+          const userItem = document.createElement("div");
+          userItem.classList.add("user-item");
+          userItem.onclick = () => shareInvoice(doc.id);
+
+          const userImage = document.createElement("img");
+          userImage.src = userData.photoURL || "https://via.placeholder.com/40";
+          userImage.alt = userData.displayName;
+
+          const userName = document.createElement("span");
+          userName.textContent = userData.displayName || userData.email;
+
+          userItem.appendChild(userImage);
+          userItem.appendChild(userName);
+          userList.appendChild(userItem);
+        }
+      });
+    } else {
+      userList.innerHTML = "<p>No hay otros usuarios.</p>";
+    }
+
+    const userModal = document.getElementById("userModal");
+    userModal.style.display = "flex";
+  };
+
+  window.closeUserModal = () => {
+    const userModal = document.getElementById("userModal");
+    userModal.style.display = "none";
+  };
+
+  window.shareInvoice = async (recipientUid) => {
+    try {
+      const invoiceRef = doc(db, "users", currentUser.uid, "invoiceHistory", currentInvoiceId);
+      const invoiceDoc = await getDoc(invoiceRef);
+
+      if (invoiceDoc.exists()) {
+        const invoiceData = invoiceDoc.data();
+        const recipientInvoiceRef = collection(db, "users", recipientUid, "invoiceHistory");
+        await addDoc(recipientInvoiceRef, { ...invoiceData, sharedBy: currentUser.uid, viewed: false });
+        showAlert("Factura compartida exitosamente.");
+        closeUserModal();
       }
-    });
-  </script>
+    } catch (error) {
+      console.error("Error al compartir la factura:", error);
+      showAlert("Hubo un error al compartir la factura.");
+    }
+  };
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUser = user;
+      loadInvoiceHistory();
+
+      // Escuchar nuevas facturas compartidas
+      const invoiceHistoryRef = collection(db, "users", currentUser.uid, "invoiceHistory");
+      onSnapshot(invoiceHistoryRef, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "added" && change.doc.data().sharedBy && !change.doc.data().viewed) {
+            // Mostrar notificación con sonido
+            const notificationSound = new Audio("notification.mp3");
+            notificationSound.play();
+
+            const notificationIcon = document.getElementById("notificationIcon");
+            notificationIcon.style.display = "inline-block";
+            notificationIcon.innerHTML = '<span class="red-dot"></span>';
+
+            // Marcar como vista al hacer clic
+            notificationIcon.onclick = async () => {
+              await updateDoc(doc(db, "users", currentUser.uid, "invoiceHistory", change.doc.id), { viewed: true });
+              notificationIcon.style.display = "none";
+              showDetails(change.doc.id);
+            };
+          }
+        });
+      });
+    } else {
+      alert("Debe iniciar sesión para ver el historial de facturas.");
+      window.location.href = "login.html";
+    }
+  });
+</script>
 </body>
 </html>
