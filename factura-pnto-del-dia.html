@@ -325,6 +325,72 @@
         transform: translateX(0);
       }
     }
+
+   .modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: #2c3e50;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #15a086;
+}
+
+
+
+
+
+/* Estilo para el icono de notificación */
+#notificationIcon {
+  display: none;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Punto rojo en el icono de notificación */
+.red-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background-color: red;
+  border-radius: 50%;
+}
+
+/* Estilo para las filas de facturas compartidas */
+tr.shared-invoice {
+  background-color: #15a086;
+  transition: background-color 0.5s ease;
+}
   </style>
 </head>
 <body>
@@ -391,7 +457,15 @@
   <div id="customAlert" class="custom-alert">
     Factura compartida exitosamente.
   </div>
-  <script type="module">
+  
+<div id="notificationModal" class="modal">
+  <div class="modal-content">
+    <p id="notificationMessage"></p>
+    <button id="notificationButton">Ver factura</button>
+  </div>
+</div>
+
+<script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
   import {
     getFirestore,
@@ -479,6 +553,14 @@
         querySnapshot.forEach((doc) => {
           const invoiceData = doc.data();
           const row = document.createElement("tr");
+
+          // Aplicar estilo si la factura fue compartida
+          if (invoiceData.sharedBy) {
+            row.style.backgroundColor = "#15a086"; // Color para facturas compartidas
+            setTimeout(() => {
+              row.style.backgroundColor = ""; // Quitar el color después de 30 segundos
+            }, 30000); // 30 segundos
+          }
 
           const userCell = document.createElement("td");
           userCell.textContent = invoiceData.user;
@@ -589,6 +671,18 @@
       modalDiscount.style.display = "none"; // Ocultar el descuento
       modalTotal.textContent = `Total: DOP $${total.toFixed(2)}`;
 
+      // Mostrar información de la factura compartida
+      if (currentInvoice.sharedBy) {
+        const sharedByUserRef = doc(db, "users", currentInvoice.sharedBy);
+        const sharedByUserDoc = await getDoc(sharedByUserRef);
+        if (sharedByUserDoc.exists()) {
+          const sharedByUser = sharedByUserDoc.data();
+          const sharedByInfo = document.createElement("p");
+          sharedByInfo.textContent = `Compartida por: ${sharedByUser.displayName || sharedByUser.email}`;
+          modalItems.appendChild(sharedByInfo);
+        }
+      }
+
       modal.style.display = "flex";
     }
   };
@@ -669,7 +763,7 @@
       currentUser = user;
       loadInvoiceHistory();
 
-      // Escuchar nuevas facturas compartidas
+      // Escuchar nuevas facturas compartidas en tiempo real
       const invoiceHistoryRef = collection(db, "users", currentUser.uid, "invoiceHistory");
       onSnapshot(invoiceHistoryRef, (snapshot) => {
         snapshot.docChanges().forEach((change) => {
