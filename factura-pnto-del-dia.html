@@ -901,7 +901,7 @@ tr.shared-invoice {
         snapshot.docChanges().forEach((change) => {
           if (change.type === "added" && change.doc.data().sharedBy && !change.doc.data().viewed) {
             // Mostrar notificación con sonido
-            const notificationSound = new Audio("notification.mp3");
+            const notificationSound = new Audio("https://firebasestorage.googleapis.com/v0/b/inventario-35d6b.appspot.com/o/SD_ALERT_32.mp3?alt=media&token=6c8d7b14-ca44-44ad-95de-8e533cd9e948");
             notificationSound.play();
 
             // Mostrar modal de alerta
