@@ -14,11 +14,25 @@
         h1 {
             color: #333;
         }
+        #notification {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e0e0e0;
+            border: 1px solid #ccc;
+            display: none;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
     <h1>Ejemplo de Notificaciones con FCM</h1>
+    <button id="request-permission">Solicitar Permiso de Notificación</button>
+    <div id="notification"></div>
 
     <!-- Importar Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
@@ -48,14 +62,22 @@
                 })
                 .then((token) => {
                     console.log('Token FCM:', token);
+                    // Aquí puedes enviar el token a tu servidor
                 })
                 .catch((error) => {
                     console.error('Error al obtener el token', error);
                 });
         }
 
-        // Llamar a la función para solicitar permiso al cargar la página
-        window.addEventListener('load', initFirebaseMessaging);
+        // Agregar evento al botón
+        document.getElementById('request-permission').addEventListener('click', initFirebaseMessaging);
+
+        // Manejar mensajes en primer plano
+        messaging.onMessage((payload) => {
+            console.log('Mensaje recibido. ', payload);
+            document.getElementById('notification').innerText = payload.notification.title;
+            document.getElementById('notification').style.display = 'block';
+        });
     </script>
 
 </body>
