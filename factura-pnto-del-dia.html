@@ -3,20 +3,380 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Facturas del Día</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <title>Historial de Facturas</title>
+  <!-- FontAwesome para iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* Estilos generales */
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #1a1a1a, #2c3e50);
+      color: #ecf0f1;
+    }
+
+    h1 {
+      text-align: center;
+      color: #00ffcc;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc;
+    }
+
+    /* Contenedor de búsqueda */
+    .search-container {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .search-container input {
+      padding: 10px;
+      font-size: 16px;
+      border: 2px solid #00ffcc;
+      border-radius: 5px;
+      background-color: rgba(0, 0, 0, 0.5);
+      color: #ecf0f1;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+
+    .search-container input:focus {
+      border-color: #00ccff;
+    }
+
+    .search-container button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      background-color: #00ffcc;
+      color: #1a1a1a;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .search-container button:hover {
+      background-color: #00ccff;
+      transform: scale(1.05);
+    }
+
+    /* Tabla de facturas */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background-color: rgba(0, 0, 0, 0.7);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #00ffcc;
+      color: #1a1a1a;
+      font-weight: bold;
+    }
+
+    tr:nth-child(even) {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    tr:hover {
+      background-color: rgba(0, 255, 204, 0.1);
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background-color: #1a1a1a;
+      padding: 20px;
+      width: 400px;
+      max-width: 90%;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+      color: #ecf0f1;
+      position: relative;
+    }
+
+    .modal-content h2 {
+      text-align: center;
+      font-size: 1.5em;
+      color: #00ffcc;
+      margin-bottom: 10px;
+    }
+
+    .modal-content p {
+      margin: 5px 0;
+    }
+
+    .modal-content hr {
+      border: 1px solid #00ffcc;
+      opacity: 0.2;
+    }
+
+    .modal-content .close-modal {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .modal-content .close-modal button {
+      padding: 5px 10px;
+      font-size: 14px;
+      background-color: #00ffcc;
+      color: #1a1a1a;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .modal-content .close-modal button:hover {
+      background-color: #00ccff;
+      transform: scale(1.05);
+    }
+
+    /* Botones de impresión y cierre */
+    .modal-content .close-modal button.print {
+      background-color: #00ccff;
+      margin-right: 10px;
+    }
+
+    .modal-content .close-modal button.print:hover {
+      background-color: #0099cc;
+    }
+
+    /* Efectos de hover en la tabla */
+    tr td button {
+      padding: 5px 10px;
+      font-size: 14px;
+      background-color: #00ffcc;
+      color: #1a1a1a;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    tr td button:hover {
+      background-color: #00ccff;
+      transform: scale(1.05);
+    }
+
+    /* Estilos para impresión */
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .modal-content {
+        width: 80mm; /* Tamaño de ticket */
+        padding: 10px;
+        border: none;
+        box-shadow: none;
+      }
+      .modal-content h2 {
+        font-size: 18px;
+      }
+      .modal-content p {
+        margin: 2px 0;
+      }
+      .modal-content .close-modal {
+        display: none; /* Oculta los botones al imprimir */
+      }
+    }
+
+    /* Iconos */
+    .icon-button {
+      background: none;
+      border: none;
+      color: #00ffcc;
+      cursor: pointer;
+      font-size: 1.2em;
+      transition: color 0.3s ease;
+    }
+
+    .icon-button:hover {
+      color: #00ccff;
+    }
+
+    /* Modal de selección de usuario */
+    .user-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .user-modal-content {
+      background-color: #1a1a1a;
+      padding: 20px;
+      width: 400px;
+      max-width: 90%;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+      color: #ecf0f1;
+      position: relative;
+    }
+
+    .user-modal-content h2 {
+      text-align: center;
+      font-size: 1.5em;
+      color: #00ffcc;
+      margin-bottom: 10px;
+    }
+
+    .user-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .user-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .user-item:hover {
+      background-color: rgba(0, 255, 204, 0.1);
+    }
+
+    .user-item img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    .user-item span {
+      font-size: 1.1em;
+    }
+
+    .close-user-modal {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .close-user-modal button {
+      padding: 5px 10px;
+      font-size: 14px;
+      background-color: #00ffcc;
+      color: #1a1a1a;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .close-user-modal button:hover {
+      background-color: #00ccff;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <h1>Historial de Facturas</h1>
+  <div class="search-container">
+    <input type="text" id="searchUser" placeholder="Buscar por nombre de usuario">
+    <input type="date" id="searchDate">
+    <button onclick="searchByUser()"><i class="fas fa-search"></i> Buscar por Usuario</button>
+    <button onclick="searchByDate()"><i class="fas fa-calendar"></i> Buscar por Fecha</button>
+    <button onclick="clearSearch()"><i class="fas fa-times"></i> Limpiar Búsqueda</button>
+  </div>
+  <table id="invoiceTable">
+    <thead>
+      <tr>
+        <th>Usuario</th>
+        <th>Fecha</th>
+        <th>Método de Pago</th>
+        <th>Total</th>
+        <th>Detalles</th>
+      </tr>
+    </thead>
+    <tbody id="invoiceBody">
+      <!-- Las filas se llenarán dinámicamente -->
+    </tbody>
+  </table>
+
+  <!-- Modal de detalles de factura -->
+  <div id="invoiceModal" class="modal">
+    <div class="modal-content">
+      <h2>Factura</h2>
+      <p id="modalUser"></p>
+      <p id="modalDate"></p>
+      <p id="modalPaymentType"></p>
+      <hr>
+      <div id="modalItems"></div>
+      <hr>
+      <p id="modalSubtotal"></p>
+      <p id="modalItbis"></p>
+      <p id="modalAdditional"></p>
+      <p id="modalDiscount"></p>
+      <p id="modalTotal"></p>
+      <div class="close-modal">
+        <button class="print" onclick="printInvoice()"><i class="fas fa-print"></i></button>
+        <button onclick="closeModal()"><i class="fas fa-times"></i></button>
+        <button onclick="openUserModal()"><i class="fas fa-share"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de selección de usuario -->
+  <div id="userModal" class="user-modal">
+    <div class="user-modal-content">
+      <h2>Compartir Factura</h2>
+      <div class="user-list" id="userList">
+        <!-- Los usuarios se llenarán dinámicamente -->
+      </div>
+      <div class="close-user-modal">
+        <button onclick="closeUserModal()"><i class="fas fa-times"></i> Cerrar</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
     import {
       getFirestore,
       collection,
       query,
+      where,
       getDocs,
       Timestamp,
-      where,
-      deleteDoc,
-      doc
+      doc,
+      getDoc,
+      addDoc,
     } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
@@ -29,305 +389,245 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
 
-    // Obtener el inicio del día actual
-    const getStartOfDay = () => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      return Timestamp.fromDate(today);
-    };
+    let currentUser = null;
+    let discount = 0;
+    let currentInvoiceId = null;
 
-    // Eliminar facturas mayores a 30 días
-    const deleteOldInvoices = async () => {
-      try {
-        const invoicesRef = collection(db, "invoices");
-        const now = Timestamp.now();
-        const snapshot = await getDocs(invoicesRef);
-        snapshot.forEach((docSnapshot) => {
-          const invoice = docSnapshot.data();
-          if (now.seconds - invoice.date.seconds > 30 * 24 * 60 * 60) {
-            deleteDoc(doc(db, "invoices", docSnapshot.id));
-          }
-        });
-      } catch (error) {
-        console.error("Error deleting old invoices:", error);
+    const getDiscount = async () => {
+      const discountRef = doc(db, "settings", "discount");
+      const discountDoc = await getDoc(discountRef);
+      if (discountDoc.exists()) {
+        discount = discountDoc.data().discount || 0;
+      } else {
+        discount = 0;
       }
     };
 
-    // Obtener las facturas del día actual
-    const getInvoicesToday = async () => {
-      try {
-        const invoicesRef = collection(db, "invoices");
-        const todayStart = getStartOfDay();
-        const q = query(invoicesRef, where("date", ">=", todayStart));
-        const querySnapshot = await getDocs(q);
-        let invoices = [];
-
-        querySnapshot.forEach((docSnapshot) => {
-          const invoice = docSnapshot.data();
-          const totalWithoutTax = invoice.items.reduce((acc, item) => acc + (item.quantity * item.pricePerUnit), 0);
-          const itbis = totalWithoutTax * 0.18; // ITBIS al 18%
-          const totalWithTax = totalWithoutTax + itbis;
-
-          invoices.push({
-            id: docSnapshot.id,
-            date: invoice.date.toDate(),
-            items: invoice.items,
-            totalWithoutTax: totalWithoutTax,
-            itbis: itbis,
-            totalWithTax: totalWithTax
-          });
-        });
-
-        renderInvoices(invoices);
-      } catch (error) {
-        console.error("Error fetching invoices:", error);
-      }
-    };
-
-    // Renderizar las facturas
-    const renderInvoices = (invoices) => {
-      const invoicesContainer = document.getElementById("invoicesContainer");
-      invoicesContainer.innerHTML = "";
-
-      if (invoices.length === 0) {
-        invoicesContainer.innerHTML = "<p>No hay facturas para hoy.</p>";
-      }
-
-      invoices.forEach(invoice => {
-        const invoiceDiv = document.createElement("div");
-        invoiceDiv.classList.add("invoice");
-        
-        const invoiceDate = new Date(invoice.date);
-        const invoiceDateString = `${invoiceDate.toLocaleDateString()} ${invoiceDate.toLocaleTimeString()}`;
-
-        invoiceDiv.innerHTML = `
-          <div class="invoice-header">
-            <h3>Factura #${invoice.id}</h3>
-            <span class="invoice-date">${invoiceDateString}</span>
-          </div>
-          <div class="invoice-details">
-            <table class="invoice-table">
-              <thead>
-                <tr>
-                  <th>Producto</th>
-                  <th>Cantidad</th>
-                  <th>Precio Unitario</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${invoice.items.map(item => `
-                  <tr>
-                    <td>${item.name}</td>
-                    <td>${item.quantity}</td>
-                    <td>$${item.pricePerUnit.toFixed(2)}</td>
-                    <td>$${(item.quantity * item.pricePerUnit).toFixed(2)}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-          <div class="invoice-summary">
-            <p><strong>Total sin ITBIS:</strong> $${invoice.totalWithoutTax.toFixed(2)}</p>
-            <p><strong>ITBIS (18%):</strong> $${invoice.itbis.toFixed(2)}</p>
-            <p><strong>Total con ITBIS:</strong> $${invoice.totalWithTax.toFixed(2)}</p>
-          </div>
-        `;
-
-        invoicesContainer.appendChild(invoiceDiv);
+    const formatDate = (timestamp) => {
+      const date = timestamp.toDate();
+      return date.toLocaleString("es-ES", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
       });
     };
 
-    window.onload = () => {
-      getInvoicesToday();
-      setInterval(deleteOldInvoices, 1000 * 60 * 60 * 24); // Ejecutar cada 24 horas
+    const loadInvoiceHistory = async (filter = {}) => {
+      const invoiceBody = document.getElementById("invoiceBody");
+      invoiceBody.innerHTML = "";
+
+      if (!currentUser) return;
+
+      try {
+        const invoiceHistoryRef = collection(db, "users", currentUser.uid, "invoiceHistory");
+        let q = query(invoiceHistoryRef);
+
+        if (filter.user) {
+          q = query(invoiceHistoryRef, where("user", "==", filter.user));
+        }
+        if (filter.date) {
+          const startDate = Timestamp.fromDate(new Date(filter.date));
+          const endDate = Timestamp.fromDate(new Date(filter.date + "T23:59:59"));
+          q = query(invoiceHistoryRef, where("date", ">=", startDate), where("date", "<=", endDate));
+        }
+
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          querySnapshot.forEach((doc) => {
+            const invoiceData = doc.data();
+            const row = document.createElement("tr");
+
+            const userCell = document.createElement("td");
+            userCell.textContent = invoiceData.user;
+            row.appendChild(userCell);
+
+            const dateCell = document.createElement("td");
+            dateCell.textContent = formatDate(invoiceData.date);
+            row.appendChild(dateCell);
+
+            const paymentCell = document.createElement("td");
+            paymentCell.textContent = invoiceData.paymentType;
+            row.appendChild(paymentCell);
+
+            const totalCell = document.createElement("td");
+            const total = invoiceData.items.reduce((sum, item) => sum + (item.quantity * item.pricePerUnit), 0).toFixed(2);
+            totalCell.textContent = `DOP $${total}`;
+            row.appendChild(totalCell);
+
+            const detailsCell = document.createElement("td");
+            const button = document.createElement("button");
+            button.innerHTML = '<i class="fas fa-eye"></i>';
+            button.onclick = () => showDetails(doc.id);
+            detailsCell.appendChild(button);
+            row.appendChild(detailsCell);
+
+            invoiceBody.appendChild(row);
+          });
+        } else {
+          invoiceBody.innerHTML = `<tr><td colspan="5">No se encontraron facturas.</td></tr>`;
+        }
+      } catch (error) {
+        console.error("Error al cargar el historial de facturas:", error);
+      }
     };
+
+    window.searchByUser = () => {
+      const user = document.getElementById("searchUser").value.trim();
+      if (user) {
+        loadInvoiceHistory({ user });
+      } else {
+        alert("Por favor, ingrese un nombre de usuario.");
+      }
+    };
+
+    window.searchByDate = () => {
+      const date = document.getElementById("searchDate").value;
+      if (date) {
+        loadInvoiceHistory({ date });
+      } else {
+        alert("Por favor, seleccione una fecha.");
+      }
+    };
+
+    window.clearSearch = () => {
+      document.getElementById("searchUser").value = "";
+      document.getElementById("searchDate").value = "";
+      loadInvoiceHistory();
+    };
+
+    window.showDetails = async (invoiceId) => {
+      currentInvoiceId = invoiceId;
+      const invoiceRef = doc(db, "users", currentUser.uid, "invoiceHistory", invoiceId);
+      const invoiceDoc = await getDoc(invoiceRef);
+
+      if (invoiceDoc.exists()) {
+        const currentInvoice = invoiceDoc.data();
+        const modal = document.getElementById("invoiceModal");
+        const modalUser = document.getElementById("modalUser");
+        const modalDate = document.getElementById("modalDate");
+        const modalPaymentType = document.getElementById("modalPaymentType");
+        const modalItems = document.getElementById("modalItems");
+        const modalSubtotal = document.getElementById("modalSubtotal");
+        const modalItbis = document.getElementById("modalItbis");
+        const modalAdditional = document.getElementById("modalAdditional");
+        const modalDiscount = document.getElementById("modalDiscount");
+        const modalTotal = document.getElementById("modalTotal");
+
+        modalUser.textContent = `Usuario: ${currentInvoice.user}`;
+        modalDate.textContent = `Fecha: ${formatDate(currentInvoice.date)}`;
+        modalPaymentType.textContent = `Método de Pago: ${currentInvoice.paymentType}`;
+
+        modalItems.innerHTML = "";
+        let subtotal = 0;
+        currentInvoice.items.forEach((item) => {
+          const itemTotal = item.quantity * item.pricePerUnit;
+          subtotal += itemTotal;
+          const itemDiv = document.createElement("p");
+          itemDiv.textContent = `${item.name} x ${item.quantity} - DOP $${itemTotal.toFixed(2)}`;
+          modalItems.appendChild(itemDiv);
+        });
+
+        const itbis = subtotal * 0.18;
+        const additional = subtotal * 0.10;
+        const total = subtotal + itbis + additional - (subtotal * discount / 100);
+
+        modalSubtotal.textContent = `Subtotal: DOP $${subtotal.toFixed(2)}`;
+        modalItbis.textContent = `ITBIS (18%): DOP $${itbis.toFixed(2)}`;
+        modalAdditional.textContent = `Adicional (10%): DOP $${additional.toFixed(2)}`;
+        modalDiscount.textContent = discount > 0 ? `Descuento: DOP $${(subtotal * discount / 100).toFixed(2)}` : "Descuento: DOP $0.00";
+        modalTotal.textContent = `Total: DOP $${total.toFixed(2)}`;
+
+        modal.style.display = "flex";
+      }
+    };
+
+    window.closeModal = () => {
+      const modal = document.getElementById("invoiceModal");
+      modal.style.display = "none";
+    };
+
+    window.printInvoice = () => {
+      const printContent = document.querySelector(".modal-content").innerHTML;
+      const printWindow = window.open("", "", "width=300,height=600");
+      printWindow.document.write(`<html><head><title>Factura</title><style>@media print { body { margin: 0; padding: 0; } .modal-content { width: 80mm; padding: 10px; } .close-modal { display: none; } }</style></head><body>${printContent}</body></html>`);
+      printWindow.document.close();
+      printWindow.print();
+    };
+
+    window.openUserModal = async () => {
+      const userList = document.getElementById("userList");
+      userList.innerHTML = "";
+
+      const usersRef = collection(db, "users");
+      const usersSnapshot = await getDocs(usersRef);
+
+      if (!usersSnapshot.empty) {
+        usersSnapshot.forEach((doc) => {
+          const userData = doc.data();
+          if (userData.email !== currentUser.email) {
+            const userItem = document.createElement("div");
+            userItem.classList.add("user-item");
+            userItem.onclick = () => shareInvoice(doc.id);
+
+            const userImage = document.createElement("img");
+            userImage.src = userData.photoURL || "https://via.placeholder.com/40";
+            userImage.alt = userData.displayName;
+
+            const userName = document.createElement("span");
+            userName.textContent = userData.displayName || userData.email;
+
+            userItem.appendChild(userImage);
+            userItem.appendChild(userName);
+            userList.appendChild(userItem);
+          }
+        });
+      } else {
+        userList.innerHTML = "<p>No hay otros usuarios.</p>";
+      }
+
+      const userModal = document.getElementById("userModal");
+      userModal.style.display = "flex";
+    };
+
+    window.closeUserModal = () => {
+      const userModal = document.getElementById("userModal");
+      userModal.style.display = "none";
+    };
+
+    window.shareInvoice = async (recipientUid) => {
+      try {
+        const invoiceRef = doc(db, "users", currentUser.uid, "invoiceHistory", currentInvoiceId);
+        const invoiceDoc = await getDoc(invoiceRef);
+
+        if (invoiceDoc.exists()) {
+          const invoiceData = invoiceDoc.data();
+          const recipientInvoiceRef = collection(db, "users", recipientUid, "invoiceHistory");
+          await addDoc(recipientInvoiceRef, invoiceData);
+          alert("Factura compartida exitosamente.");
+          closeUserModal();
+        }
+      } catch (error) {
+        console.error("Error al compartir la factura:", error);
+        alert("Hubo un error al compartir la factura.");
+      }
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        await getDiscount();
+        loadInvoiceHistory();
+      } else {
+        alert("Debe iniciar sesión para ver el historial de facturas.");
+        window.location.href = "login.html";
+      }
+    });
   </script>
-
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background-color: #2c3e50;
-      color: #fff;
-      margin: 0;
-      padding: 0;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px 0;
-      border-bottom: 2px solid #fff;
-    }
-
-    .header h1 {
-      font-size: 2rem;
-      color: #15a086;
-    }
-
-    .invoice-button {
-      background-color: #15a086;
-      padding: 10px 20px;
-      font-size: 1.2rem;
-      border: none;
-      border-radius: 5px;
-      color: #121212;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .invoice-button:hover {
-      background-color: #16e086;
-    }
-
-    .invoice {
-      background-color: #273645;
-      padding: 20px;
-      margin: 15px 0;
-      border-radius: 10px;
-      box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .invoice-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #fff;
-      padding-bottom: 10px;
-    }
-
-    .invoice-header h3 {
-      font-size: 1.5rem;
-      color: #15a086;
-    }
-
-    .invoice-header .invoice-date {
-      font-size: 1rem;
-      color: #16e086;
-    }
-
-    .invoice-details {
-      margin-top: 20px;
-    }
-
-    .invoice-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .invoice-table th, .invoice-table td {
-      padding: 10px;
-      text-align: left;
-      border-bottom: 1px solid #fff;
-    }
-
-    .invoice-table th {
-      background-color: #15a086;
-    }
-
-    .invoice-summary {
-      margin-top: 20px;
-      font-size: 1.2rem;
-    }
-
-    .invoice-summary p {
-      margin: 5px 0;
-    }
-
-    #invoicesContainer {
-      margin-top: 20px;
-    }
-
-
-/* Estilo de impresión */
-    @media print {
-      /* Ocultar los botones y otros elementos que no deben aparecer en la impresión */
-      .invoice-button {
-        display: none;
-      }
-
-      /* Ajustes para la apariencia de la página de impresión */
-      body {
-        background-color: white;
-        color: black;
-      }
-
-      .container {
-        padding: 10px;
-        max-width: 100%;
-      }
-
-      .invoice {
-        border: 1px solid #ccc;
-        padding: 10px;
-      }
-
-      .invoice-header h3 {
-        color: black;
-      }
-
-      .invoice-table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-
-      .invoice-table th, .invoice-table td {
-        padding: 5px;
-        border: 1px solid #ccc;
-        text-align: left;
-      }
-
-      .invoice-table th {
-        background-color: #f4f4f4;
-      }
-
-      .invoice-summary {
-        font-size: 1.1rem;
-      }
-    }
-
-  /* Estilo del icono dentro del botón */
-  .invoice-button i {
-    font-size: 1.8rem; /* Tamaño más grande para el icono */
-    transition: transform 0.3s ease; /* Efecto en el icono */
-    color: #f4f4f4;
-  }
-
-  /* Efecto sobre el icono cuando se pasa el mouse */
-  .invoice-button:hover i {
-    transform: rotate(180deg); /* Hace rotar el icono */
-  }
-
-  /* Opcional: Estilo para la fuente del texto */
-  .invoice-button span {
-    font-size: 1.1rem;
-    margin-left: 10px; /* Espacio entre icono y texto */
-  }
-  </style>
-
-  </style>
-</head>
-<body>
-
-  <div class="container">
-    <div class="header">
-      <h1>Facturas del Día</h1>
-        <button class="invoice-button" onclick="window.print()">
-           <i class="fas fa-print"></i>
-             </button>
-
-    </div>
-
-    <div id="invoicesContainer"></div>
-  </div>
-
 </body>
 </html>
