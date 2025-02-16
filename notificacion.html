@@ -30,7 +30,7 @@
 </head>
 <body>
 
-    <h1>Ejemplo de Notificaciones con FCM</h1>
+    <h1>FCM</h1>
     <button id="request-permission">Solicitar Permiso de Notificación</button>
     <div id="notification"></div>
 
@@ -42,18 +42,18 @@
         // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
-      authDomain: "inventario-35d6b.firebaseapp.com",
-      projectId: "inventario-35d6b",
-      storageBucket: "inventario-35d6b.appspot.com",
-      messagingSenderId: "266100399659",
-      appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
-    };
+            authDomain: "inventario-35d6b.firebaseapp.com",
+            projectId: "inventario-35d6b",
+            storageBucket: "inventario-35d6b.appspot.com",
+            messagingSenderId: "266100399659",
+            appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+        };
 
         // Inicializar Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const messaging = firebase.messaging();
 
-        // Solicitar permiso y obtener el token
+        // Función para solicitar permiso y obtener el token
         function initFirebaseMessaging() {
             messaging.requestPermission()
                 .then(() => {
