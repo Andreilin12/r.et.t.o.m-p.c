@@ -1,1 +1,935 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historial de Facturas</title>
+  <!-- FontAwesome para iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* Estilos generales */
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #2c3e50, #2c3e50);
+      color: #ecf0f1;
+    }
 
+    h1 {
+      text-align: center;
+      color: #fff;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+    }
+
+    /* Contenedor de búsqueda */
+    .search-container {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .search-container input {
+      padding: 10px;
+      font-size: 16px;
+      border: 2px solid #15a086;
+      border-radius: 5px;
+      background-color: rgba(0, 0, 0, 0.5);
+      color: #ecf0f1;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+
+    .search-container input:focus {
+      border-color: #16e086;
+    }
+
+    .search-container button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      background-color: #15a086;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .search-container button:hover {
+      background-color: #16e086;
+      transform: scale(1.05);
+    }
+
+    /* Tabla de facturas */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background-color: rgba(0, 0, 0, 0.7);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #15a086;
+      color: #ff;
+      font-weight: bold;
+    }
+
+    tr:nth-child(even) {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    tr:hover {
+      background-color: rgba(0, 255, 204, 0.1);
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background-color: #1a1a1a;
+      padding: 20px;
+      width: 400px;
+      max-width: 90%;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+      color: #ecf0f1;
+      position: relative;
+    }
+
+    .modal-content h2 {
+      text-align: center;
+      font-size: 1.5em;
+      color: #15a086;
+      margin-bottom: 10px;
+    }
+
+    .modal-content p {
+      margin: 5px 0;
+    }
+
+    .modal-content hr {
+      border: 1px solid #00ffcc;
+      opacity: 0.2;
+    }
+
+    .modal-content .close-modal {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .modal-content .close-modal button {
+      padding: 5px 10px;
+      font-size: 14px;
+      background-color: #15a086;
+      color: #1a1a1a;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .modal-content .close-modal button:hover {
+      background-color: #16e086;
+      transform: scale(1.05);
+    }
+
+    /* Botones de impresión y cierre */
+    .modal-content .close-modal button.print {
+      background-color: #15a086;
+      margin-right: 10px;
+    }
+
+    .modal-content .close-modal button.print:hover {
+      background-color: #16e086;
+    }
+
+    /* Efectos de hover en la tabla */
+    tr td button {
+      padding: 5px 10px;
+      font-size: 14px;
+      background-color: #15a086;
+      color: #1a1a1a;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    tr td button:hover {
+      background-color: #16e086;
+      transform: scale(1.05);
+    }
+
+    /* Estilos para impresión */
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .modal-content {
+        width: 80mm; /* Tamaño de ticket */
+        padding: 10px;
+        border: none;
+        box-shadow: none;
+      }
+      .modal-content h2 {
+        font-size: 18px;
+      }
+      .modal-content p {
+        margin: 2px 0;
+      }
+      .modal-content .close-modal {
+        display: none; /* Oculta los botones al imprimir */
+      }
+    }
+
+    /* Iconos */
+    .icon-button {
+      background: none;
+      border: none;
+      color: #00ffcc;
+      cursor: pointer;
+      font-size: 1.2em;
+      transition: color 0.3s ease;
+    }
+
+    .icon-button:hover {
+      color: #16e086;
+    }
+
+    /* Modal de selección de usuario */
+    .user-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .user-modal-content {
+      background-color: #2c3e50;
+      padding: 20px;
+      width: 400px;
+      max-width: 90%;
+      border-radius: 10px;
+      color: #fff;
+      position: relative;
+    }
+
+    .user-modal-content h2 {
+      text-align: center;
+      font-size: 1.5em;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .user-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .user-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .user-item:hover {
+      background-color: rgba(21, 160, 134);
+    }
+
+    .user-item img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    .user-item span {
+      font-size: 1.1em;
+    }
+
+    .close-user-modal {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .close-user-modal button {
+      padding: 5px 10px;
+      font-size: 14px;
+      background-color: #15a086;
+      color: #1a1a1a;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .close-user-modal button:hover {
+      background-color: #16e086;
+      transform: scale(1.05);
+    }
+
+    /* Alerta elegante */
+    .custom-alert {
+      display: none;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #00cc88;
+      color: #1a1a1a;
+      padding: 15px 25px;
+      border-radius: 5px;
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+      z-index: 1000;
+      animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+      }
+      to {
+        transform: translateX(0);
+      }
+    }
+
+   .modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: #2c3e50;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #15a086;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #16e086;
+}
+
+
+
+
+
+/* Estilo para el icono de notificación */
+#notificationIcon {
+  display: none;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Punto rojo en el icono de notificación */
+.red-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background-color: red;
+  border-radius: 50%;
+}
+
+/* Estilo para las filas de facturas compartidas */
+tr.shared-invoice {
+  background-color: #16e086;
+  transition: background-color 0.5s ease;
+}
+
+/* Estilo para el botón de notificación flotante */
+#notificationButton {
+  display: none;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #15a086;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+/* Contador de notificaciones */
+#notificationCount {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  padding: 5px;
+  font-size: 12px;
+}
+
+/* Estilo para el modal de alerta */
+#alertModal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #2c3e50;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1001;
+}
+
+/* Botón para cerrar el modal de alerta */
+/* Estilo para el botón de notificación flotante */
+#notificationButton {
+  display: none;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #16e086;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+/* Contador de notificaciones */
+#notificationCount {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  padding: 5px;
+  font-size: 12px;
+}
+
+/* Estilo para el modal de alerta */
+#alertModal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #2c3e50;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1001;
+}
+
+/* Botón para cerrar el modal de alerta */
+#closeAlertModal {
+  margin-top: 10px;
+  padding: 5px 10px;
+  background-color: #15a086;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+  </style>
+</head>
+<body>
+  <h1>FACTURAS</h1>
+  <div class="search-container">
+    <input type="text" id="searchUser" placeholder="Buscar por nombre de usuario">
+    <input type="date" id="searchDate">
+    <button onclick="searchByUser()"><i class="fas fa-search"></i> Buscar por Usuario</button>
+    <button onclick="searchByDate()"><i class="fas fa-calendar"></i> Buscar por Fecha</button>
+    <button onclick="clearSearch()"><i class="fas fa-times"></i> Limpiar Búsqueda</button>
+  </div>
+  <table id="invoiceTable">
+    <thead>
+      <tr>
+        <th>Usuario</th>
+        <th>Fecha</th>
+        <th>Método de Pago</th>
+        <th>Total</th>
+        <th>Detalles</th>
+      </tr>
+    </thead>
+    <tbody id="invoiceBody">
+      <!-- Las filas se llenarán dinámicamente -->
+    </tbody>
+  </table>
+
+  <!-- Modal de detalles de factura -->
+  <div id="invoiceModal" class="modal">
+    <div class="modal-content">
+      <h2>Factura</h2>
+      <p id="modalUser"></p>
+      <p id="modalDate"></p>
+      <p id="modalPaymentType"></p>
+      <hr>
+      <div id="modalItems"></div>
+      <hr>
+      <p id="modalSubtotal"></p>
+      <p id="modalItbis"></p>
+      <p id="modalAdditional"></p>
+      <p id="modalDiscount"></p>
+      <p id="modalTotal"></p>
+      <div class="close-modal">
+        <button class="print" onclick="printInvoice()"><i class="fas fa-print"></i></button>
+        <button onclick="closeModal()"><i class="fas fa-times"></i></button>
+        <button onclick="openUserModal()"><i class="fas fa-share"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de selección de usuario -->
+  <div id="userModal" class="user-modal">
+    <div class="user-modal-content">
+      <h2>Compartir Factura</h2>
+      <div class="user-list" id="userList">
+        <!-- Los usuarios se llenarán dinámicamente -->
+      </div>
+      <div class="close-user-modal">
+        <button onclick="closeUserModal()"><i class="fas fa-times"></i> Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerta elegante -->
+  <div id="customAlert" class="custom-alert">
+    Factura compartida exitosamente.
+  </div>
+  
+  <!-- Botón flotante de notificaciones -->
+<button id="notificationButton">
+  <i class="fas fa-bell"></i>
+  <span id="notificationCount"></span>
+</button>
+
+<!-- Modal de alerta -->
+<div id="alertModal">
+  <p id="alertMessage"></p>
+  <button id="closeAlertModal" onclick="closeAlertModal()">Cerrar</button>
+</div>
+
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    query,
+    where,
+    getDocs,
+    Timestamp,
+    doc,
+    getDoc,
+    addDoc,
+    onSnapshot,
+    updateDoc,
+  } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+    authDomain: "inventario-35d6b.firebaseapp.com",
+    projectId: "inventario-35d6b",
+    storageBucket: "inventario-35d6b.appspot.com",
+    messagingSenderId: "266100399659",
+    appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  let currentUser = null;
+  let currentInvoiceId = null;
+  let unreadInvoicesCount = 0; // Contador de facturas sin leer
+
+  const showAlert = (message) => {
+    const alert = document.getElementById("customAlert");
+    alert.textContent = message;
+    alert.style.display = "block";
+    setTimeout(() => {
+      alert.style.display = "none";
+    }, 3000);
+  };
+
+  const getProductDiscount = async (businessName, productId) => {
+    const productRef = doc(db, "businesses", businessName, "productos", productId);
+    const productDoc = await getDoc(productRef);
+    if (productDoc.exists()) {
+      return productDoc.data().discount || 0;
+    }
+    return 0;
+  };
+
+  const formatDate = (timestamp) => {
+    const date = timestamp.toDate();
+    return date.toLocaleString("es-ES", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  };
+
+  const loadInvoiceHistory = async (filter = {}) => {
+    const invoiceBody = document.getElementById("invoiceBody");
+    invoiceBody.innerHTML = "";
+
+    if (!currentUser) return;
+
+    try {
+      const invoiceHistoryRef = collection(db, "users", currentUser.uid, "invoiceHistory");
+      let q = query(invoiceHistoryRef);
+
+      if (filter.user) {
+        q = query(invoiceHistoryRef, where("user", "==", filter.user));
+      }
+      if (filter.date) {
+        const startDate = Timestamp.fromDate(new Date(filter.date));
+        const endDate = Timestamp.fromDate(new Date(filter.date + "T23:59:59"));
+        q = query(invoiceHistoryRef, where("date", ">=", startDate), where("date", "<=", endDate));
+      }
+
+      // Filtrar solo facturas del día actual
+      const today = new Date();
+      const startOfDay = Timestamp.fromDate(new Date(today.setHours(0, 0, 0, 0)));
+      const endOfDay = Timestamp.fromDate(new Date(today.setHours(23, 59, 59, 999)));
+      q = query(invoiceHistoryRef, where("date", ">=", startOfDay), where("date", "<=", endOfDay));
+
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        querySnapshot.forEach((doc) => {
+          const invoiceData = doc.data();
+          const row = document.createElement("tr");
+
+          // Aplicar estilo si la factura fue compartida y no ha sido vista
+          if (invoiceData.sharedBy && !invoiceData.viewed) {
+            row.style.backgroundColor = "#15a086"; // Color para facturas compartidas no leídas
+          }
+
+          const userCell = document.createElement("td");
+          userCell.textContent = invoiceData.user;
+          row.appendChild(userCell);
+
+          const dateCell = document.createElement("td");
+          dateCell.textContent = formatDate(invoiceData.date);
+          row.appendChild(dateCell);
+
+          const paymentCell = document.createElement("td");
+          paymentCell.textContent = invoiceData.paymentType;
+          row.appendChild(paymentCell);
+
+          const totalCell = document.createElement("td");
+          const total = invoiceData.items.reduce((sum, item) => sum + (item.quantity * item.pricePerUnit), 0).toFixed(2);
+          totalCell.textContent = `DOP $${total}`;
+          row.appendChild(totalCell);
+
+          const detailsCell = document.createElement("td");
+          const button = document.createElement("button");
+          button.innerHTML = '<i class="fas fa-eye"></i>';
+          button.onclick = () => showDetails(doc.id);
+          detailsCell.appendChild(button);
+          row.appendChild(detailsCell);
+
+          invoiceBody.appendChild(row);
+        });
+      } else {
+        invoiceBody.innerHTML = `<tr><td colspan="5">No se encontraron facturas para el día actual.</td></tr>`;
+      }
+    } catch (error) {
+      console.error("Error al cargar el historial de facturas:", error);
+    }
+  };
+
+  window.searchByUser = () => {
+    const user = document.getElementById("searchUser").value.trim();
+    if (user) {
+      loadInvoiceHistory({ user });
+    } else {
+      alert("Por favor, ingrese un nombre de usuario.");
+    }
+  };
+
+  window.searchByDate = () => {
+    const date = document.getElementById("searchDate").value;
+    if (date) {
+      loadInvoiceHistory({ date });
+    } else {
+      alert("Por favor, seleccione una fecha.");
+    }
+  };
+
+  window.clearSearch = () => {
+    document.getElementById("searchUser").value = "";
+    document.getElementById("searchDate").value = "";
+    loadInvoiceHistory();
+  };
+
+  window.showDetails = async (invoiceId) => {
+    currentInvoiceId = invoiceId;
+    const invoiceRef = doc(db, "users", currentUser.uid, "invoiceHistory", invoiceId);
+    const invoiceDoc = await getDoc(invoiceRef);
+
+    if (invoiceDoc.exists()) {
+      const currentInvoice = invoiceDoc.data();
+      const modal = document.getElementById("invoiceModal");
+      const modalUser = document.getElementById("modalUser");
+      const modalDate = document.getElementById("modalDate");
+      const modalPaymentType = document.getElementById("modalPaymentType");
+      const modalItems = document.getElementById("modalItems");
+      const modalSubtotal = document.getElementById("modalSubtotal");
+      const modalItbis = document.getElementById("modalItbis");
+      const modalAdditional = document.getElementById("modalAdditional");
+      const modalDiscount = document.getElementById("modalDiscount");
+      const modalTotal = document.getElementById("modalTotal");
+
+      modalUser.textContent = `Usuario: ${currentInvoice.user}`;
+      modalDate.textContent = `Fecha: ${formatDate(currentInvoice.date)}`;
+      modalPaymentType.textContent = `Método de Pago: ${currentInvoice.paymentType}`;
+
+      modalItems.innerHTML = "";
+      let subtotal = 0;
+      let totalDiscount = 0;
+
+      for (const item of currentInvoice.items) {
+        const itemTotal = item.quantity * item.pricePerUnit;
+        const discount = await getProductDiscount(item.businessName, item.productId);
+        const itemDiscount = itemTotal * (discount / 100);
+        totalDiscount += itemDiscount;
+        subtotal += itemTotal - itemDiscount;
+
+        const itemDiv = document.createElement("p");
+        itemDiv.textContent = `${item.name} x ${item.quantity} - DOP $${itemTotal.toFixed(2)}`;
+        if (discount > 0) {
+          itemDiv.textContent += ` (Descuento: ${discount}%)`;
+        }
+        modalItems.appendChild(itemDiv);
+      }
+
+      const itbis = subtotal * 0.18;
+      const additional = subtotal * 0.10;
+      const total = subtotal + itbis + additional;
+
+      modalSubtotal.textContent = `Subtotal: DOP $${subtotal.toFixed(2)}`;
+      modalItbis.textContent = `ITBIS (18%): DOP $${itbis.toFixed(2)}`;
+      modalAdditional.style.display = "none"; // Ocultar el adicional del 10%
+      modalDiscount.style.display = "none"; // Ocultar el descuento
+      modalTotal.textContent = `Total: DOP $${total.toFixed(2)}`;
+
+      // Mostrar información de la factura compartida
+      if (currentInvoice.sharedBy) {
+        const sharedByUserRef = doc(db, "users", currentInvoice.sharedBy);
+        const sharedByUserDoc = await getDoc(sharedByUserRef);
+        if (sharedByUserDoc.exists()) {
+          const sharedByUser = sharedByUserDoc.data();
+          const sharedByInfo = document.createElement("p");
+          sharedByInfo.textContent = `Compartida por: ${sharedByUser.displayName || sharedByUser.email}`;
+          modalItems.appendChild(sharedByInfo);
+        }
+      }
+
+      modal.style.display = "flex";
+
+      // Marcar la factura como vista
+      if (currentInvoice.sharedBy && !currentInvoice.viewed) {
+        await updateDoc(invoiceRef, { viewed: true });
+        loadInvoiceHistory(); // Recargar el historial para actualizar los estilos
+        updateUnreadCount(); // Actualizar el contador de facturas sin leer
+      }
+    }
+  };
+
+  window.closeModal = () => {
+    const modal = document.getElementById("invoiceModal");
+    modal.style.display = "none";
+  };
+
+  window.printInvoice = () => {
+    const printContent = document.querySelector(".modal-content").innerHTML;
+    const printWindow = window.open("", "", "width=300,height=600");
+    printWindow.document.write(`<html><head><title>Factura</title><style>@media print { body { margin: 0; padding: 0; } .modal-content { width: 80mm; padding: 10px; } .close-modal { display: none; } }</style></head><body>${printContent}</body></html>`);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  window.openUserModal = async () => {
+    const userList = document.getElementById("userList");
+    userList.innerHTML = "";
+
+    const usersRef = collection(db, "users");
+    const usersSnapshot = await getDocs(usersRef);
+
+    if (!usersSnapshot.empty) {
+      usersSnapshot.forEach((doc) => {
+        const userData = doc.data();
+        if (userData.email !== currentUser.email) {
+          const userItem = document.createElement("div");
+          userItem.classList.add("user-item");
+          userItem.onclick = () => shareInvoice(doc.id);
+
+          const userImage = document.createElement("img");
+          userImage.src = userData.photoURL || "https://via.placeholder.com/40";
+          userImage.alt = userData.displayName;
+
+          const userName = document.createElement("span");
+          userName.textContent = userData.displayName || userData.email;
+
+          userItem.appendChild(userImage);
+          userItem.appendChild(userName);
+          userList.appendChild(userItem);
+        }
+      });
+    } else {
+      userList.innerHTML = "<p>No hay otros usuarios.</p>";
+    }
+
+    const userModal = document.getElementById("userModal");
+    userModal.style.display = "flex";
+  };
+
+  window.closeUserModal = () => {
+    const userModal = document.getElementById("userModal");
+    userModal.style.display = "none";
+  };
+
+  window.shareInvoice = async (recipientUid) => {
+    try {
+      const invoiceRef = doc(db, "users", currentUser.uid, "invoiceHistory", currentInvoiceId);
+      const invoiceDoc = await getDoc(invoiceRef);
+
+      if (invoiceDoc.exists()) {
+        const invoiceData = invoiceDoc.data();
+        const recipientInvoiceRef = collection(db, "users", recipientUid, "invoiceHistory");
+        await addDoc(recipientInvoiceRef, { ...invoiceData, sharedBy: currentUser.uid, viewed: false });
+        showAlert("Factura compartida exitosamente.");
+        closeUserModal();
+      }
+    } catch (error) {
+      console.error("Error al compartir la factura:", error);
+      showAlert("Hubo un error al compartir la factura.");
+    }
+  };
+
+  const updateUnreadCount = async () => {
+    if (!currentUser) return;
+
+    const invoiceHistoryRef = collection(db, "users", currentUser.uid, "invoiceHistory");
+    const q = query(invoiceHistoryRef, where("sharedBy", "!=", null), where("viewed", "==", false));
+    const querySnapshot = await getDocs(q);
+
+    unreadInvoicesCount = querySnapshot.size; // Actualizar el contador de facturas sin leer
+
+    const notificationButton = document.getElementById("notificationButton");
+    const notificationCount = document.getElementById("notificationCount");
+
+    if (unreadInvoicesCount > 0) {
+      notificationButton.style.display = "block";
+      notificationCount.textContent = unreadInvoicesCount;
+    } else {
+      notificationButton.style.display = "none";
+    }
+  };
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUser = user;
+      loadInvoiceHistory(); // Cargar facturas del día actual
+      updateUnreadCount();
+
+      // Escuchar nuevas facturas compartidas en tiempo real
+      const invoiceHistoryRef = collection(db, "users", currentUser.uid, "invoiceHistory");
+      onSnapshot(invoiceHistoryRef, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "added" && change.doc.data().sharedBy && !change.doc.data().viewed) {
+            // Mostrar notificación con sonido
+            const notificationSound = new Audio("notification.mp3");
+            notificationSound.play();
+
+            // Mostrar modal de alerta
+            const alertModal = document.getElementById("alertModal");
+            const alertMessage = document.getElementById("alertMessage");
+            alertMessage.textContent = `Tienes ${unreadInvoicesCount + 1} facturas nuevas.`;
+            alertModal.style.display = "flex";
+
+            // Actualizar el contador de facturas sin leer
+            updateUnreadCount();
+          }
+        });
+      });
+    } else {
+      alert("Debe iniciar sesión para ver el historial de facturas.");
+      window.location.href = "login.html";
+    }
+  });
+
+  // Cerrar el modal de alerta
+  window.closeAlertModal = () => {
+    const alertModal = document.getElementById("alertModal");
+    alertModal.style.display = "none";
+  };
+</script>
+ </body>
+</html>
