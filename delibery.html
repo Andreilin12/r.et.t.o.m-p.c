@@ -1,0 +1,380 @@
+Dame una pagina que me recupere todo los productos imagen y nombre de producto con el PRECIO ORIGINAL y le sume PORCENTAJE DE GANANCIA mas 18%, un solo total, al dar clic en un producto se agreguen en otra ventana y se si elije varios del mismo que dos ejemplos quédiga x2 y se sume, y boton de quitar el prducto elejido o quitar si hay varios del mismo elegido y un boton que diga realizar. pedido, y sean subido a firebase y que identifique a cada usuario y solo el usuario que realiza la acción pueda ver los datos, dale estylo elegante: <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+        authDomain: "inventario-35d6b.firebaseapp.com",
+        databaseURL: "https://inventario-35d6b-default-rtdb.firebaseio.com",
+        projectId: "inventario-35d6b",
+        storageBucket: "inventario-35d6b.appspot.com",
+        messagingSenderId: "266100399659",
+        appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const options = {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+        };
+        return date.toLocaleString('es-ES', options).replace(',', '');
+    }
+
+    async function loadProducts(name = "", code = "", ean = "") {
+        const businessesQuerySnapshot = await getDocs(collection(db, "businesses"));
+        const productsSection = document.getElementById("productsSection");
+        productsSection.innerHTML = "";
+
+        for (const businessDoc of businessesQuerySnapshot.docs) {
+            const businessName = businessDoc.data().name;
+            const productsRef = collection(db, "businesses", businessName, "products");
+            const productsQuerySnapshot = await getDocs(productsRef);
+
+            if (!productsQuerySnapshot.empty) {
+                const accordion = document.createElement("div");
+                accordion.classList.add("accordion");
+
+                const accordionHeader = document.createElement("div");
+                accordionHeader.classList.add("accordion-header");
+                accordionHeader.textContent = businessName;
+                accordionHeader.addEventListener("click", () => {
+                    const content = accordion.querySelector(".accordion-content");
+                    content.style.display = content.style.display === "block" ? "none" : "block";
+                });
+
+                const accordionContent = document.createElement("div");
+                accordionContent.classList.add("accordion-content");
+
+                productsQuerySnapshot.forEach((productDoc) => {
+                    const productData = productDoc.data();
+
+                    if (
+                        (name && !productData.name.toLowerCase().includes(name.toLowerCase())) ||
+                        (code && !productData.code.includes(code)) ||
+                        (ean && !productData.eanUpcCode.includes(ean))
+                    ) {
+                        return;
+                    }
+
+                    const productDiv = document.createElement("div");
+                    productDiv.classList.add("product");
+
+                    if (productData.imageUrl) {
+                        const img = document.createElement("img");
+                        img.src = productData.imageUrl;
+                        productDiv.appendChild(img);
+                    }
+
+                    const userProfileImage = productData.userProfileImage || 'https://firebasestorage.googleapis.com/v0/b/inventario-35d6b.appspot.com/o/SIN%20FOTO%20DE%20PERFIL.png?alt=media&token=2e8c3d69-e0ae-47ec-89e0-f314ea58f727';
+                    const lastEditedProfileImage = productData.lastEditedProfileImage || 'https://firebasestorage.googleapis.com/v0/b/inventario-35d6b.appspot.com/o/SIN%20FOTO%20DE%20PERFIL.png?alt=media&token=2e8c3d69-e0ae-47ec-89e0-f314ea58f727';
+
+                    const details = `
+                      <p><strong>Agregado por: ${productData.userName || 'N/A'}</strong> - ${formatDate(productData.addedDate) || 'N/A'}</p>
+                      <img src="${userProfileImage}" alt="Imagen de perfil" style="width:50px;height:50px; border-radius: 50px;">
+                      <p>Último usuario que editó: ${productData.lastEditedBy || 'N/A'} - ${formatDate(productData.lastEditedDate) || 'N/A'}</p>
+                      <img src="${lastEditedProfileImage}" alt="Imagen de perfil" style="width:50px;height:50px; border-radius: 50px;">
+                      <p>PRODUCTO: ${productData.name || 'N/A'}</p><br>
+                      <p>TIPO DE PRODUCTO: ${productData.type || 'N/A'}</p><br>
+                      <p>FECHA DE EXPIRACIÓN: ${productData.expirationDate || ''}</p> <br>
+                      <p>CANTIDAD: ${productData.quantity} ${productData.unit || ''}</p><br>
+                      <p>PRECIO POR UNIDAD: ${productData.pricePerUnit || '0.00'}</p><br>
+                      <p>PRECIO ORIGINAL: ${productData.originalPrice || '0.00'}</p><br>
+                      <p>PORCENTAJE DE GANANCIA: ${productData.profitPercentage || '0'}%</p><br>
+                      <p>DESCUENTO: ${productData.discount || '0'}%</p><br>
+                      <p>CÓDIGO EAN/UPC: ${productData.eanUpcCode || 'N/A'}</p> <br>
+                      <p>CODIGO DEL PRODUCTO: ${productData.code || 'N/A'}</p><br>
+                    `;
+                    productDiv.innerHTML += details;
+
+                    const stockPara = document.createElement("p"); 
+                    if (productData.quantity === 0) {
+                        stockPara.textContent = "AGOTADO";
+                        stockPara.classList.add("low-stock");
+                    } else if (productData.quantity <= productData.lowStockThreshold) {
+                        stockPara.textContent = "SE ESTÁ CASI AGOTANDO";
+                        stockPara.classList.add("low-stock");
+                    } else {
+                        stockPara.textContent = `UNIDAD: ${productData.quantity} ${productData.unit || 'N/A'}`;
+                    } 
+                    productDiv.appendChild(stockPara);
+
+                    const expirationDate = new Date(productData.expirationDate);
+                    const currentDate = new Date();
+                    const daysUntilExpiration = Math.ceil((expirationDate - currentDate) / (1000 * 60 * 60 * 24));
+
+                    const expirationPara = document.createElement("p");
+                    expirationPara.textContent = `DÍAS PARA VENCER: ${daysUntilExpiration} días`;
+                    if (daysUntilExpiration <= 30) {
+                        expirationPara.classList.add("expiration-warning");
+                    }
+                    productDiv.appendChild(expirationPara);
+
+                    const editForm = document.createElement("div");
+                    editForm.classList.add("edit-form");
+
+                    // Campo: Editar cantidad
+                    const editQuantityLabel = document.createElement("label");
+                    editQuantityLabel.textContent = "Editar cantidad de Unidad/Paquete/Fardo/Libras:";
+                    const editQuantityInput = document.createElement("input");
+                    editQuantityInput.type = "number";
+                    editQuantityInput.value = productData.quantity;
+                    editForm.appendChild(editQuantityLabel);
+                    editForm.appendChild(editQuantityInput);
+
+                    // Campo: Editar Unidad/Paquete/Fardo/Libras
+                    const editUnitLabel = document.createElement("label");
+                    editUnitLabel.textContent = "Editar Unidad/Paquete/Fardo/Libras:";
+                    const editUnitInput = document.createElement("select");
+                    const options = ["Unidad", "Paquete", "Fardo", "Libras"];
+                    options.forEach(option => {
+                        const opt = document.createElement("option");
+                        opt.value = option;
+                        opt.textContent = option;
+                        if (productData.unit === option) opt.selected = true;
+                        editUnitInput.appendChild(opt);
+                    });
+                    editForm.appendChild(editUnitLabel);
+                    editForm.appendChild(editUnitInput);
+
+                    // Campo: Editar umbral de alerta
+                    const editLowStockThresholdLabel = document.createElement("label");
+                    editLowStockThresholdLabel.textContent = "Editar cantidad que debe notificar que el producto se está agotando:";
+                    const editLowStockThreshold = document.createElement("input");
+                    editLowStockThreshold.type = "number";
+                    editLowStockThreshold.value = productData.lowStockThreshold || 10;
+                    editForm.appendChild(editLowStockThresholdLabel);
+                    editForm.appendChild(editLowStockThreshold);
+
+                    // Campo: Cambiar precio
+                    const editPriceLabel = document.createElement("label"); 
+                    editPriceLabel.textContent = "Cambiar precio $DOP:";
+                    const editPriceInput = document.createElement("input");
+                    editPriceInput.type = "number";
+                    editPriceInput.value = productData.pricePerUnit || 0;
+                    editForm.appendChild(editPriceLabel);
+                    editForm.appendChild(editPriceInput);
+
+                    // Campo: Precio original
+                    const editOriginalPriceLabel = document.createElement("label"); 
+                    editOriginalPriceLabel.textContent = "Precio Original $DOP:";
+                    const editOriginalPriceInput = document.createElement("input");
+                    editOriginalPriceInput.type = "number";
+                    editOriginalPriceInput.value = productData.originalPrice || 0;
+                    editForm.appendChild(editOriginalPriceLabel);
+                    editForm.appendChild(editOriginalPriceInput);
+
+                    // Campo: Porcentaje de ganancia
+                    const editProfitPercentageLabel = document.createElement("label");
+                    editProfitPercentageLabel.textContent = "Porcentaje de Ganancia (%):";
+                    const editProfitPercentageInput = document.createElement("input");
+                    editProfitPercentageInput.type = "number";
+                    editProfitPercentageInput.value = productData.profitPercentage || 0;
+                    editForm.appendChild(editProfitPercentageLabel);
+                    editForm.appendChild(editProfitPercentageInput);
+
+                    // Campo: Descuento
+                    const editDiscountLabel = document.createElement("label");
+                    editDiscountLabel.textContent = "Descuento (%):";
+                    const editDiscountInput = document.createElement("input");
+                    editDiscountInput.type = "number";
+                    editDiscountInput.value = productData.discount || 0;
+                    editForm.appendChild(editDiscountLabel);
+                    editForm.appendChild(editDiscountInput);
+
+                    // Campo: Editar fecha de vencimiento
+                    const editExpirationLabel = document.createElement("label");
+                    editExpirationLabel.textContent = "Editar fecha de vencimiento:";
+                    const editExpirationInput = document.createElement("input");
+                    editExpirationInput.type = "date";
+                    editExpirationInput.value = productData.expirationDate ? productData.expirationDate.split('T')[0] : '';
+                    editForm.appendChild(editExpirationLabel);
+                    editForm.appendChild(editExpirationInput);
+
+                    // Botón para guardar los cambios
+                    const saveBtn = document.createElement("button");
+                    saveBtn.classList.add("btn");
+                    saveBtn.textContent = "Guardar";
+                    saveBtn.addEventListener("click", async () => {
+                        try {
+                            const newQuantity = parseInt(editQuantityInput.value, 10);
+                            const newUnit = editUnitInput.value;
+                            const newLowStockThreshold = parseInt(editLowStockThreshold.value, 10);
+                            const newPrice = parseFloat(editPriceInput.value);
+                            const newOriginalPrice = parseFloat(editOriginalPriceInput.value);
+                            const newProfitPercentage = parseFloat(editProfitPercentageInput.value);
+                            const newDiscount = parseFloat(editDiscountInput.value);
+                            const newExpirationDate = editExpirationInput.value;
+                            const user = auth.currentUser;
+
+                            if (!user) {
+                                alert("Por favor, inicie sesión para guardar los cambios.");
+                                return;
+                            }
+
+                            // Calcular el precio total con ganancia y descuento
+                            const profitAmount = newOriginalPrice * (newProfitPercentage / 100);
+                            const totalPrice = newOriginalPrice + profitAmount;
+                            const discountedPrice = totalPrice * (1 - (newDiscount / 100));
+
+                            // Guardar los cambios en Firebase
+                            await updateDoc(doc(db, "businesses", businessName, "products", productDoc.id), {
+                                quantity: newQuantity,
+                                unit: newUnit,
+                                lowStockThreshold: newLowStockThreshold,
+                                pricePerUnit: discountedPrice, // Almacenar el precio con descuento
+                                originalPrice: newOriginalPrice,
+                                profitPercentage: newProfitPercentage,
+                                discount: newDiscount,
+                                expirationDate: newExpirationDate,
+                                lastEditedBy: user.email || 'N/A',
+                                lastEditedDate: new Date().toISOString(),
+                                lastEditedProfileImage: user.photoURL || 'default-profile.jpg',
+                            });
+
+                            // Enviar historial de edición a "productsHistory"
+                            await addDoc(collection(db, "productsHistory"), {
+                                businessName: businessName,
+                                productName: productData.name,
+                                editedBy: user.displayName || 'N/A',
+                                editDate: new Date().toISOString(),
+                                unit: newUnit,
+                                quantity: newQuantity,
+                                expirationDate: newExpirationDate,
+                                userName: user ? user.email || 'N/A' : 'N/A', // Nombre del usuario
+                                lastEditedProfileImage: user ? user.photoURL || 'default-profile.jpg' : 'default-profile.jpg' // Foto de perfil
+                            });
+
+                            // Actualizar la interfaz inmediatamente
+                            loadProducts(name, code, ean);
+
+                            showAlert("Cambios guardados correctamente.");
+                        } catch (error) {
+                            console.error("Error al guardar los cambios: ", error);
+                        }
+                    });
+                    editForm.appendChild(saveBtn);
+                    productDiv.appendChild(editForm);
+
+                    const editBtn = document.createElement("button");
+                    editBtn.classList.add("icon-btn");
+                    editBtn.innerHTML = "<i class='fas fa-edit'></i>";
+                    editBtn.addEventListener("click", () => {
+                        editForm.style.display = editForm.style.display === "flex" ? "none" : "flex";
+                    });
+                    productDiv.appendChild(editBtn);
+
+                    const deleteBtn = document.createElement("button");
+                    deleteBtn.classList.add("icon-btn", "delete-btn");
+                    deleteBtn.innerHTML = "<i class='fas fa-trash-alt'></i>";
+                    deleteBtn.addEventListener("click", async () => {
+                        const confirmDelete = confirm("¿Estás seguro de que deseas eliminar este producto?");
+                        if (confirmDelete) {
+                            const user = auth.currentUser;
+
+                            if (!user) {
+                                alert("Por favor, inicie sesión para eliminar el producto.");
+                                return;
+                            }
+
+                            // Enviar historial de eliminación a "deletedProducts"
+                            await addDoc(collection(db, "deletedProducts"), {
+                                businessName: businessName,
+                                productName: productData.name,
+                                deletedBy: user.email || 'N/A',
+                                deleteDate: new Date().toISOString(),
+                                unit: productData.unit,
+                                quantity: productData.quantity,
+                                expirationDate: productData.expirationDate,
+                            });
+
+                            await deleteDoc(doc(db, "businesses", businessName, "products", productDoc.id));
+                            loadProducts();
+                        }
+                    });
+                    productDiv.appendChild(deleteBtn);
+
+                    accordionContent.appendChild(productDiv);
+                });
+
+                accordion.appendChild(accordionHeader);
+                accordion.appendChild(accordionContent);
+                productsSection.appendChild(accordion);
+            }
+        }
+    }
+
+    function showAlert(message) {
+        const alertBox = document.getElementById("alert");
+        alertBox.innerHTML = message;
+        alertBox.classList.add("show");
+
+        setTimeout(() => {
+            alertBox.classList.remove("show");
+        }, 12000); 
+    }
+
+    function checkAlerts() {
+        onSnapshot(collection(db, "businesses"), async (snapshot) => {
+            let alertContent = "";
+            const currentDate = new Date();
+
+            for (const businessDoc of snapshot.docs) {
+                const businessName = businessDoc.data().name;
+                const productsQuerySnapshot = await getDocs(collection(db, "businesses", businessName, "products"));
+                let lowStockProducts = "";
+
+                productsQuerySnapshot.forEach((productDoc) => {
+                    const productData = productDoc.data();
+                    const expirationDate = new Date(productData.expirationDate);
+                    const daysUntilExpiration = (expirationDate - currentDate) / (1000 * 60 * 60 * 24);
+
+                    if (productData.quantity <= productData.lowStockThreshold) {
+                        lowStockProducts += `<li>${productData.name} - ${productData.quantity}</li>`;
+                    }
+
+                    if (daysUntilExpiration <= 30) {
+                        lowStockProducts += `<li>${productData.name} - Fecha de vencimiento cercana: ${productData.expirationDate}</li>`;
+                    }
+                });
+
+                if (lowStockProducts) {
+                    alertContent += `<strong>${businessName}</strong><ul>${lowStockProducts}</ul>`;
+                }
+            }
+
+            if (alertContent) {
+                showAlert(alertContent);
+            }
+        });
+    }
+
+    document.getElementById("searchName").addEventListener("input", (e) => {
+        const name = e.target.value;
+        const code = document.getElementById("searchCode").value;
+        const ean = document.getElementById("searchEAN").value;
+        loadProducts(name, code, ean);
+    });
+
+    document.getElementById("searchCode").addEventListener("input", (e) => { 
+        const code = e.target.value;
+        const name = document.getElementById("searchName").value; 
+        const ean = document.getElementById("searchEAN").value;
+        loadProducts(name, code, ean);
+    });
+
+    document.getElementById("searchEAN").addEventListener("input", (e) => {
+        const ean = e.target.value;
+        const name = document.getElementById("searchName").value;
+        const code = document.getElementById("searchCode").value;
+        loadProducts(name, code, ean);
+    });
+
+    loadProducts();
+    checkAlerts();
+</script>
