@@ -64,12 +64,12 @@
         }
 
         .search-container input {
-            padding: 5px 10px;
+            padding: 5px 20px;
             border-radius: 25px;
             border: none;
             background: #1e1e2f;
             color: #fff;
-            width: 200px;
+            width: 100px;
         }
 
         .settings-icon {
@@ -89,17 +89,15 @@
             flex: 1;
             padding: 20px;
             overflow-y: auto;
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 20px;
-            justify-content: center;
         }
 
         .product {
             background: linear-gradient(145deg, #2a2a40, #1e1e2f);
             border-radius: 15px;
             padding: 20px;
-            width: 200px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
@@ -324,11 +322,10 @@
             }
 
             .products {
-                order: 1;
+                grid-template-columns: repeat(4, 1fr);
             }
 
             .cart {
-                order: 2;
                 flex: 0 0 auto;
                 height: 300px;
             }
@@ -392,216 +389,214 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-        import { getFirestore, collection, addDoc, doc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getFirestore, collection, addDoc, doc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
-            authDomain: "inventario-35d6b.firebaseapp.com",
-            databaseURL: "https://inventario-35d6b-default-rtdb.firebaseio.com",
-            projectId: "inventario-35d6b",
-            storageBucket: "inventario-35d6b.appspot.com",
-            messagingSenderId: "266100399659",
-            appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
-        };
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+        authDomain: "inventario-35d6b.firebaseapp.com",
+        databaseURL: "https://inventario-35d6b-default-rtdb.firebaseio.com",
+        projectId: "inventario-35d6b",
+        storageBucket: "inventario-35d6b.appspot.com",
+        messagingSenderId: "266100399659",
+        appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-        let cart = [];
-        let total = 0;
-        let currency = "DOP"; // Moneda por defecto
-        const exchangeRates = { USD: 56.50, EUR: 60.00 }; // Tasas de cambio (ejemplo)
+    let cart = [];
+    let total = 0;
+    let currency = "DOP"; // Moneda por defecto
+    const exchangeRates = { USD: 56.50, EUR: 60.00 }; // Tasas de cambio (ejemplo)
 
-        // Verificar autenticación del usuario
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // Recuperar datos del usuario desde Firestore
-                const userDoc = await getDocs(query(collection(db, "users"), where("uid", "==", user.uid)));
-                if (!userDoc.empty) {
-                    const userData = userDoc.docs[0].data();
-                    document.getElementById("profilePhoto").src = userData.photoURL || "https://via.placeholder.com/40";
-                    document.getElementById("profileName").textContent = userData.name || "Usuario";
-                }
-                loadProducts();
-            } else {
-                showAlert("Por favor, inicia sesión para ver los productos.", "error");
-                window.location.href = "login.html"; // Redirigir a la página de login
+    // Verificar autenticación del usuario
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            // Recuperar datos del usuario desde Firestore
+            const userDoc = await getDocs(query(collection(db, "users"), where("uid", "==", user.uid)));
+            if (!userDoc.empty) {
+                const userData = userDoc.docs[0].data();
+                document.getElementById("profilePhoto").src = userData.photoURL || "https://via.placeholder.com/40";
+                document.getElementById("profileName").textContent = userData.name || "Usuario";
             }
-        });
-
-        async function loadProducts() {
-            const productsSection = document.getElementById("productsSection");
-            productsSection.innerHTML = "";
-
-            const businessesQuerySnapshot = await getDocs(collection(db, "businesses"));
-            for (const businessDoc of businessesQuerySnapshot.docs) {
-                const businessName = businessDoc.data().name;
-                const productsRef = collection(db, "businesses", businessName, "products");
-                const productsQuerySnapshot = await getDocs(productsRef);
-
-                productsQuerySnapshot.forEach((productDoc) => {
-                    const productData = productDoc.data();
-                    const productDiv = document.createElement("div");
-                    productDiv.classList.add("product");
-
-                    // Recuperar el porcentaje de ganancia desde Firestore
-                    const profitPercentage = productData.profitPercentage || 10; // Si no existe, usar 10%
-                    const originalPrice = parseFloat(productData.originalPrice);
-
-                    // Calcular el precio final
-                    const profit = originalPrice * (profitPercentage / 100); // Ganancia
-                    const priceWithProfit = originalPrice + profit; // Precio con ganancia
-                    const additional = priceWithProfit * 0.10; // 10% adicional
-                    const priceWithAdditional = priceWithProfit + additional; // Precio con adicional
-                    const tax = priceWithAdditional * 0.18; // ITBIS (18%)
-                    const finalPrice = priceWithAdditional + tax; // Precio final
-
-                    productDiv.innerHTML = `
-                        <img src="${productData.imageUrl}" alt="${productData.name}" onclick="openPreviewModal('${productData.imageUrl}')">
-                        <h3>${productData.name}</h3>
-                        <p>$${finalPrice.toFixed(2)}</p>
-                        <button onclick="addToCart('${productData.name}', ${finalPrice})">Agregar al Carrito</button>
-                    `;
-                    productsSection.appendChild(productDiv);
-                });
-            }
+            loadProducts();
+        } else {
+            showAlert("Por favor, inicia sesión para ver los productos.", "error");
+            window.location.href = "login.html"; // Redirigir a la página de login
         }
+    });
 
-        window.addToCart = function(name, price) {
-            const existingItem = cart.find(item => item.name === name);
-            if (existingItem) {
-                existingItem.quantity++;
-            } else {
-                cart.push({ name, price, quantity: 1 });
-            }
-            updateCart();
-        }
+    async function loadProducts() {
+        const productsSection = document.getElementById("productsSection");
+        productsSection.innerHTML = "";
 
-        function updateCart() {
-            const cartItems = document.getElementById("cartItems");
-            const totalPrice = document.getElementById("totalPrice");
-            cartItems.innerHTML = "";
-            total = 0;
+        const businessesQuerySnapshot = await getDocs(collection(db, "businesses"));
+        for (const businessDoc of businessesQuerySnapshot.docs) {
+            const businessName = businessDoc.data().name;
+            const productsRef = collection(db, "businesses", businessName, "products");
+            const productsQuerySnapshot = await getDocs(productsRef);
 
-            cart.forEach((item, index) => {
-                const itemTotal = item.price * item.quantity;
-                total += itemTotal;
+            productsQuerySnapshot.forEach((productDoc) => {
+                const productData = productDoc.data();
+                const productDiv = document.createElement("div");
+                productDiv.classList.add("product");
 
-                const cartItemDiv = document.createElement("div");
-                cartItemDiv.classList.add("cart-item");
-                cartItemDiv.innerHTML = `
-                    <span>${item.name} x${item.quantity} - $${itemTotal.toFixed(2)}</span>
-                    <button onclick="removeFromCart(${index})">Quitar</button>
+                // Recuperar el porcentaje de ganancia desde Firestore
+                const profitPercentage = productData.profitPercentage || 10; // Si no existe, usar 10%
+                const originalPrice = parseFloat(productData.originalPrice);
+
+                // Calcular el precio final
+                const profit = originalPrice * (profitPercentage / 100); // Ganancia
+                const priceWithProfit = originalPrice + profit; // Precio con ganancia
+                const additional = priceWithProfit * 0.10; // 10% adicional
+                const priceWithAdditional = priceWithProfit + additional; // Precio con adicional
+                const tax = priceWithAdditional * 0.18; // ITBIS (18%)
+                const finalPrice = priceWithAdditional + tax; // Precio final
+
+                productDiv.innerHTML = `
+                    <img src="${productData.imageUrl}" alt="${productData.name}" onclick="openPreviewModal('${productData.imageUrl}')">
+                    <h3>${productData.name}</h3>
+                    <p>$${finalPrice.toFixed(2)}</p>
+                    <button onclick="addToCart('${productData.name}', ${finalPrice})">Agregar al Carrito</button>
                 `;
-                cartItems.appendChild(cartItemDiv);
+                productsSection.appendChild(productDiv);
             });
+        }
+    }
 
-            // Convertir el total a la moneda seleccionada
-            let convertedTotal = total;
-            if (currency === "USD") {
-                convertedTotal = total / exchangeRates.USD;
-            } else if (currency === "EUR") {
-                convertedTotal = total / exchangeRates.EUR;
-            }
+    window.addToCart = function(name, price) {
+        const existingItem = cart.find(item => item.name === name);
+        if (existingItem) {
+            existingItem.quantity++;
+        } else {
+            cart.push({ name, price, quantity: 1 });
+        }
+        updateCart();
+    }
 
-            totalPrice.textContent = convertedTotal.toFixed(2);
+    function updateCart() {
+        const cartItems = document.getElementById("cartItems");
+        const totalPrice = document.getElementById("totalPrice");
+        cartItems.innerHTML = "";
+        total = 0;
+
+        cart.forEach((item, index) => {
+            const itemTotal = item.price * item.quantity;
+            total += itemTotal;
+
+            const cartItemDiv = document.createElement("div");
+            cartItemDiv.classList.add("cart-item");
+            cartItemDiv.innerHTML = `
+                <span>${item.name} x${item.quantity} - $${itemTotal.toFixed(2)}</span>
+                <button onclick="removeFromCart(${index})">Quitar</button>
+            `;
+            cartItems.appendChild(cartItemDiv);
+        });
+
+        // Convertir el total a la moneda seleccionada
+        let convertedTotal = total;
+        if (currency === "USD") {
+            convertedTotal = total / exchangeRates.USD;
+        } else if (currency === "EUR") {
+            convertedTotal = total / exchangeRates.EUR;
         }
 
-        window.removeFromCart = function(index) {
-            if (cart[index].quantity > 1) {
-                cart[index].quantity--;
+        totalPrice.textContent = convertedTotal.toFixed(2);
+    }
+
+    window.removeFromCart = function(index) {
+        if (cart[index].quantity > 1) {
+            cart[index].quantity--;
+        } else {
+            cart.splice(index, 1);
+        }
+        updateCart();
+    }
+
+    window.updateCurrency = function() {
+        currency = document.getElementById("currency").value;
+        updateCart();
+    }
+
+    window.openPreviewModal = function(imageUrl) {
+        const previewModal = document.getElementById("previewModal");
+        previewModal.querySelector("img").src = imageUrl;
+        previewModal.style.display = "block";
+    }
+
+    window.closePreviewModal = function() {
+        const previewModal = document.getElementById("previewModal");
+        previewModal.style.display = "none";
+    }
+
+    window.toggleSearch = function() {
+        const searchContainer = document.getElementById("searchContainer");
+        searchContainer.style.display = searchContainer.style.display === "flex" ? "none" : "flex";
+    }
+
+    window.filterProducts = function() {
+        const searchInput = document.getElementById("searchInput").value.toLowerCase();
+        const products = document.querySelectorAll(".product");
+
+        products.forEach((product) => {
+            const productName = product.querySelector("h3").textContent.toLowerCase();
+            if (productName.includes(searchInput)) {
+                product.style.display = "block";
             } else {
-                cart.splice(index, 1);
-            }
-            updateCart();
-        }
-
-        window.updateCurrency = function() {
-            currency = document.getElementById("currency").value;
-            updateCart();
-        }
-
-        window.openPreviewModal = function(imageUrl) {
-            const previewModal = document.getElementById("previewModal");
-            previewModal.querySelector("img").src = imageUrl;
-            previewModal.style.display = "block";
-        }
-
-        window.closePreviewModal = function() {
-            const previewModal = document.getElementById("previewModal");
-            previewModal.style.display = "none";
-        }
-
-        window.toggleSearch = function() {
-            const searchContainer = document.getElementById("searchContainer");
-            searchContainer.style.display = searchContainer.style.display === "flex" ? "none" : "flex";
-        }
-
-        window.filterProducts = function() {
-            const searchInput = document.getElementById("searchInput").value.toLowerCase();
-            const products = document.querySelectorAll(".product");
-
-            products.forEach((product) => {
-                const productName = product.querySelector("h3").textContent.toLowerCase();
-                if (productName.includes(searchInput)) {
-                    product.style.display = "block";
-                } else {
-                    product.style.display = "none";
-                }
-            });
-        }
-
-        function showAlert(message, type) {
-            const alert = document.getElementById("alert");
-            alert.textContent = message;
-            alert.className = `alert ${type}`;
-            alert.style.display = "block";
-            setTimeout(() => {
-                alert.style.display = "none";
-            }, 3000);
-        }
-
-        function showLoading() {
-            document.getElementById("loading").style.display = "block";
-        }
-
-        function hideLoading() {
-            document.getElementById("loading").style.display = "none";
-        }
-
-        document.getElementById("placeOrder").addEventListener("click", async () => {
-            const user = auth.currentUser;
-            if (!user) {
-                showAlert("Por favor, inicia sesión para realizar un pedido.", "error");
-                return;
-            }
-
-            if (cart.length === 0) {
-                showAlert("El carrito está vacío.", "error");
-                return;
-            }
-
-            showLoading();
-            try {
-                await addDoc(collection(db, "orders"), {
-                    userId: user.uid,
-                    items: cart,
-                    total: total,
-                    date: new Date().toISOString()
-                });
-                showAlert("Pedido realizado con éxito.", "success");
-                cart = [];
-                updateCart();
-            } catch (error) {
-                console.error("Error al realizar el pedido: ", error);
-                showAlert("Error al realizar el pedido.", "error");
-            } finally {
-                hideLoading();
+                product.style.display = "none";
             }
         });
-    </script>
-</body>
-</html>
+    }
+
+    function showAlert(message, type) {
+        const alert = document.getElementById("alert");
+        alert.textContent = message;
+        alert.className = `alert ${type}`;
+        alert.style.display = "block";
+        setTimeout(() => {
+            alert.style.display = "none";
+        }, 3000);
+    }
+
+    function showLoading() {
+        document.getElementById("loading").style.display = "block";
+    }
+
+    function hideLoading() {
+        document.getElementById("loading").style.display = "none";
+    }
+
+    document.getElementById("placeOrder").addEventListener("click", async () => {
+        const user = auth.currentUser;
+        if (!user) {
+            showAlert("Por favor, inicia sesión para realizar un pedido.", "error");
+            return;
+        }
+
+        if (cart.length === 0) {
+            showAlert("El carrito está vacío.", "error");
+            return;
+        }
+
+        showLoading();
+        try {
+            await addDoc(collection(db, "orders"), {
+                userId: user.uid,
+                items: cart,
+                total: total,
+                date: new Date().toISOString()
+            });
+            showAlert("Pedido realizado con éxito.", "success");
+            cart = [];
+            updateCart();
+        } catch (error) {
+            console.error("Error al realizar el pedido: ", error);
+            showAlert("Error al realizar el pedido.", "error");
+        } finally {
+            hideLoading();
+        }
+    });
+</script>
