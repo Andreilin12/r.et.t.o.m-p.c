@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos Registrados</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .orders-container {
+            width: 100%;
+            max-width: 800px;
+            background: #34495e;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .order-item {
+            background: #2c3e50;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .order-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .order-item h3 {
+            margin: 0;
+            font-size: 1.2em;
+            color: #15a086;
+        }
+
+        .order-item p {
+            margin: 5px 0;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+
+        .order-item .new {
+            background: #15a086;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #15a086;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.5s ease-out;
+            display: none;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #34495e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h3 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .modal ul li {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-bottom: 1px solid #15a086;
+        }
+
+        .modal textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background: #2c3e50;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .modal select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background: #2c3e50;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background: #2c3e50;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .modal button {
+            margin-top: 20px;
+            background: #15a086;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .modal button:hover {
+            background: #12816d;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pedidos Registrados</h1>
+    <div class="orders-container" id="ordersContainer">
+        <!-- Los pedidos se cargarán aquí -->
+    </div>
+
+    <!-- Modal para ver detalles del pedido -->
+    <div class="modal" id="orderModal">
+        <h3>Detalles del Pedido</h3>
+        <ul id="orderDetails"></ul>
+        <textarea id="orderComment" placeholder="Agregar un comentario..."></textarea>
+        <select id="orderStatus">
+            <option value="preparando">Preparando su pedido</option>
+            <option value="proceso">Su pedido ya está en proceso a enviar</option>
+            <option value="enviado">Su pedido ya fue enviado</option>
+        </select>
+        <input type="number" id="totalToPay" placeholder="Total a pagar" step="0.01">
+        <button id="updateButton">Actualizar Pedido</button>
+        <button id="closeButton">Cerrar</button>
+    </div>
+
+    <!-- Alerta elegante -->
+    <div class="alert" id="alert">
+        <span id="alertMessage"></span>
+    </div>
+
+    <!-- Sonido de alerta -->
+    <audio id="alertSound" src="alert.mp3"></audio>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+        import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+            authDomain: "inventario-35d6b.firebaseapp.com",
+            databaseURL: "https://inventario-35d6b-default-rtdb.firebaseio.com",
+            projectId: "inventario-35d6b",
+            storageBucket: "inventario-35d6b.appspot.com",
+            messagingSenderId: "266100399659",
+            appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth();
+
+        let currentOrderId = null; // Almacena el ID del pedido actual
+
+        // Obtener la fecha actual en formato YYYY-MM-DD
+        const getCurrentDate = () => {
+            const now = new Date();
+            return now.toISOString().split('T')[0];
+        };
+
+        // Mostrar alerta elegante
+        const showAlert = (message) => {
+            const alert = document.getElementById("alert");
+            const alertSound = document.getElementById("alertSound");
+
+            alert.textContent = message;
+            alert.style.display = "block";
+            alertSound.play(); // Reproducir sonido de alerta
+
+            setTimeout(() => {
+                alert.style.display = "none";
+            }, 3000);
+        };
+
+        // Cargar pedidos del día actual
+        const loadOrders = () => {
+            const ordersContainer = document.getElementById("ordersContainer");
+            const currentDate = getCurrentDate();
+
+            // Consulta para obtener los pedidos del día actual
+            const ordersRef = collection(db, "orders");
+            const q = query(ordersRef, where("date", ">=", `${currentDate}T00:00:00Z`), where("date", "<=", `${currentDate}T23:59:59Z`));
+
+            // Escuchar cambios en tiempo real
+            onSnapshot(q, (snapshot) => {
+                ordersContainer.innerHTML = ""; // Limpiar el contenedor
+
+                // Ordenar pedidos por fecha (más reciente primero)
+                const orders = snapshot.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                orders.forEach((order) => {
+                    const orderItem = document.createElement("div");
+                    orderItem.classList.add("order-item");
+
+                    // Marcar como nuevo si no ha sido visto
+                    const isNew = !order.viewed; // Si no tiene el campo "viewed" o es false
+                    const newLabel = isNew ? `<span class="new">Nuevo</span>` : "";
+
+                    orderItem.innerHTML = `
+                        <h3>${order.userName} ${newLabel}</h3>
+                        <p>Fecha: ${new Date(order.date).toLocaleString()}</p>
+                        <p>Total: $${order.total.toFixed(2)}</p>
+                        <p>Estado: ${order.status || "Pendiente"}</p>
+                    `;
+
+                    // Mostrar detalles del pedido al hacer clic
+                    orderItem.addEventListener("click", async () => {
+                        currentOrderId = order.id; // Guardar el ID del pedido actual
+                        await markOrderAsViewed(order.id); // Marcar como visto
+                        showOrderDetails(order);
+                    });
+
+                    ordersContainer.appendChild(orderItem);
+                });
+
+                // Mostrar alerta si hay nuevos pedidos
+                if (orders.some(order => !order.viewed)) {
+                    showAlert("Nuevo pedido registrado.");
+                }
+            });
+        };
+
+        // Marcar un pedido como visto en Firestore
+        const markOrderAsViewed = async (orderId) => {
+            const orderRef = doc(db, "orders", orderId);
+            await updateDoc(orderRef, { viewed: true });
+        };
+
+        // Mostrar detalles del pedido en un modal
+        const showOrderDetails = (order) => {
+            const orderDetails = document.getElementById("orderDetails");
+            orderDetails.innerHTML = "";
+
+            order.items.forEach((item) => {
+                const li = document.createElement("li");
+                li.textContent = `${item.name} x${item.quantity} - $${item.price.toFixed(2)}`;
+                orderDetails.appendChild(li);
+            });
+
+            // Mostrar el modal
+            document.getElementById("orderModal").style.display = "block";
+        };
+
+        // Actualizar el pedido con el comentario, estado y total a pagar
+        const updateOrder = async () => {
+            const comment = document.getElementById("orderComment").value;
+            const status = document.getElementById("orderStatus").value;
+            const totalToPay = parseFloat(document.getElementById("totalToPay").value);
+
+            if (!currentOrderId) return;
+
+            try {
+                const orderRef = doc(db, "orders", currentOrderId);
+                await updateDoc(orderRef, {
+                    comment,
+                    status,
+                    totalToPay,
+                    viewed: true, // Marcar como "cliente atendido"
+                });
+
+                showAlert("Pedido actualizado correctamente.");
+                closeModal();
+                loadOrders(); // Recargar los pedidos para reflejar los cambios
+            } catch (error) {
+                console.error("Error al actualizar el pedido:", error);
+                showAlert("Error al actualizar el pedido.");
+            }
+        };
+
+        // Cerrar el modal
+        const closeModal = () => {
+            document.getElementById("orderModal").style.display = "none";
+        };
+
+        // Asignar eventos a los botones
+        document.getElementById("updateButton").addEventListener("click", updateOrder);
+        document.getElementById("closeButton").addEventListener("click", closeModal);
+
+        // Cargar los pedidos al iniciar la página
+        loadOrders();
+    </script>
+</body>
+</html>
