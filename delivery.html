@@ -547,7 +547,7 @@
                         <img src="${productData.imageUrl}" alt="${productData.name}" onclick="openPreviewModal('${productData.imageUrl}')">
                         <h3>${productData.name}</h3>
                         <p>$${finalPrice.toFixed(2)}</p>
-                        <button onclick="addToCart('${productDoc.id}', '${productData.name}', ${finalPrice})">Agregar al Carrito</button>
+                        <button onclick="addToCart('${productDoc.id}', '${productData.name}', ${finalPrice})">Agregar</button>
                     `;
                     productsSection.appendChild(productDiv);
                 });
