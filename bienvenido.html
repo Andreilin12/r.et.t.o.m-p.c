@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>¡Felicitaciones!</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #2e3c50, #15a086);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .congrats-container {
+      text-align: center;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+    h1 {
+      font-size: 3.5rem;
+      margin-bottom: 20px;
+      animation: bounce 2s infinite;
+    }
+    h2 {
+      font-size: 2rem;
+      margin-bottom: 30px;
+      animation: slideIn 1s ease-in-out;
+    }
+    .user-photo {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 5px solid #fff;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+      margin-bottom: 20px;
+      animation: zoomIn 1s ease-in-out;
+    }
+    .username {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 30px;
+      animation: glow 2s infinite alternate;
+    }
+    .btn-home {
+      background-color: #fff;
+      color: #2575fc;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 50px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.3s;
+      animation: pulse 2s infinite;
+    }
+    .btn-home:hover {
+      background-color: #2575fc;
+      color: #fff;
+      transform: scale(1.1);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-30px); }
+      60% { transform: translateY(-15px); }
+    }
+    @keyframes slideIn {
+      from { transform: translateX(-100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes zoomIn {
+      from { transform: scale(0); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    @keyframes glow {
+      from { text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #2575fc, 0 0 40px #2575fc; }
+      to { text-shadow: 0 0 20px #fff, 0 0 30px #fff, 0 0 40px #6a11cb, 0 0 50px #6a11cb; }
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="congrats-container">
+    <h1>🎉🎊 ¡Felicitaciones! 🎊🎉</h1>
+    <h2>¡Bienvenido al equipo!</h2>
+    <img id="userPhoto" class="user-photo" src="#" alt="Foto de perfil">
+    <div id="username" class="username"></div>
+    <button class="btn-home" onclick="window.location.href='crear-cuenta.html'">Ir a Inicio</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+      authDomain: "inventario-35d6b.firebaseapp.com",
+      databaseURL: "https://inventario-35d6b-default-rtdb.firebaseio.com",
+      projectId: "inventario-35d6b",
+      storageBucket: "inventario-35d6b.appspot.com",
+      messagingSenderId: "266100399659",
+      appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Obtener datos del usuario logueado
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          document.getElementById('username').textContent = userData.name;
+          document.getElementById('userPhoto').src = userData.photoURL || "https://via.placeholder.com/150"; // Usar foto de perfil o una por defecto
+        }
+      } else {
+        window.location.href = "crear-cuenta.html"; // Redirigir si no está autenticado
+      }
+    });
+  </script>
+</body>
+</html>
