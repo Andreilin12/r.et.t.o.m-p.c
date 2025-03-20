@@ -9,7 +9,7 @@
         /* Estilos generales */
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+            background: linear-gradient(135deg, #2c3e50, #2c3e50);
             color: #fff;
             margin: 0;
             padding: 0;
@@ -114,7 +114,7 @@
         }
 
         .product h3 {
-            font-size: 1.2em;
+            font-size: 0.70em;
             margin: 10px 0;
             text-align: center;
         }
@@ -127,7 +127,7 @@
         }
 
         .product button {
-            background: linear-gradient(145deg, #00c6ff, #0072ff);
+            background: linear-gradient(145deg, #15a086, #15a086);
             color: white;
             border: none;
             padding: 10px 20px;
@@ -138,7 +138,7 @@
         }
 
         .product button:hover {
-            background: linear-gradient(145deg, #0072ff, #00c6ff);
+            background: linear-gradient(145deg, #2c3e50, #15a086);
         }
 
         /* Carrito */
@@ -170,7 +170,7 @@
         }
 
         .cart-item button {
-            background: #ff4d4d;
+            background: #15a086;
             color: white;
             border: none;
             padding: 5px 10px;
@@ -210,11 +210,11 @@
             border-radius: 5px;
             background: #1e1e2f;
             color: #fff;
-            border: 1px solid #00c6ff;
+            border: 1px solid #15a086;
         }
 
         .footer #placeOrder {
-            background: linear-gradient(145deg, #00c6ff, #0072ff);
+            background: linear-gradient(145deg, #15a086, #15a086);
             color: white;
             border: none;
             padding: 10px 20px;
@@ -224,7 +224,7 @@
         }
 
         .footer #placeOrder:hover {
-            background: linear-gradient(145deg, #0072ff, #00c6ff);
+            background: linear-gradient(145deg, #2c3e50, #15a086);
         }
 
         /* Modal de comentarios */
@@ -234,7 +234,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: #2a2a40;
+            background: #2c3e50;
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
@@ -254,7 +254,7 @@
         }
 
         .comment-modal button {
-            background: linear-gradient(145deg, #00c6ff, #0072ff);
+            background: linear-gradient(145deg, #15a086, #2c3e50);
             color: white;
             border: none;
             padding: 10px 20px;
@@ -265,7 +265,7 @@
         }
 
         .comment-modal button:hover {
-            background: linear-gradient(145deg, #0072ff, #00c6ff);
+            background: linear-gradient(145deg, #2c3e50, #15a086);
         }
 
         /* Alertas */
@@ -284,7 +284,7 @@
         }
 
         .alert.success {
-            background: #4caf50;
+            background: #15a086;
         }
 
         .alert.error {
@@ -348,7 +348,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: #2a2a40;
+    background: #2c3e50;
     color: white;
     padding: 20px;
     border-radius: 15px;
@@ -363,7 +363,7 @@
 }
 
 .confirmation-modal textarea {
-    width: 100%;
+    width: 80%;
     height: 100px;
     margin-bottom: 15px;
     padding: 10px;
@@ -383,21 +383,21 @@
 }
 
 .confirmation-modal button#confirmOrder {
-    background: #00c6ff;
+    background: #15a086;
     color: white;
 }
 
 .confirmation-modal button#confirmOrder:hover {
-    background: #0072ff;
+    background: #2c3e50;
 }
 
 .confirmation-modal button#cancelOrder {
-    background: #ff4d4d;
+    background: #15a086;
     color: white;
 }
 
 .confirmation-modal button#cancelOrder:hover {
-    background: #cc0000;
+    background: #2c3e50;
 }
     </style>
 </head>
@@ -461,7 +461,7 @@
 
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-    import { getFirestore, collection, addDoc, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, doc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 
     const firebaseConfig = {
@@ -547,7 +547,7 @@
                         <img src="${productData.imageUrl}" alt="${productData.name}" onclick="openPreviewModal('${productData.imageUrl}')">
                         <h3>${productData.name}</h3>
                         <p>$${finalPrice.toFixed(2)}</p>
-                        <button onclick="addToCart('${productData.name}', ${finalPrice})">Agregar al Carrito</button>
+                        <button onclick="addToCart('${productDoc.id}', '${productData.name}', ${finalPrice})">Agregar al Carrito</button>
                     `;
                     productsSection.appendChild(productDiv);
                 });
@@ -558,12 +558,12 @@
         }
     }
 
-    window.addToCart = function(name, price) {
-        const existingItem = cart.find(item => item.name === name);
+    window.addToCart = function(productId, name, price) {
+        const existingItem = cart.find(item => item.productId === productId);
         if (existingItem) {
             existingItem.quantity++;
         } else {
-            cart.push({ name, price, quantity: 1 });
+            cart.push({ productId, name, price, quantity: 1 });
         }
         updateCart();
     }
@@ -720,7 +720,7 @@
             });
 
             // Mostrar confirmación elegante
-            showAlert("Pedido realizado con éxito.", "success");
+            showAlert("Pedido realizado con éxito. Algunos precios pueden cambiar.", "success");
 
             // Limpiar el carrito
             cart = [];
