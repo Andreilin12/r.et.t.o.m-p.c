@@ -461,7 +461,7 @@
 
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-    import { getFirestore, collection, addDoc, doc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 
     const firebaseConfig = {
@@ -486,20 +486,28 @@
     // Verificar autenticación del usuario
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            // Recuperar datos del usuario desde Firestore
-            const userDoc = await getDocs(query(collection(db, "users"), where("uid", "==", user.uid)));
-            if (!userDoc.empty) {
-                const userData = userDoc.docs[0].data();
-                // Verificar que los campos "name" y "photoURL" existen
-                if (userData.name && userData.photoURL) {
-                    document.getElementById("profilePhoto").src = userData.photoURL;
-                    document.getElementById("profileName").textContent = userData.name;
+            try {
+                // Recuperar datos del usuario desde Firestore usando su UID
+                const userDocRef = doc(db, "users", user.uid); // Acceso directo al documento
+                const userDocSnap = await getDoc(userDocRef);
+
+                if (userDocSnap.exists()) {
+                    const userData = userDocSnap.data();
+                    // Verificar que los campos "name" y "photoURL" existen
+                    if (userData.name && userData.photoURL) {
+                        document.getElementById("profilePhoto").src = userData.photoURL;
+                        document.getElementById("profileName").textContent = userData.name;
+                    } else {
+                        console.error("Los campos 'name' o 'photoURL' no están definidos en el documento del usuario.");
+                    }
                 } else {
-                    console.error("Los campos 'name' o 'photoURL' no están definidos en el documento del usuario.");
+                    console.error("No se encontró el documento del usuario en Firestore.");
                 }
-            } else {
-                console.error("No se encontró el documento del usuario en Firestore.");
+            } catch (error) {
+                console.error("Error al recuperar datos del usuario:", error);
             }
+
+            // Cargar productos
             loadProducts();
         } else {
             showAlert("Por favor, inicia sesión para ver los productos.", "error");
@@ -511,37 +519,42 @@
         const productsSection = document.getElementById("productsSection");
         productsSection.innerHTML = "";
 
-        const businessesQuerySnapshot = await getDocs(collection(db, "businesses"));
-        for (const businessDoc of businessesQuerySnapshot.docs) {
-            const businessName = businessDoc.data().name;
-            const productsRef = collection(db, "businesses", businessName, "products");
-            const productsQuerySnapshot = await getDocs(productsRef);
+        try {
+            const businessesQuerySnapshot = await getDocs(collection(db, "businesses"));
+            for (const businessDoc of businessesQuerySnapshot.docs) {
+                const businessName = businessDoc.data().name;
+                const productsRef = collection(db, "businesses", businessName, "products");
+                const productsQuerySnapshot = await getDocs(productsRef);
 
-            productsQuerySnapshot.forEach((productDoc) => {
-                const productData = productDoc.data();
-                const productDiv = document.createElement("div");
-                productDiv.classList.add("product");
+                productsQuerySnapshot.forEach((productDoc) => {
+                    const productData = productDoc.data();
+                    const productDiv = document.createElement("div");
+                    productDiv.classList.add("product");
 
-                // Recuperar el porcentaje de ganancia desde Firestore
-                const profitPercentage = productData.profitPercentage || 10; // Si no existe, usar 10%
-                const originalPrice = parseFloat(productData.originalPrice);
+                    // Recuperar el porcentaje de ganancia desde Firestore
+                    const profitPercentage = productData.profitPercentage || 10; // Si no existe, usar 10%
+                    const originalPrice = parseFloat(productData.originalPrice);
 
-                // Calcular el precio final
-                const profit = originalPrice * (profitPercentage / 100); // Ganancia
-                const priceWithProfit = originalPrice + profit; // Precio con ganancia
-                const additional = priceWithProfit * 0.10; // 10% adicional
-                const priceWithAdditional = priceWithProfit + additional; // Precio con adicional
-                const tax = priceWithAdditional * 0.18; // ITBIS (18%)
-                const finalPrice = priceWithAdditional + tax; // Precio final
+                    // Calcular el precio final
+                    const profit = originalPrice * (profitPercentage / 100); // Ganancia
+                    const priceWithProfit = originalPrice + profit; // Precio con ganancia
+                    const additional = priceWithProfit * 0.10; // 10% adicional
+                    const priceWithAdditional = priceWithProfit + additional; // Precio con adicional
+                    const tax = priceWithAdditional * 0.18; // ITBIS (18%)
+                    const finalPrice = priceWithAdditional + tax; // Precio final
 
-                productDiv.innerHTML = `
-                    <img src="${productData.imageUrl}" alt="${productData.name}" onclick="openPreviewModal('${productData.imageUrl}')">
-                    <h3>${productData.name}</h3>
-                    <p>$${finalPrice.toFixed(2)}</p>
-                    <button onclick="addToCart('${productData.name}', ${finalPrice})">Agregar al Carrito</button>
-                `;
-                productsSection.appendChild(productDiv);
-            });
+                    productDiv.innerHTML = `
+                        <img src="${productData.imageUrl}" alt="${productData.name}" onclick="openPreviewModal('${productData.imageUrl}')">
+                        <h3>${productData.name}</h3>
+                        <p>$${finalPrice.toFixed(2)}</p>
+                        <button onclick="addToCart('${productData.name}', ${finalPrice})">Agregar al Carrito</button>
+                    `;
+                    productsSection.appendChild(productDiv);
+                });
+            }
+        } catch (error) {
+            console.error("Error al cargar productos:", error);
+            showAlert("Error al cargar los productos.", "error");
         }
     }
 
@@ -688,8 +701,9 @@
         showLoading();
         try {
             // Obtener el nombre del usuario
-            const userDoc = await getDocs(query(collection(db, "users"), where("uid", "==", user.uid)));
-            const userName = userDoc.empty ? "Usuario" : userDoc.docs[0].data().name;
+            const userDocRef = doc(db, "users", user.uid);
+            const userDocSnap = await getDoc(userDocRef);
+            const userName = userDocSnap.exists() ? userDocSnap.data().name : "Usuario";
 
             // Obtener el comentario del modal
             const comment = document.getElementById("orderComment").value;
