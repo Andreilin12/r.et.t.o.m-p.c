@@ -196,7 +196,7 @@
         signInWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
                 // Iniciar sesión exitosa
-                window.location.href = "go:Home"; // Redirigir a la página principal
+                window.location.href = "bienvenido.html"; // Redirigir a la página principal
             })
             .catch((error) => {
                 console.error(error);
@@ -240,7 +240,7 @@
                 }); 
 
                 alert("Cuenta creada exitosamente.");
-                window.location.href = "go:Home"; // Redirigir a la página principal
+                window.location.href = "bienvenido.html"; // Redirigir a la página principal
             })
             .catch((error) => {
                 console.error(error);
@@ -355,43 +355,5 @@
         });
     </script>
 
-
-
-
-
-
-
-
-
-<!-- LOGUIADOS -->
-
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
-        authDomain: "inventario-35d6b.firebaseapp.com",
-        projectId: "inventario-35d6b",
-        storageBucket: "inventario-35d6b.appspot.com",
-        messagingSenderId: "266100399659",
-        appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    // Verifica si el usuario está autenticado
-    onAuthStateChanged(auth, user => {
-        if (!user) {
-            // Si el usuario no está autenticado, redirigir a index.html
-            window.location.href = "index.html";
-        } else {
-            // El usuario está autenticado, puedes mostrar contenido o permitir acceso a la página
-            console.log("Usuario autenticado:", user);
-        }
-    });
-</script>
 
 
