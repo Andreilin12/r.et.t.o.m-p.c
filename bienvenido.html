@@ -99,7 +99,7 @@
     <h2>¡Bienvenido al equipo!</h2>
     <img id="userPhoto" class="user-photo" src="#" alt="Foto de perfil">
     <div id="username" class="username"></div>
-    <button class="btn-home" onclick="window.location.href='crear-cuenta.html'">Ir a Inicio</button>
+    <button class="btn-home" onclick="window.location.href='crear-una-cuenta.html'">Ir a Inicio</button>
   </div>
 
   <script type="module">
@@ -131,7 +131,7 @@
           document.getElementById('userPhoto').src = userData.photoURL || "https://via.placeholder.com/150"; // Usar foto de perfil o una por defecto
         }
       } else {
-        window.location.href = "crear-cuenta.html"; // Redirigir si no está autenticado
+        window.location.href = "crear-una-cuenta.html"; // Redirigir si no está autenticado
       }
     });
   </script>
