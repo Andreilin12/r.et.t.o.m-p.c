@@ -28,6 +28,7 @@
       margin-bottom: 20px;
       display: flex;
       gap: 10px;
+      align-items: center;
     }
     .search-container input {
       width: 100%;
@@ -35,6 +36,17 @@
       padding: 10px;
       border: 1px solid #ddd;
       border-radius: 5px;
+    }
+    .search-container button {
+      background-color: #16a085;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .search-container button:hover {
+      background-color: #2c3e50;
     }
     .accordion {
       background-color: #fff;
@@ -47,7 +59,7 @@
     .accordion-header {
       padding: 15px;
       background-color: #16a085;
-      color: #fff; 
+      color: #fff;
       border-radius: 5px 5px 0 0;
     }
     .accordion-content {
@@ -55,15 +67,15 @@
       padding: 15px;
     }
     .product {
-    font-family: 'Arial', sans-serif;
-    line-height: 1.6;
-    margin: 20px;
-    padding: 20px;
-    border: 1px solid #e0e0e0;
-    border-radius: 10px;
-    background-color: #f9f9f9;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
+      font-family: 'Arial', sans-serif;
+      line-height: 1.6;
+      margin: 20px;
+      padding: 20px;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      background-color: #f9f9f9;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
     .product img {
       max-width: 100px;
       height: auto;
@@ -132,48 +144,137 @@
       width: 300px;
       max-height: 400px;
       overflow-y: auto;
+      animation: slideIn 0.5s ease-out;
+    }
+    .alert.success {
+      background-color: #28a745;
+    }
+    .alert.error {
+      background-color: #dc3545;
+    }
+    .alert.confirm {
+      background-color: #ffc107;
     }
     .alert.show {
       display: block;
     }
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+      }
+      to {
+        transform: translateX(0);
+      }
+    }
     h2 {
       color: #fff;
     }
-
-
     .back-button {
-    position: fixed;
-    top: 10px; /* Distancia desde la parte superior */
-    left: 10px; /* Distancia desde el borde izquierdo */
-    background-color: #16a085; /* Color de fondo */
-    color: #fff; /* Color del texto y del icono */
-    border: none;
-    border-radius: 4px;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    transition: background-color 0.3s; /* Transición suave para el color de fondo */
-    z-index: 1000; /* Asegura que el botón esté sobre otros elementos */
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background-color: #16a085;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.3s;
+      z-index: 1000;
+    }
+    .back-button i {
+      margin-right: 8px;
+    }
+    .back-button:hover {
+      background-color: #2c2e50;
+    }
+    .product-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .product-header img {
+      max-width: 50px;
+      height: auto;
+      border-radius: 50%;
+    }
+    .product-header h3 {
+      margin: 0;
+      font-size: 1.2em;
+    }
+    .product-header .actions {
+      display: flex;
+      gap: 10px;
+    }
+    .product-details {
+      margin-top: 10px;
+    }
+    .product-details p {
+      font-size: 0.9em;
+    }
+    .product-details p.price {
+      font-size: 1em;
+      font-weight: bold;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal.show {
+      display: flex;
+    }
+    
+    #loading {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
-.back-button i {
-    margin-right: 8px; /* Espacio entre el icono y el texto */
+#loading img {
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
 }
 
-.back-button:hover {
-    background-color: #2c2e50; /* Color de fondo al pasar el ratón */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
   </style>
 </head>
 <body>
   <header>
-
-        <button class="back-button" onclick="goBack()">
-        <i class="fas fa-arrow-left"></i> Volver
+    <button class="back-button" onclick="goBack()">
+      <i class="fas fa-arrow-left"></i> Volver
     </button>
-
     <h1>Inventarios</h1>
   </header>
   <main>
@@ -181,30 +282,46 @@
       <div class="search-container">
         <input type="text" id="searchName" placeholder="Buscar por nombre">
         <input type="text" id="searchCode" placeholder="Buscar por código">
-       <input type="text" id="searchEAN" placeholder="Buscar por EAN/UPC">
+        <input type="text" id="searchEAN" placeholder="Buscar por EAN/UPC">
+       
+  <!-- Botón para descargar Excel -->
+  <button id="downloadExcelBtn" ><i class="fa-solid fa-file-excel"></i>
+   
+  </button>
+  
       </div>
-
+  </div>
+      
       <section id="productsSection" class="products-section">
         <h2>Productos</h2>
       </section>
     </section>
-  </main> 
-
+  </main>
   <div id="alert" class="alert"></div>
-
-  <script type="module">
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <h3>Detalles del Producto</h3>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+  <div id="loading">
+  <img src="https://firebasestorage.googleapis.com/v0/b/inventario-35d6b.appspot.com/o/RETOM%20COMPLETO%20(2).png?alt=media&token=bcb475a5-edf6-494a-96e5-ca8f0a8ae005" alt="Cargando..." />
+</div>
+  <audio id="alertSound" src="https://firebasestorage.googleapis.com/v0/b/inventario-35d6b.appspot.com/o/SD_ALERT_32.mp3?alt=media&token=6c8d7b14-ca44-44ad-95de-8e533cd9e948"></audio>
+  
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
     import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 
     const firebaseConfig = {
-        apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
-        authDomain: "inventario-35d6b.firebaseapp.com",
-        databaseURL: "https://inventario-35d6b-default-rtdb.firebaseio.com",
-        projectId: "inventario-35d6b",
-        storageBucket: "inventario-35d6b.appspot.com",
-        messagingSenderId: "266100399659",
-        appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
+      apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+      authDomain: "inventario-35d6b.firebaseapp.com",
+      databaseURL: "https://inventario-35d6b-default-rtdb.firebaseio.com",
+      projectId: "inventario-35d6b",
+      storageBucket: "inventario-35d6b.appspot.com",
+      messagingSenderId: "266100399659",
+      appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -212,376 +329,521 @@
     const auth = getAuth(app);
 
     function formatDate(dateString) {
-        const date = new Date(dateString);
-        const options = {
-            year: 'numeric', month: '2-digit', day: '2-digit',
-            hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+      const date = new Date(dateString);
+      const options = {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+      };
+      return date.toLocaleString('es-ES', options).replace(',', '');
+    }
+
+    function showModal(content) {
+      const modal = document.getElementById("modal");
+      const modalContent = document.getElementById("modalContent");
+      modalContent.innerHTML = content;
+      modal.classList.add("show");
+    }
+
+    function closeModal() {
+      const modal = document.getElementById("modal");
+      modal.classList.remove("show");
+    }
+
+    function showAlert(message, type = "success") {
+      const alertBox = document.getElementById("alert");
+      alertBox.innerHTML = message;
+      alertBox.classList.add("show", type);
+
+      const alertSound = document.getElementById("alertSound");
+      alertSound.play();
+
+      setTimeout(() => {
+        alertBox.classList.remove("show", type);
+      }, 5000);
+    }
+
+    function showLoading() {
+      const loading = document.getElementById("loading");
+      loading.style.display = "flex";
+    }
+
+    function hideLoading() {
+      const loading = document.getElementById("loading");
+      loading.style.display = "none";
+    }
+
+    async function confirmDelete(productName, businessName, productId) {
+      const confirmDelete = await new Promise((resolve) => {
+        const confirmBox = document.createElement("div");
+        confirmBox.classList.add("alert", "confirm", "show");
+        confirmBox.innerHTML = `
+          <p>¿Estás seguro de que deseas eliminar el producto <strong>${productName}</strong>?</p>
+          <button class="btn" onclick="handleConfirmDelete(true, '${businessName}', '${productId}')">Sí</button>
+          <button class="btn" onclick="handleConfirmDelete(false)">No</button>
+        `;
+        document.body.appendChild(confirmBox);
+
+        const handleConfirmDelete = (confirm, businessName, productId) => {
+          document.body.removeChild(confirmBox);
+          resolve({ confirm, businessName, productId });
         };
-        return date.toLocaleString('es-ES', options).replace(',', '');
+
+        window.handleConfirmDelete = handleConfirmDelete;
+      });
+
+      if (confirmDelete.confirm) {
+        const user = auth.currentUser;
+
+        if (!user) {
+          alert("Por favor, inicie sesión para eliminar el producto.");
+          return;
+        }
+
+        try {
+          // Obtener los datos del producto antes de eliminarlo
+          const productDocRef = doc(db, "businesses", confirmDelete.businessName, "products", confirmDelete.productId);
+          const productDoc = await getDoc(productDocRef);
+
+          if (productDoc.exists()) {
+            const productData = productDoc.data();
+
+            // Registrar el producto eliminado en la colección "deletedProducts"
+            await addDoc(collection(db, "deletedProducts"), {
+              businessName: confirmDelete.businessName,
+              productName: productData.name,
+              deletedBy: user.displayName || 'N/A',
+              deleteDate: new Date().toISOString(),
+              unit: productData.unit,
+              quantity: productData.quantity,
+              expirationDate: productData.expirationDate,
+            });
+
+            // Eliminar el producto de la colección "products"
+            await deleteDoc(productDocRef);
+
+            // Recargar la lista de productos
+            loadProducts();
+            showAlert("Producto eliminado con éxito.", "success");
+          } else {
+            showAlert("El producto no existe.", "error");
+          }
+        } catch (error) {
+          console.error("Error al eliminar el producto: ", error);
+          showAlert("Error al eliminar el producto.", "error");
+        }
+      }
     }
 
     async function loadProducts(name = "", code = "", ean = "") {
-        const businessesQuerySnapshot = await getDocs(collection(db, "businesses"));
-        const productsSection = document.getElementById("productsSection");
-        productsSection.innerHTML = "";
+      const businessesQuerySnapshot = await getDocs(collection(db, "businesses"));
+      const productsSection = document.getElementById("productsSection");
+      productsSection.innerHTML = "";
 
-        for (const businessDoc of businessesQuerySnapshot.docs) {
-            const businessName = businessDoc.data().name;
-            const productsRef = collection(db, "businesses", businessName, "products");
-            const productsQuerySnapshot = await getDocs(productsRef);
+      for (const businessDoc of businessesQuerySnapshot.docs) {
+        const businessName = businessDoc.data().name;
+        const productsRef = collection(db, "businesses", businessName, "products");
+        const productsQuerySnapshot = await getDocs(productsRef);
 
-            if (!productsQuerySnapshot.empty) {
-                const accordion = document.createElement("div");
-                accordion.classList.add("accordion");
+        if (!productsQuerySnapshot.empty) {
+          const accordion = document.createElement("div");
+          accordion.classList.add("accordion");
 
-                const accordionHeader = document.createElement("div");
-                accordionHeader.classList.add("accordion-header");
-                accordionHeader.textContent = businessName;
-                accordionHeader.addEventListener("click", () => {
-                    const content = accordion.querySelector(".accordion-content");
-                    content.style.display = content.style.display === "block" ? "none" : "block";
-                });
+          const accordionHeader = document.createElement("div");
+          accordionHeader.classList.add("accordion-header");
+          accordionHeader.textContent = businessName;
+          accordionHeader.addEventListener("click", () => {
+            const content = accordion.querySelector(".accordion-content");
+            content.style.display = content.style.display === "block" ? "none" : "block";
+          });
 
-                const accordionContent = document.createElement("div");
-                accordionContent.classList.add("accordion-content");
+          const accordionContent = document.createElement("div");
+          accordionContent.classList.add("accordion-content");
 
-                productsQuerySnapshot.forEach((productDoc) => {
-                    const productData = productDoc.data();
+          productsQuerySnapshot.forEach((productDoc) => {
+            const productData = productDoc.data();
 
-                    if (
-                        (name && !productData.name.toLowerCase().includes(name.toLowerCase())) ||
-                        (code && !productData.code.includes(code)) ||
-                        (ean && !productData.eanUpcCode.includes(ean))
-                    ) {
-                        return;
-                    }
-
-                    const productDiv = document.createElement("div");
-                    productDiv.classList.add("product");
-
-                    if (productData.imageUrl) {
-                        const img = document.createElement("img");
-                        img.src = productData.imageUrl;
-                        productDiv.appendChild(img);
-                    }
-
-                    const userProfileImage = productData.userProfileImage || 'https://firebasestorage.googleapis.com/v0/b/inventario-35d6b.appspot.com/o/SIN%20FOTO%20DE%20PERFIL.png?alt=media&token=2e8c3d69-e0ae-47ec-89e0-f314ea58f727';
-                    const lastEditedProfileImage = productData.lastEditedProfileImage || 'https://firebasestorage.googleapis.com/v0/b/inventario-35d6b.appspot.com/o/SIN%20FOTO%20DE%20PERFIL.png?alt=media&token=2e8c3d69-e0ae-47ec-89e0-f314ea58f727';
-
-                    const details = `
-                      <p><strong>Agregado por: ${productData.userName || 'N/A'}</strong> - ${formatDate(productData.addedDate) || 'N/A'}</p>
-                      <img src="${userProfileImage}" alt="Imagen de perfil" style="width:50px;height:50px; border-radius: 50px;">
-                      <p>Último usuario que editó: ${productData.lastEditedBy || 'N/A'} - ${formatDate(productData.lastEditedDate) || 'N/A'}</p>
-                      <img src="${lastEditedProfileImage}" alt="Imagen de perfil" style="width:50px;height:50px; border-radius: 50px;">
-                      <p>PRODUCTO: ${productData.name || 'N/A'}</p><br>
-                      <p>TIPO DE PRODUCTO: ${productData.type || 'N/A'}</p><br>
-                      <p>FECHA DE EXPIRACIÓN: ${productData.expirationDate || ''}</p> <br>
-                      <p>CANTIDAD: ${productData.quantity} ${productData.unit || ''}</p><br>
-                      <p>PRECIO POR UNIDAD: ${productData.pricePerUnit || '0.00'}</p><br>
-                      <p>PRECIO ORIGINAL: ${productData.originalPrice || '0.00'}</p><br>
-                      <p>PORCENTAJE DE GANANCIA: ${productData.profitPercentage || '0'}%</p><br>
-                      <p>DESCUENTO: ${productData.discount || '0'}%</p><br>
-                      <p>CÓDIGO EAN/UPC: ${productData.eanUpcCode || 'N/A'}</p> <br>
-                      <p>CODIGO DEL PRODUCTO: ${productData.code || 'N/A'}</p><br>
-                    `;
-                    productDiv.innerHTML += details;
-
-                    const stockPara = document.createElement("p"); 
-                    if (productData.quantity === 0) {
-                        stockPara.textContent = "AGOTADO";
-                        stockPara.classList.add("low-stock");
-                    } else if (productData.quantity <= productData.lowStockThreshold) {
-                        stockPara.textContent = "SE ESTÁ CASI AGOTANDO";
-                        stockPara.classList.add("low-stock");
-                    } else {
-                        stockPara.textContent = `UNIDAD: ${productData.quantity} ${productData.unit || 'N/A'}`;
-                    } 
-                    productDiv.appendChild(stockPara);
-
-                    const expirationDate = new Date(productData.expirationDate);
-                    const currentDate = new Date();
-                    const daysUntilExpiration = Math.ceil((expirationDate - currentDate) / (1000 * 60 * 60 * 24));
-
-                    const expirationPara = document.createElement("p");
-                    expirationPara.textContent = `DÍAS PARA VENCER: ${daysUntilExpiration} días`;
-                    if (daysUntilExpiration <= 30) {
-                        expirationPara.classList.add("expiration-warning");
-                    }
-                    productDiv.appendChild(expirationPara);
-
-                    const editForm = document.createElement("div");
-                    editForm.classList.add("edit-form");
-
-                    // Campo: Editar cantidad
-                    const editQuantityLabel = document.createElement("label");
-                    editQuantityLabel.textContent = "Editar cantidad de Unidad/Paquete/Fardo/Libras:";
-                    const editQuantityInput = document.createElement("input");
-                    editQuantityInput.type = "number";
-                    editQuantityInput.value = productData.quantity;
-                    editForm.appendChild(editQuantityLabel);
-                    editForm.appendChild(editQuantityInput);
-
-                    // Campo: Editar Unidad/Paquete/Fardo/Libras
-                    const editUnitLabel = document.createElement("label");
-                    editUnitLabel.textContent = "Editar Unidad/Paquete/Fardo/Libras:";
-                    const editUnitInput = document.createElement("select");
-                    const options = ["Unidad", "Paquete", "Fardo", "Libras"];
-                    options.forEach(option => {
-                        const opt = document.createElement("option");
-                        opt.value = option;
-                        opt.textContent = option;
-                        if (productData.unit === option) opt.selected = true;
-                        editUnitInput.appendChild(opt);
-                    });
-                    editForm.appendChild(editUnitLabel);
-                    editForm.appendChild(editUnitInput);
-
-                    // Campo: Editar umbral de alerta
-                    const editLowStockThresholdLabel = document.createElement("label");
-                    editLowStockThresholdLabel.textContent = "Editar cantidad que debe notificar que el producto se está agotando:";
-                    const editLowStockThreshold = document.createElement("input");
-                    editLowStockThreshold.type = "number";
-                    editLowStockThreshold.value = productData.lowStockThreshold || 10;
-                    editForm.appendChild(editLowStockThresholdLabel);
-                    editForm.appendChild(editLowStockThreshold);
-
-                    // Campo: Cambiar precio
-                    const editPriceLabel = document.createElement("label"); 
-                    editPriceLabel.textContent = "Cambiar precio $DOP:";
-                    const editPriceInput = document.createElement("input");
-                    editPriceInput.type = "number";
-                    editPriceInput.value = productData.pricePerUnit || 0;
-                    editForm.appendChild(editPriceLabel);
-                    editForm.appendChild(editPriceInput);
-
-                    // Campo: Precio original
-                    const editOriginalPriceLabel = document.createElement("label"); 
-                    editOriginalPriceLabel.textContent = "Precio Original $DOP:";
-                    const editOriginalPriceInput = document.createElement("input");
-                    editOriginalPriceInput.type = "number";
-                    editOriginalPriceInput.value = productData.originalPrice || 0;
-                    editForm.appendChild(editOriginalPriceLabel);
-                    editForm.appendChild(editOriginalPriceInput);
-
-                    // Campo: Porcentaje de ganancia
-                    const editProfitPercentageLabel = document.createElement("label");
-                    editProfitPercentageLabel.textContent = "Porcentaje de Ganancia (%):";
-                    const editProfitPercentageInput = document.createElement("input");
-                    editProfitPercentageInput.type = "number";
-                    editProfitPercentageInput.value = productData.profitPercentage || 0;
-                    editForm.appendChild(editProfitPercentageLabel);
-                    editForm.appendChild(editProfitPercentageInput);
-
-                    // Campo: Descuento
-                    const editDiscountLabel = document.createElement("label");
-                    editDiscountLabel.textContent = "Descuento (%):";
-                    const editDiscountInput = document.createElement("input");
-                    editDiscountInput.type = "number";
-                    editDiscountInput.value = productData.discount || 0;
-                    editForm.appendChild(editDiscountLabel);
-                    editForm.appendChild(editDiscountInput);
-
-                    // Campo: Editar fecha de vencimiento
-                    const editExpirationLabel = document.createElement("label");
-                    editExpirationLabel.textContent = "Editar fecha de vencimiento:";
-                    const editExpirationInput = document.createElement("input");
-                    editExpirationInput.type = "date";
-                    editExpirationInput.value = productData.expirationDate ? productData.expirationDate.split('T')[0] : '';
-                    editForm.appendChild(editExpirationLabel);
-                    editForm.appendChild(editExpirationInput);
-
-                    // Botón para guardar los cambios
-                    const saveBtn = document.createElement("button");
-                    saveBtn.classList.add("btn");
-                    saveBtn.textContent = "Guardar";
-                    saveBtn.addEventListener("click", async () => {
-                        try {
-                            const newQuantity = parseInt(editQuantityInput.value, 10);
-                            const newUnit = editUnitInput.value;
-                            const newLowStockThreshold = parseInt(editLowStockThreshold.value, 10);
-                            const newPrice = parseFloat(editPriceInput.value);
-                            const newOriginalPrice = parseFloat(editOriginalPriceInput.value);
-                            const newProfitPercentage = parseFloat(editProfitPercentageInput.value);
-                            const newDiscount = parseFloat(editDiscountInput.value);
-                            const newExpirationDate = editExpirationInput.value;
-                            const user = auth.currentUser;
-
-                            if (!user) {
-                                alert("Por favor, inicie sesión para guardar los cambios.");
-                                return;
-                            }
-
-                            // Calcular el precio total con ganancia y descuento
-                            const profitAmount = newOriginalPrice * (newProfitPercentage / 100);
-                            const totalPrice = newOriginalPrice + profitAmount;
-                            const discountedPrice = totalPrice * (1 - (newDiscount / 100));
-
-                            // Guardar los cambios en Firebase
-                            await updateDoc(doc(db, "businesses", businessName, "products", productDoc.id), {
-                                quantity: newQuantity,
-                                unit: newUnit,
-                                lowStockThreshold: newLowStockThreshold,
-                                pricePerUnit: discountedPrice, // Almacenar el precio con descuento
-                                originalPrice: newOriginalPrice,
-                                profitPercentage: newProfitPercentage,
-                                discount: newDiscount,
-                                expirationDate: newExpirationDate,
-                                lastEditedBy: user.email || 'N/A',
-                                lastEditedDate: new Date().toISOString(),
-                                lastEditedProfileImage: user.photoURL || 'default-profile.jpg',
-                            });
-
-                            // Enviar historial de edición a "productsHistory"
-                            await addDoc(collection(db, "productsHistory"), {
-                                businessName: businessName,
-                                productName: productData.name,
-                                editedBy: user.displayName || 'N/A',
-                                editDate: new Date().toISOString(),
-                                unit: newUnit,
-                                quantity: newQuantity,
-                                expirationDate: newExpirationDate,
-                                userName: user ? user.email || 'N/A' : 'N/A', // Nombre del usuario
-                                lastEditedProfileImage: user ? user.photoURL || 'default-profile.jpg' : 'default-profile.jpg' // Foto de perfil
-                            });
-
-                            // Actualizar la interfaz inmediatamente
-                            loadProducts(name, code, ean);
-
-                            showAlert("Cambios guardados correctamente.");
-                        } catch (error) {
-                            console.error("Error al guardar los cambios: ", error);
-                        }
-                    });
-                    editForm.appendChild(saveBtn);
-                    productDiv.appendChild(editForm);
-
-                    const editBtn = document.createElement("button");
-                    editBtn.classList.add("icon-btn");
-                    editBtn.innerHTML = "<i class='fas fa-edit'></i>";
-                    editBtn.addEventListener("click", () => {
-                        editForm.style.display = editForm.style.display === "flex" ? "none" : "flex";
-                    });
-                    productDiv.appendChild(editBtn);
-
-                    const deleteBtn = document.createElement("button");
-                    deleteBtn.classList.add("icon-btn", "delete-btn");
-                    deleteBtn.innerHTML = "<i class='fas fa-trash-alt'></i>";
-                    deleteBtn.addEventListener("click", async () => {
-                        const confirmDelete = confirm("¿Estás seguro de que deseas eliminar este producto?");
-                        if (confirmDelete) {
-                            const user = auth.currentUser;
-
-                            if (!user) {
-                                alert("Por favor, inicie sesión para eliminar el producto.");
-                                return;
-                            }
-
-                            // Enviar historial de eliminación a "deletedProducts"
-                            await addDoc(collection(db, "deletedProducts"), {
-                                businessName: businessName,
-                                productName: productData.name,
-                                deletedBy: user.email || 'N/A',
-                                deleteDate: new Date().toISOString(),
-                                unit: productData.unit,
-                                quantity: productData.quantity,
-                                expirationDate: productData.expirationDate,
-                            });
-
-                            await deleteDoc(doc(db, "businesses", businessName, "products", productDoc.id));
-                            loadProducts();
-                        }
-                    });
-                    productDiv.appendChild(deleteBtn);
-
-                    accordionContent.appendChild(productDiv);
-                });
-
-                accordion.appendChild(accordionHeader);
-                accordion.appendChild(accordionContent);
-                productsSection.appendChild(accordion);
+            if (
+              (name && !productData.name.toLowerCase().includes(name.toLowerCase())) ||
+              (code && !productData.code.includes(code)) ||
+              (ean && !productData.eanUpcCode.includes(ean))
+            ) {
+              return;
             }
+
+            const productDiv = document.createElement("div");
+            productDiv.classList.add("product");
+
+            const productHeader = document.createElement("div");
+            productHeader.classList.add("product-header");
+
+            if (productData.imageUrl) {
+              const img = document.createElement("img");
+              img.src = productData.imageUrl;
+              productHeader.appendChild(img);
+            }
+
+            const productName = document.createElement("h3");
+            productName.textContent = productData.name;
+            productHeader.appendChild(productName);
+
+            const actions = document.createElement("div");
+            actions.classList.add("actions");
+
+            const viewDetailsBtn = document.createElement("button");
+            viewDetailsBtn.classList.add("icon-btn");
+            viewDetailsBtn.innerHTML = "<i class='fas fa-eye'></i>";
+            viewDetailsBtn.addEventListener("click", () => {
+              const detailsContent = `
+                <p><strong>Agregado por:</strong> ${productData.userName || 'N/A'} - ${formatDate(productData.addedDate) || 'N/A'}</p>
+                <p><strong>Último usuario que editó:</strong> ${productData.lastEditedBy || 'N/A'} - ${formatDate(productData.lastEditedDate) || 'N/A'}</p>
+                <p><strong>PRODUCTO:</strong> ${productData.name || 'N/A'}</p>
+                <p><strong>TIPO DE PRODUCTO:</strong> ${productData.type || 'N/A'}</p>
+                <p><strong>FECHA DE EXPIRACIÓN:</strong> ${productData.expirationDate || ''}</p>
+                <p><strong>CANTIDAD:</strong> ${productData.quantity} ${productData.unit || ''}</p>
+                <p><strong>PRECIO POR UNIDAD:</strong> ${productData.pricePerUnit || '0.00'}</p>
+                <p><strong>PRECIO ORIGINAL:</strong> ${productData.originalPrice || '0.00'}</p>
+                <p><strong>PORCENTAJE DE GANANCIA:</strong> ${productData.profitPercentage || '0'}%</p>
+                <p><strong>DESCUENTO:</strong> ${productData.discount || '0'}%</p>
+                <p><strong>CÓDIGO EAN/UPC:</strong> ${productData.eanUpcCode || 'N/A'}</p>
+                <p><strong>CODIGO DEL PRODUCTO:</strong> ${productData.code || 'N/A'}</p>
+              `;
+              showModal(detailsContent);
+            });
+            actions.appendChild(viewDetailsBtn);
+
+            const editBtn = document.createElement("button");
+            editBtn.classList.add("icon-btn");
+            editBtn.innerHTML = "<i class='fas fa-edit'></i>";
+            editBtn.addEventListener("click", () => {
+              const editForm = productDiv.querySelector(".edit-form");
+              editForm.style.display = editForm.style.display === "flex" ? "none" : "flex";
+            });
+            actions.appendChild(editBtn);
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.classList.add("icon-btn", "delete-btn");
+            deleteBtn.innerHTML = "<i class='fas fa-trash-alt'></i>";
+            deleteBtn.addEventListener("click", async () => {
+              await confirmDelete(productData.name, businessName, productDoc.id);
+            });
+            actions.appendChild(deleteBtn);
+
+            productHeader.appendChild(actions);
+            productDiv.appendChild(productHeader);
+
+            const productDetails = document.createElement("div");
+            productDetails.classList.add("product-details");
+
+            const eanPara = document.createElement("p");
+            eanPara.textContent = `CÓDIGO EAN/UPC: ${productData.eanUpcCode || 'N/A'}`;
+            productDetails.appendChild(eanPara);
+
+            const pricePara = document.createElement("p");
+            pricePara.classList.add("price");
+            pricePara.textContent = `PRECIO: ${productData.pricePerUnit || '0.00'}`;
+            productDetails.appendChild(pricePara);
+
+            const stockPara = document.createElement("p");
+            if (productData.quantity === 0) {
+              stockPara.textContent = "AGOTADO";
+              stockPara.classList.add("low-stock");
+            } else if (productData.quantity <= productData.lowStockThreshold) {
+              stockPara.textContent = `SE ESTÁ CASI AGOTANDO: ${productData.quantity} ${productData.unit || 'N/A'}`;
+              stockPara.classList.add("low-stock");
+            } else {
+              stockPara.textContent = `CANTIDAD: ${productData.quantity} ${productData.unit || 'N/A'}`;
+            }
+            productDetails.appendChild(stockPara);
+
+            const expirationDate = new Date(productData.expirationDate);
+            const currentDate = new Date();
+            const daysUntilExpiration = Math.ceil((expirationDate - currentDate) / (1000 * 60 * 60 * 24));
+
+            const expirationPara = document.createElement("p");
+            expirationPara.textContent = `DÍAS PARA VENCER: ${daysUntilExpiration} días`;
+            if (daysUntilExpiration <= 30) {
+              expirationPara.classList.add("expiration-warning");
+            }
+            productDetails.appendChild(expirationPara);
+
+            productDiv.appendChild(productDetails);
+
+            const editForm = document.createElement("div");
+            editForm.classList.add("edit-form");
+
+            // Campo: Editar cantidad
+            const editQuantityLabel = document.createElement("label");
+            editQuantityLabel.textContent = "Editar cantidad de Unidad/Paquete/Fardo/Libras:";
+            const editQuantityInput = document.createElement("input");
+            editQuantityInput.type = "number";
+            editQuantityInput.value = productData.quantity;
+            editForm.appendChild(editQuantityLabel);
+            editForm.appendChild(editQuantityInput);
+
+            // Campo: Editar Unidad/Paquete/Fardo/Libras
+            const editUnitLabel = document.createElement("label");
+            editUnitLabel.textContent = "Editar Unidad/Paquete/Fardo/Libras:";
+            const editUnitInput = document.createElement("select");
+            const options = ["Unidad", "Paquete", "Fardo", "Libras"];
+            options.forEach(option => {
+              const opt = document.createElement("option");
+              opt.value = option;
+              opt.textContent = option;
+              if (productData.unit === option) opt.selected = true;
+              editUnitInput.appendChild(opt);
+            });
+            editForm.appendChild(editUnitLabel);
+            editForm.appendChild(editUnitInput);
+
+            // Campo: Editar umbral de alerta
+            const editLowStockThresholdLabel = document.createElement("label");
+            editLowStockThresholdLabel.textContent = "Editar cantidad que debe notificar que el producto se está agotando:";
+            const editLowStockThreshold = document.createElement("input");
+            editLowStockThreshold.type = "number";
+            editLowStockThreshold.value = productData.lowStockThreshold || 10;
+            editForm.appendChild(editLowStockThresholdLabel);
+            editForm.appendChild(editLowStockThreshold);
+
+            // Campo: Cambiar precio
+            const editPriceLabel = document.createElement("label");
+            editPriceLabel.textContent = "Cambiar precio $DOP:";
+            const editPriceInput = document.createElement("input");
+            editPriceInput.type = "number";
+            editPriceInput.value = productData.pricePerUnit || 0;
+            editForm.appendChild(editPriceLabel);
+            editForm.appendChild(editPriceInput);
+
+            // Campo: Precio original
+            const editOriginalPriceLabel = document.createElement("label");
+            editOriginalPriceLabel.textContent = "Precio Original $DOP:";
+            const editOriginalPriceInput = document.createElement("input");
+            editOriginalPriceInput.type = "number";
+            editOriginalPriceInput.value = productData.originalPrice || 0;
+            editForm.appendChild(editOriginalPriceLabel);
+            editForm.appendChild(editOriginalPriceInput);
+
+            // Campo: Porcentaje de ganancia
+            const editProfitPercentageLabel = document.createElement("label");
+            editProfitPercentageLabel.textContent = "Porcentaje de Ganancia (%):";
+            const editProfitPercentageInput = document.createElement("input");
+            editProfitPercentageInput.type = "number";
+            editProfitPercentageInput.value = productData.profitPercentage || 0;
+            editForm.appendChild(editProfitPercentageLabel);
+            editForm.appendChild(editProfitPercentageInput);
+
+            // Campo: Descuento
+            const editDiscountLabel = document.createElement("label");
+            editDiscountLabel.textContent = "Descuento (%):";
+            const editDiscountInput = document.createElement("input");
+            editDiscountInput.type = "number";
+            editDiscountInput.value = productData.discount || 0;
+            editForm.appendChild(editDiscountLabel);
+            editForm.appendChild(editDiscountInput);
+
+            // Campo: Editar fecha de vencimiento
+            const editExpirationLabel = document.createElement("label");
+            editExpirationLabel.textContent = "Editar fecha de vencimiento:";
+            const editExpirationInput = document.createElement("input");
+            editExpirationInput.type = "date";
+            editExpirationInput.value = productData.expirationDate ? productData.expirationDate.split('T')[0] : '';
+            editForm.appendChild(editExpirationLabel);
+            editForm.appendChild(editExpirationInput);
+
+            // Botón para guardar los cambios
+            const saveBtn = document.createElement("button");
+            saveBtn.classList.add("btn");
+            saveBtn.textContent = "Guardar";
+            saveBtn.addEventListener("click", async () => {
+              try {
+                const newQuantity = parseInt(editQuantityInput.value, 10);
+                const newUnit = editUnitInput.value;
+                const newLowStockThreshold = parseInt(editLowStockThreshold.value, 10);
+                const newPrice = parseFloat(editPriceInput.value);
+                const newOriginalPrice = parseFloat(editOriginalPriceInput.value);
+                const newProfitPercentage = parseFloat(editProfitPercentageInput.value);
+                const newDiscount = parseFloat(editDiscountInput.value);
+                const newExpirationDate = editExpirationInput.value;
+                const user = auth.currentUser;
+
+                if (!user) {
+                  alert("Por favor, inicie sesión para guardar los cambios.");
+                  return;
+                }
+
+                const profitAmount = newOriginalPrice * (newProfitPercentage / 100);
+                const totalPrice = newOriginalPrice + profitAmount;
+                const discountedPrice = totalPrice * (1 - (newDiscount / 100));
+
+                await updateDoc(doc(db, "businesses", businessName, "products", productDoc.id), {
+                  quantity: newQuantity,
+                  unit: newUnit,
+                  lowStockThreshold: newLowStockThreshold,
+                  pricePerUnit: discountedPrice,
+                  originalPrice: newOriginalPrice,
+                  profitPercentage: newProfitPercentage,
+                  discount: newDiscount,
+                  expirationDate: newExpirationDate,
+                  lastEditedBy: user.displayName || 'N/A',
+                  lastEditedDate: new Date().toISOString(),
+                  lastEditedProfileImage: user.photoURL || 'default-profile.jpg',
+                });
+
+                await addDoc(collection(db, "productsHistory"), {
+                  businessName: businessName,
+                  productName: productData.name,
+                  editedBy: user.displayName || 'N/A',
+                  editDate: new Date().toISOString(),
+                  unit: newUnit,
+                  quantity: newQuantity,
+                  expirationDate: newExpirationDate,
+                  userName: user ? user.email || 'N/A' : 'N/A',
+                  lastEditedProfileImage: user ? user.photoURL || 'default-profile.jpg' : 'default-profile.jpg'
+                });
+
+                loadProducts(name, code, ean);
+                showAlert("Cambios guardados correctamente.", "success");
+              } catch (error) {
+                console.error("Error al guardar los cambios: ", error);
+                showAlert("Error al guardar los cambios.", "error");
+              }
+            });
+            editForm.appendChild(saveBtn);
+            productDiv.appendChild(editForm);
+
+            accordionContent.appendChild(productDiv);
+          });
+
+          accordion.appendChild(accordionHeader);
+          accordion.appendChild(accordionContent);
+          productsSection.appendChild(accordion);
         }
-    }
-
-    function showAlert(message) {
-        const alertBox = document.getElementById("alert");
-        alertBox.innerHTML = message;
-        alertBox.classList.add("show");
-
-        setTimeout(() => {
-            alertBox.classList.remove("show");
-        }, 12000); 
+      }
     }
 
     function checkAlerts() {
-        onSnapshot(collection(db, "businesses"), async (snapshot) => {
-            let alertContent = "";
-            const currentDate = new Date();
+      onSnapshot(collection(db, "businesses"), async (snapshot) => {
+        let alertContent = "";
+        const currentDate = new Date();
 
-            for (const businessDoc of snapshot.docs) {
-                const businessName = businessDoc.data().name;
-                const productsQuerySnapshot = await getDocs(collection(db, "businesses", businessName, "products"));
-                let lowStockProducts = "";
+        let outOfStockProducts = "";
+        let nearExpirationProducts = "";
+        let expiredProducts = "";
 
-                productsQuerySnapshot.forEach((productDoc) => {
-                    const productData = productDoc.data();
-                    const expirationDate = new Date(productData.expirationDate);
-                    const daysUntilExpiration = (expirationDate - currentDate) / (1000 * 60 * 60 * 24);
+        for (const businessDoc of snapshot.docs) {
+          const businessName = businessDoc.data().name;
+          const productsQuerySnapshot = await getDocs(collection(db, "businesses", businessName, "products"));
 
-                    if (productData.quantity <= productData.lowStockThreshold) {
-                        lowStockProducts += `<li>${productData.name} - ${productData.quantity}</li>`;
-                    }
+          productsQuerySnapshot.forEach((productDoc) => {
+            const productData = productDoc.data();
+            const expirationDate = new Date(productData.expirationDate);
+            const daysUntilExpiration = Math.ceil((expirationDate - currentDate) / (1000 * 60 * 60 * 24));
 
-                    if (daysUntilExpiration <= 30) {
-                        lowStockProducts += `<li>${productData.name} - Fecha de vencimiento cercana: ${productData.expirationDate}</li>`;
-                    }
-                });
-
-                if (lowStockProducts) {
-                    alertContent += `<strong>${businessName}</strong><ul>${lowStockProducts}</ul>`;
-                }
+            if (productData.quantity === 0) {
+              outOfStockProducts += `<li>${productData.name} | ${businessName}</li>`;
+            } else if (daysUntilExpiration <= 30 && daysUntilExpiration >= 0) {
+              nearExpirationProducts += `<li>${productData.name} | ${businessName}</li>`;
+            } else if (daysUntilExpiration < 0) {
+              expiredProducts += `<li>${productData.name} | ${businessName}</li>`;
             }
+          });
+        }
 
-            if (alertContent) {
-                showAlert(alertContent);
-            }
+        if (outOfStockProducts || nearExpirationProducts || expiredProducts) {
+          alertContent = `
+            <strong>PRODUCTOS AGOTADOS</strong>
+            <ul>${outOfStockProducts || "No hay productos agotados."}</ul>
+            <strong>FECHA DE VENCIMIENTOS CERCANA</strong>
+            <ul>${nearExpirationProducts || "No hay productos con vencimientos cercanos."}</ul>
+            <strong>VENCIDOS</strong>
+            <ul>${expiredProducts || "No hay productos vencidos."}</ul>
+          `;
+          showAlert(alertContent, "error");
+        }
+      });
+    }
+
+    async function downloadExcel() {
+      showLoading(); // Mostrar el loading
+
+      try {
+        const table = document.createElement("table");
+        const headerRow = table.insertRow();
+        const headers = ["Nombre", "Código", "EAN/UPC", "Cantidad", "Precio", "Fecha de Expiración"];
+        headers.forEach(header => {
+          const th = document.createElement("th");
+          th.textContent = header;
+          headerRow.appendChild(th);
         });
+
+        const businessesQuerySnapshot = await getDocs(collection(db, "businesses"));
+        for (const businessDoc of businessesQuerySnapshot.docs) {
+          const businessName = businessDoc.data().name;
+          const productsQuerySnapshot = await getDocs(collection(db, "businesses", businessName, "products"));
+
+          productsQuerySnapshot.forEach((productDoc) => {
+            const productData = productDoc.data();
+            const row = table.insertRow();
+            const cells = [
+              productData.name || 'N/A',
+              productData.code || 'N/A',
+              productData.eanUpcCode || 'N/A',
+              `${productData.quantity} ${productData.unit || ''}`,
+              productData.pricePerUnit || '0.00',
+              productData.expirationDate || 'N/A'
+            ];
+
+            cells.forEach(cellData => {
+              const cell = row.insertCell();
+              cell.textContent = cellData;
+            });
+          });
+        }
+
+        const wb = XLSX.utils.table_to_book(table);
+        XLSX.writeFile(wb, "inventario.xlsx");
+      } catch (error) {
+        console.error("Error al generar el archivo Excel: ", error);
+        showAlert("Error al generar el archivo Excel.", "error");
+      } finally {
+        hideLoading(); // Ocultar el loading
+      }
     }
 
     document.getElementById("searchName").addEventListener("input", (e) => {
-        const name = e.target.value;
-        const code = document.getElementById("searchCode").value;
-        const ean = document.getElementById("searchEAN").value;
-        loadProducts(name, code, ean);
+      const name = e.target.value;
+      const code = document.getElementById("searchCode").value;
+      const ean = document.getElementById("searchEAN").value;
+      loadProducts(name, code, ean);
     });
 
-    document.getElementById("searchCode").addEventListener("input", (e) => { 
-        const code = e.target.value;
-        const name = document.getElementById("searchName").value; 
-        const ean = document.getElementById("searchEAN").value;
-        loadProducts(name, code, ean);
+    document.getElementById("searchCode").addEventListener("input", (e) => {
+      const code = e.target.value;
+      const name = document.getElementById("searchName").value;
+      const ean = document.getElementById("searchEAN").value;
+      loadProducts(name, code, ean);
     });
 
     document.getElementById("searchEAN").addEventListener("input", (e) => {
-        const ean = e.target.value;
-        const name = document.getElementById("searchName").value;
-        const code = document.getElementById("searchCode").value;
-        loadProducts(name, code, ean);
+      const ean = e.target.value;
+      const name = document.getElementById("searchName").value;
+      const code = document.getElementById("searchCode").value;
+      loadProducts(name, code, ean);
     });
+
+    document.getElementById("modal").addEventListener("click", (e) => {
+      if (e.target === document.getElementById("modal")) {
+        closeModal();
+      }
+    });
+
+    document.getElementById("downloadExcelBtn").addEventListener("click", downloadExcel);
 
     loadProducts();
     checkAlerts();
-</script>
+  </script>
 
 
+  <!-- Incluir la librería XLSX -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 </body>
 </html>
-
-
-
- <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-<script>
-    function goBack() {
-        window.location.href = 'index.html';
-    }
-</script>
