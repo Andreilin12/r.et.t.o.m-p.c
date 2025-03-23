@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transferir Datos</title>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #1e1e2f;
+      margin: 0;
+      padding: 20px;
+      color: #fff;
+    }
+    h1 {
+      text-align: center;
+      color: #00d1b2;
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+    .transfer-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .transfer-btn {
+      padding: 10px 20px;
+      font-size: 16px;
+      color: #fff;
+      background-color: #00d1b2;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .transfer-btn:hover {
+      background-color: #009e87;
+    }
+    .loading {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .loading img {
+      width: 80px;
+      height: 80px;
+      animation: spin 1.5s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .alert {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px;
+      border-radius: 5px;
+      color: #fff;
+      background-color: #00d1b2;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.5s ease-out;
+    }
+    .alert.error {
+      background-color: #ff3860;
+    }
+    @keyframes slideIn {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(0); }
+    }
+  </style>
+</head>
+<body>
+  <h1>Transferir Datos entre Bases de Datos</h1>
+  <button id="transferBtn" class="transfer-btn">Transferir Productos de DB1 a DB2</button>
+  <div id="loading">
+    <img src="loading.png" alt="Loading...">
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getFirestore, collection, getDocs, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+    // Configuración de la primera base de datos
+    const firebaseConfig1 = {
+      apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+      authDomain: "inventario-35d6b.firebaseapp.com",
+      databaseURL: "https://inventario-35d6b-default-rtdb.firebaseio.com",
+      projectId: "inventario-35d6b",
+      storageBucket: "inventario-35d6b.appspot.com",
+      messagingSenderId: "266100399659",
+      appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
+    };
+
+    // Configuración de la segunda base de datos
+    const firebaseConfig2 = {
+      apiKey: "AIzaSyBQZev4QZdClhi4LzdyPlOyJvkyQWRCiKU",
+      authDomain: "energycontador-20e7d.firebaseapp.com",
+      databaseURL: "https://energycontador-20e7d-default-rtdb.firebaseio.com",
+      projectId: "energycontador-20e7d",
+      storageBucket: "energycontador-20e7d.appspot.com",
+      messagingSenderId: "216700307706",
+      appId: "1:216700307706:web:dedc278ff696be60662143"
+    };
+
+    // Inicializar ambas aplicaciones de Firebase
+    const app1 = initializeApp(firebaseConfig1, "app1");
+    const app2 = initializeApp(firebaseConfig2, "app2");
+
+    // Obtener instancias de Firestore para ambas bases de datos
+    const db1 = getFirestore(app1);
+    const db2 = getFirestore(app2);
+
+    // Función para transferir productos de DB1 a DB2
+    async function transferProducts() {
+      const loading = document.getElementById("loading");
+      loading.style.display = "flex";
+
+      try {
+        const businessesQuerySnapshot = await getDocs(collection(db1, "businesses"));
+        for (const businessDoc of businessesQuerySnapshot.docs) {
+          const businessName = businessDoc.data().name;
+
+          // Verificar si el negocio ya existe en DB2
+          const businessRefDB2 = doc(db2, "businesses", businessName);
+          const businessDocDB2 = await getDoc(businessRefDB2);
+
+          if (!businessDocDB2.exists()) {
+            // Crear el negocio en DB2 si no existe
+            await addDoc(collection(db2, "businesses"), { name: businessName });
+          }
+
+          const productsRefDB1 = collection(db1, "businesses", businessName, "products");
+          const productsQuerySnapshotDB1 = await getDocs(productsRefDB1);
+
+          for (const productDocDB1 of productsQuerySnapshotDB1.docs) {
+            const productData = productDocDB1.data();
+            const productRefDB2 = doc(db2, "businesses", businessName, "products", productDocDB1.id);
+            const productDocDB2 = await getDoc(productRefDB2);
+
+            if (!productDocDB2.exists()) {
+              // Transferir el producto si no existe en DB2
+              await addDoc(collection(db2, "businesses", businessName, "products"), productData);
+            } else {
+              console.log(`El producto ${productData.name} ya existe en DB2.`);
+            }
+          }
+        }
+        alert("Transferencia completada con éxito.");
+      } catch (error) {
+        console.error("Error durante la transferencia:", error);
+        alert("Error durante la transferencia.");
+      } finally {
+        loading.style.display = "none";
+      }
+    }
+
+    // Asignar evento al botón de transferencia
+    document.getElementById("transferBtn").addEventListener("click", transferProducts);
+  </script>
+</body>
+</html>
