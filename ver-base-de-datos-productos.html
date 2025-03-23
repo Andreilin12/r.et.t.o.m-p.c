@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mostrar Productos en Tiempo Real</title>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #1e1e2f;
+      margin: 0;
+      padding: 20px;
+      color: #fff;
+    }
+    h1 {
+      text-align: center;
+      color: #00d1b2;
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+    .selector {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .selector select {
+      padding: 10px;
+      font-size: 16px;
+      border: 2px solid #00d1b2;
+      border-radius: 5px;
+      background-color: #27293d;
+      color: #00d1b2;
+      cursor: pointer;
+    }
+    .product {
+      background-color: #27293d;
+      border: 1px solid #00d1b2;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .product:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+    }
+    .product h3 {
+      margin: 0;
+      color: #00d1b2;
+    }
+    .product p {
+      margin: 5px 0;
+      color: #ccc;
+    }
+    .loading {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .loading img {
+      width: 80px;
+      height: 80px;
+      animation: spin 1.5s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>Mostrar Productos en Tiempo Real</h1>
+  <div class="selector">
+    <select id="databaseSelector">
+      <option value="db1">Base de Datos 1</option>
+      <option value="db2">Base de Datos 2</option>
+    </select>
+  </div>
+  <div id="productsSection"></div>
+  <div id="loading">
+    <img src="loading.png" alt="Loading...">
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+    // Configuración de la primera base de datos
+    const firebaseConfig1 = {
+      apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+      authDomain: "inventario-35d6b.firebaseapp.com",
+      databaseURL: "https://inventario-35d6b-default-rtdb.firebaseio.com",
+      projectId: "inventario-35d6b",
+      storageBucket: "inventario-35d6b.appspot.com",
+      messagingSenderId: "266100399659",
+      appId: "1:266100399659:web:92358d28cbd803c8a7d46e"
+    };
+
+    // Configuración de la segunda base de datos
+    const firebaseConfig2 = {
+      apiKey: "AIzaSyBQZev4QZdClhi4LzdyPlOyJvkyQWRCiKU",
+      authDomain: "energycontador-20e7d.firebaseapp.com",
+      databaseURL: "https://energycontador-20e7d-default-rtdb.firebaseio.com",
+      projectId: "energycontador-20e7d",
+      storageBucket: "energycontador-20e7d.appspot.com",
+      messagingSenderId: "216700307706",
+      appId: "1:216700307706:web:dedc278ff696be60662143"
+    };
+
+    // Inicializar ambas aplicaciones de Firebase
+    const app1 = initializeApp(firebaseConfig1, "app1");
+    const app2 = initializeApp(firebaseConfig2, "app2");
+
+    // Obtener instancias de Firestore para ambas bases de datos
+    const db1 = getFirestore(app1);
+    const db2 = getFirestore(app2);
+
+    // Función para cargar productos en tiempo real
+    function loadRealTimeProducts(db, dbName) {
+      const productsSection = document.getElementById("productsSection");
+      const loading = document.getElementById("loading");
+      loading.style.display = "flex";
+      productsSection.innerHTML = "";
+
+      onSnapshot(collection(db, "businesses"), (snapshot) => {
+        productsSection.innerHTML = "";
+        snapshot.forEach((businessDoc) => {
+          const businessName = businessDoc.data().name;
+          const productsRef = collection(db, "businesses", businessName, "products");
+
+          onSnapshot(productsRef, (productsSnapshot) => {
+            const businessDiv = document.createElement("div");
+            businessDiv.classList.add("product");
+
+            const businessHeader = document.createElement("h3");
+            businessHeader.textContent = `${businessName} (${dbName})`;
+            businessDiv.appendChild(businessHeader);
+
+            productsSnapshot.forEach((productDoc) => {
+              const productData = productDoc.data();
+              const productDiv = document.createElement("div");
+              productDiv.classList.add("product");
+
+              const productName = document.createElement("h3");
+              productName.textContent = productData.name;
+              productDiv.appendChild(productName);
+
+              const productDetails = document.createElement("div");
+              productDetails.innerHTML = `
+                <p><strong>Código EAN/UPC:</strong> ${productData.eanUpcCode || 'N/A'}</p>
+                <p><strong>Precio:</strong> ${productData.pricePerUnit || '0.00'}</p>
+                <p><strong>Cantidad:</strong> ${productData.quantity} ${productData.unit || 'N/A'}</p>
+              `;
+              productDiv.appendChild(productDetails);
+              businessDiv.appendChild(productDiv);
+            });
+
+            productsSection.appendChild(businessDiv);
+          });
+        });
+        loading.style.display = "none";
+      });
+    }
+
+    // Cargar productos según la selección
+    document.getElementById("databaseSelector").addEventListener("change", (e) => {
+      const selectedDb = e.target.value;
+      if (selectedDb === "db1") {
+        loadRealTimeProducts(db1, "Base de Datos 1");
+      } else if (selectedDb === "db2") {
+        loadRealTimeProducts(db2, "Base de Datos 2");
+      }
+    });
+
+    // Cargar productos de la base de datos 1 por defecto
+    loadRealTimeProducts(db1, "Base de Datos 1");
+  </script>
+</body>
+</html>
