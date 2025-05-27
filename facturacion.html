@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facturación</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Arial", sans-serif;
+      background: linear-gradient(135deg, #2c3e50, #34495e);
+      color: #ecf0f1;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #47627d;
+      padding: 10px 20px;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
+    }
+
+    header a {
+      text-decoration: none;
+      color: #ecf0f1;
+      font-size: 1.2em;
+    }
+
+    /* Main Layout */
+    .main-container {
+      display: flex;
+      flex-direction: row;
+      margin-top: 60px;
+      flex-grow: 1;
+      min-height: calc(100vh - 120px);
+    }
+
+    /* Left: Products */
+    .products-container {
+      flex: 3;
+      padding: 20px;
+      overflow-y: auto;
+      background: #34495e;
+      border-radius: 10px;
+      margin: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .products-container h1 {
+      font-size: 1.8em;
+      margin-bottom: 20px;
+    }
+
+    .invoice-item {
+      padding: 10px;
+      border-bottom: 1px solid #95a5a6;
+      margin-bottom: 10px;
+      background: #2c3e50;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: transform 0.3s ease;
+    }
+
+    .invoice-item:hover {
+      transform: translateX(5px);
+    }
+
+    /* Right: Vertical Menu */
+    .vertical-menu {
+      flex: 1;
+      background: #47627d;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      border-radius: 10px;
+      margin: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      max-width: 250px;
+    }
+
+    .vertical-menu .exchange-rates {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+      font-size: 1em;
+    }
+
+    .vertical-menu .button {
+      padding: 12px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 1em;
+      color: #ecf0f1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.3s, transform 0.3s;
+      text-decoration: none;
+    }
+
+    .vertical-menu .button:hover {
+      transform: scale(1.05);
+    }
+
+    .vertical-menu .button i {
+      font-size: 1.2em;
+    }
+
+    .button-efectivo {
+      background-color: #27ae60;
+    }
+
+    .button-efectivo:hover {
+      background-color: #2ecc71;
+    }
+
+    .button-tarjeta {
+      background-color: #2980b9;
+    }
+
+    .button-tarjeta:hover {
+      background-color: #3498db;
+    }
+
+    .button-descuento {
+      background-color: #e67e22;
+    }
+
+    .button-descuento:hover {
+      background-color: #d35400;
+    }
+
+    .button-home {
+      background-color: #8e44ad;
+    }
+
+    .button-home:hover {
+      background-color: #9b59b6;
+    }
+
+    /* Bottom Fixed Bar */
+    .totals-bar {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #2c3e50;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+    }
+
+    .totals-bar .total-container {
+      background: #47627d;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 1em;
+      color: #ecf0f1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .totals-bar .total-container i {
+      font-size: 1.2em;
+    }
+
+    /* Modals */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: #2c3e50;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80mm;
+      max-width: 90%;
+      border-radius: 10px;
+      color: #ecf0f1;
+      text-align: center;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: #fff;
+    }
+
+    /* Print Modal Styling */
+    .modal-content button {
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 1em;
+      background-color: #27ae60;
+      color: #ecf0f1;
+      transition: background 0.3s, transform 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 10px auto;
+    }
+
+    .modal-content button:hover {
+      background-color: #2ecc71;
+      transform: scale(1.05);
+    }
+
+    /* Payment Modals */
+    .payment-modal-content {
+      background-color: #2c3e50;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 300px;
+      max-width: 90%;
+      border-radius: 10px;
+      color: #ecf0f1;
+      text-align: center;
+    }
+
+    .payment-modal-content input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #888;
+      background-color: #34495e;
+      color: #ecf0f1;
+      font-size: 1em;
+    }
+
+    .payment-modal-content button {
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 1em;
+      background-color: #27ae60;
+      color: #ecf0f1;
+      transition: background 0.3s, transform 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 10px auto;
+    }
+
+    .payment-modal-content button:hover {
+      background-color: #2ecc71;
+      transform: scale(1.05);
+    }
+
+    /* Password Modal */
+    .password-modal-content {
+      background-color: #2c3e50;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 300px;
+      max-width: 90%;
+      border-radius: 10px;
+      color: #ecf0f1;
+      text-align: center;
+    }
+
+    .password-modal-content input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #888;
+      background-color: #34495e;
+      color: #ecf0f1;
+    }
+
+    .password-modal-content button {
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 1em;
+      background-color: #27ae60;
+      color: #ecf0f1;
+      transition: background 0.3s, transform 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .password-modal-content button:hover {
+      background-color: #2ecc71;
+      transform: scale(1.05);
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: white;
+      }
+      header, .vertical-menu, .totals-bar {
+        display: none;
+      }
+      .modal-content {
+        width: 80mm;
+        margin: 0;
+        padding: 10px;
+        border: none;
+        color: #000;
+      }
+      .modal-content h2, .modal-content h3, .modal-content p {
+        color: #000;
+      }
+      .modal-content button {
+        display: none;
+      }
+      .invoice-item {
+        color: #000;
+      }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .main-container {
+        flex-direction: column;
+        margin-top: 50px;
+      }
+
+      .products-container {
+        order: 2;
+        margin: 10px 5px;
+        padding: 10px;
+      }
+
+      .vertical-menu {
+        order: 1;
+        flex-direction: row;
+        flex-wrap: wrap;
+        max-width: 100%;
+        margin: 5px;
+        padding: 10px;
+        justify-content: center;
+      }
+
+      .vertical-menu .button {
+        flex: 1 1 45%;
+        margin: 5px;
+      }
+
+      .totals-bar {
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .totals-bar .total-container {
+        width: 100%;
+        justify-content: center;
+      }
+
+      header {
+        padding: 8px 10px;
+      }
+
+      .modal-content, .payment-modal-content, .password-modal-content {
+        width: 90%;
+      }
+    }
+
+    /* Mobile App-Like Styling */
+    @media (max-width: 480px) {
+      body {
+        background: #2c3e50;
+      }
+
+      header {
+        background: #34495e;
+        border-bottom: 2px solid #47627d;
+      }
+
+      .main-container {
+        margin-top: 50px;
+      }
+
+      .products-container {
+        border-radius: 0;
+        margin: 0;
+        padding: 10px;
+      }
+
+      .vertical-menu {
+        background: #34495e;
+        border-radius: 0;
+        margin: 0;
+        padding: 10px;
+      }
+
+      .totals-bar {
+        background: #34495e;
+        border-top: 2px solid #47627d;
+      }
+    }
+
+    /* Icon Hover Effects */
+    .icon {
+      color: #15a086;
+      font-size: 1.8em;
+      transition: transform 0.3s ease, color 0.3s ease;
+    }
+
+    .icon:hover {
+      transform: scale(1.2);
+      color: #16e086;
+    }
+
+    /* Factura Styles */
+    .invoice-container {
+      width: 100%;
+      max-width: 80mm;
+      margin: 0 auto;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+    }
+
+    .invoice-header {
+      text-align: center;
+      margin-bottom: 10px;
+      border-bottom: 1px dashed #000;
+      padding-bottom: 10px;
+    }
+
+    .invoice-header h2 {
+      margin: 5px 0;
+      font-size: 18px;
+    }
+
+    .invoice-header p {
+      margin: 3px 0;
+      font-size: 14px;
+    }
+
+    .invoice-user {
+      margin: 10px 0;
+      padding-bottom: 5px;
+      border-bottom: 1px dashed #000;
+    }
+
+    .invoice-products {
+      margin: 10px 0;
+    }
+
+    .product-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    .product-name {
+      flex: 3;
+    }
+
+    .product-quantity, .product-price, .product-total, .product-itbis {
+      flex: 1;
+      text-align: right;
+    }
+
+    .invoice-totals {
+      margin-top: 15px;
+      border-top: 1px dashed #000;
+      padding-top: 10px;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .barcode {
+      text-align: center;
+      margin-top: 15px;
+      font-family: 'Libre Barcode 39', cursive;
+      font-size: 36px;
+    }
+
+    .thank-you {
+      text-align: center;
+      margin-top: 10px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="punto-de-venta.html"><i class="fa-solid fa-house icon"></i></a>
+    <span id="invoiceUser"></span>
+  </header>
+
+  <div class="main-container">
+    <!-- Left: Products -->
+    <div class="products-container">
+      <h1>Productos</h1>
+      <div id="invoiceItems"></div>
+    </div>
+
+    <!-- Right: Vertical Menu -->
+    <div class="vertical-menu">
+      <div class="exchange-rates" id="exchangeRatesDisplay"></div>
+      <a href="punto-de-venta.html" class="button button-home"><i class="fa-solid fa-home"></i> Inicio</a>
+      <button class="button button-efectivo" id="btnEfectivo"><i class="fa-solid fa-money-bill"></i> Pagar en Efectivo</button>
+      <button class="button button-tarjeta" id="btnTarjeta"><i class="fa-solid fa-credit-card"></i> Pagar con Tarjeta</button>
+      <button class="button button-descuento" id="btnApplyDiscount"><i class="fa-solid fa-percent"></i> Aplicar Descuento</button>
+    </div>
+  </div>
+
+  <!-- Bottom Totals Bar -->
+  <div class="totals-bar">
+    <div class="total-container" id="invoiceTotal"><i class="fa-solid fa-calculator"></i> Total: DOP $0.00</div>
+  </div>
+
+  <!-- Print Modal -->
+  <div id="printModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeModal">×</span>
+      <div id="invoicePrintContent">
+        <!-- Invoice content will be generated here -->
+      </div>
+      <button id="btnPrint"><i class="fa-solid fa-print"></i> Imprimir</button>
+    </div>
+  </div>
+
+  <!-- Payment Modal (Efectivo) -->
+  <div id="efectivoModal" class="modal">
+    <div class="payment-modal-content">
+      <span class="close" id="closeEfectivoModal">×</span>
+      <h2>Pago en Efectivo</h2>
+      <p>Total a Pagar: <span id="efectivoTotal"></span></p>
+      <input type="number" id="efectivoReceived" placeholder="Monto Recibido (DOP)">
+      <p>Cambio: <span id="efectivoChange">DOP $0.00</span></p>
+      <button id="confirmEfectivo"><i class="fa-solid fa-check"></i> Confirmar Pago</button>
+    </div>
+  </div>
+
+  <!-- Payment Modal (Tarjeta) -->
+  <div id="tarjetaModal" class="modal">
+    <div class="payment-modal-content">
+      <span class="close" id="closeTarjetaModal">×</span>
+      <h2>Pago con Tarjeta</h2>
+      <p>Total a Pagar: <span id="tarjetaTotal"></span></p>
+      <button id="confirmTarjeta"><i class="fa-solid fa-check"></i> Confirmar Pago</button>
+    </div>
+  </div>
+
+  <!-- Password Modal -->
+  <div id="passwordModal" class="modal">
+    <div class="password-modal-content">
+      <span class="close" id="closePasswordModal">×</span>
+      <h2>Introduce la Contraseña</h2>
+      <input type="password" id="passwordInput" placeholder="Contraseña de 6 dígitos">
+      <button id="submitPassword"><i class="fa-solid fa-lock"></i> Aceptar</button>
+      <p id="passwordError" style="color: #e74c3c; display: none;">Contraseña incorrecta</p>
+    </div>
+  </div>
+
+  <!-- Discount Applied Modal -->
+  <div id="discountAppliedModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeDiscountModal">×</span>
+      <h2>Descuento Aplicado</h2>
+      <p id="discountMessage"></p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      query,
+      orderBy,
+      limit,
+      getDocs,
+      doc,
+      getDoc,
+      updateDoc,
+      addDoc,
+      deleteDoc,
+      Timestamp,
+      where,
+    } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+      authDomain: "inventario-35d6b.firebaseapp.com",
+      projectId: "inventario-35d6b",
+      storageBucket: "inventario-35d6b.appspot.com",
+      messagingSenderId: "266100399659",
+      appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const invoiceItems = document.getElementById("invoiceItems");
+    const invoiceTotal = document.getElementById("invoiceTotal");
+    const invoiceUser = document.getElementById("invoiceUser");
+    const btnEfectivo = document.getElementById("btnEfectivo");
+    const btnTarjeta = document.getElementById("btnTarjeta");
+    const btnApplyDiscount = document.getElementById("btnApplyDiscount");
+    const printModal = document.getElementById("printModal");
+    const invoicePrintContent = document.getElementById("invoicePrintContent");
+    const closeModal = document.getElementById("closeModal");
+    const btnPrint = document.getElementById("btnPrint");
+    const exchangeRatesDisplay = document.getElementById("exchangeRatesDisplay");
+
+    const efectivoModal = document.getElementById("efectivoModal");
+    const closeEfectivoModal = document.getElementById("closeEfectivoModal");
+    const efectivoReceived = document.getElementById("efectivoReceived");
+    const efectivoTotal = document.getElementById("efectivoTotal");
+    const efectivoChange = document.getElementById("efectivoChange");
+    const confirmEfectivo = document.getElementById("confirmEfectivo");
+
+    const tarjetaModal = document.getElementById("tarjetaModal");
+    const closeTarjetaModal = document.getElementById("closeTarjetaModal");
+    const tarjetaTotal = document.getElementById("tarjetaTotal");
+    const confirmTarjeta = document.getElementById("confirmTarjeta");
+
+    const passwordModal = document.getElementById("passwordModal");
+    const closePasswordModal = document.getElementById("closePasswordModal");
+    const passwordInput = document.getElementById("passwordInput");
+    const submitPassword = document.getElementById("submitPassword");
+    const passwordError = document.getElementById("passwordError");
+
+    const discountAppliedModal = document.getElementById("discountAppliedModal");
+    const closeDiscountModal = document.getElementById("closeDiscountModal");
+    const discountMessage = document.getElementById("discountMessage");
+
+    let invoice = null;
+    let currentUser = null;
+    let exchangeRates = { usd: 62.15, eur: 64.42 };
+    let discount = 0;
+    let discountedTotal = 0;
+    let totalDOP = 0;
+    let invoiceId = null;
+
+    const getBusinessDetails = async () => {
+      const businessRef = doc(db, "businessDetails", "info");
+      const businessDoc = await getDoc(businessRef);
+      if (businessDoc.exists()) {
+        return businessDoc.data();
+      }
+      return { name: "Nombre del Negocio", address: "Dirección del Negocio", rnc: "123456789" };
+    };
+
+    const getExchangeRates = async () => {
+      const ratesRef = doc(db, "exchangeRates", "rates");
+      const ratesDoc = await getDoc(ratesRef);
+      if (ratesDoc.exists()) {
+        exchangeRates = ratesDoc.data();
+        exchangeRatesDisplay.textContent = `USD: $${exchangeRates.usd} | EUR: €${exchangeRates.eur}`;
+      }
+    };
+
+    const getLatestInvoice = async () => {
+      if (!currentUser) return;
+
+      try {
+        const invoicesRef = collection(db, "users", currentUser.uid, "invoices");
+        const invoicesQuery = query(invoicesRef, orderBy("date", "desc"), limit(1));
+        const querySnapshot = await getDocs(invoicesQuery);
+
+        if (!querySnapshot.empty) {
+          querySnapshot.forEach((doc) => {
+            invoice = doc.data();
+            invoiceId = doc.id;
+            renderInvoice();
+          });
+        } else {
+          invoiceItems.innerHTML = "<p>No hay facturas recientes.</p>";
+          invoiceTotal.innerHTML = `<i class="fa-solid fa-calculator"></i> Total: DOP $0.00`;
+        }
+      } catch (error) {
+        console.error("Error al obtener la factura más reciente:", error);
+      }
+    };
+
+    const clearInvoice = async () => {
+      if (invoiceId && currentUser) {
+        try {
+          const invoiceRef = doc(db, "users", currentUser.uid, "invoices", invoiceId);
+          await deleteDoc(invoiceRef);
+          invoice = null;
+          invoiceId = null;
+          invoiceItems.innerHTML = "<p>No hay facturas recientes.</p>";
+          invoiceTotal.innerHTML = `<i class="fa-solid fa-calculator"></i> Total: DOP $0.00`;
+          discount = 0;
+          totalDOP = 0;
+          discountedTotal = 0;
+        } catch (error) {
+          console.error("Error al eliminar la factura:", error);
+        }
+      }
+    };
+
+    const renderInvoice = async () => {
+      invoiceItems.innerHTML = "";
+      totalDOP = 0;
+      let totalITBIS = 0;
+
+      for (const item of invoice.items) {
+        const productRef = doc(db, "businesses", item.businessName, "products", item.productId);
+        const productDoc = await getDoc(productRef);
+
+        if (productDoc.exists()) {
+          const productData = productDoc.data();
+          const profitPercentage = productData.profitPercentage / 100 || 0.10;
+          const itemTotal = item.quantity * item.pricePerUnit;
+          const itbis = itemTotal * 0.18;
+          const subtotal = itemTotal + itbis;
+          const additional = subtotal * profitPercentage;
+          const finalTotal = subtotal + additional;
+
+          totalDOP += finalTotal;
+          totalITBIS += itbis;
+
+          const itemDiv = document.createElement("div");
+          itemDiv.classList.add("invoice-item");
+          itemDiv.innerHTML = `<i class="fa-solid fa-box"></i> ${item.name} x ${item.quantity} - Precio: DOP $${itemTotal.toFixed(2)} | ITBIS: $${itbis.toFixed(2)} | Adicional: $${additional.toFixed(2)} | Total: DOP $${finalTotal.toFixed(2)}`;
+          invoiceItems.appendChild(itemDiv);
+        }
+      }
+
+      const totalUSD = (totalDOP / exchangeRates.usd).toFixed(2);
+      const totalEUR = (totalDOP / exchangeRates.eur).toFixed(2);
+
+      discountedTotal = discount > 0 ? totalDOP - (totalDOP * discount / 100) : totalDOP;
+
+      invoiceTotal.innerHTML = `<i class="fa-solid fa-calculator"></i> Total: DOP $${totalDOP.toFixed(2)} (USD: $${totalUSD}, EUR: €${totalEUR})`;
+      efectivoTotal.textContent = `DOP $${discountedTotal.toFixed(2)}`;
+      tarjetaTotal.textContent = `DOP $${discountedTotal.toFixed(2)}`;
+    };
+
+    const generateInvoice = async (paymentTypeValue, change = 0) => {
+      const businessDetails = await getBusinessDetails();
+      const invoiceHTML = `
+        <div class="invoice-container">
+          <div class="invoice-header">
+            <h2>${businessDetails.name}</h2>
+            <p>RNC: ${businessDetails.rnc}</p>
+            <p>${businessDetails.address}</p>
+          </div>
+          <div class="invoice-user">
+            <p>Atendido por: ${currentUser.displayName || currentUser.email}</p>
+          </div>
+          <div class="invoice-products">
+            <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px;">
+              <span class="product-name">Producto</span>
+              <span class="product-quantity">Cant</span>
+              <span class="product-price">Precio</span>
+              <span class="product-total">Total</span>
+              <span class="product-itbis">ITBIS</span>
+            </div>
+            ${invoice.items.map(item => `
+              <div class="product-row">
+                <span class="product-name">${item.name}</span>
+                <span class="product-quantity">${item.quantity}</span>
+                <span class="product-price">$${item.pricePerUnit.toFixed(2)}</span>
+                <span class="product-total">$${(item.quantity * item.pricePerUnit).toFixed(2)}</span>
+                <span class="product-itbis">$${(item.quantity * item.pricePerUnit * 0.18).toFixed(2)}</span>
+              </div>
+            `).join('')}
+          </div>
+          <div class="invoice-totals">
+            <div class="total-row">
+              <span>Descuento:</span>
+              <span>${discount > 0 ? `$${(totalDOP * discount / 100).toFixed(2)} (${discount}%)` : '$0.00'}</span>
+            </div>
+            ${paymentTypeValue === 'Efectivo' ? `
+              <div class="total-row">
+                <span>Devuelta:</span>
+                <span>$${change.toFixed(2)}</span>
+              </div>
+            ` : ''}
+            <div class="total-row">
+              <span>Total ITBIS:</span>
+              <span>$${(totalDOP * 0.18).toFixed(2)}</span>
+            </div>
+            <div class="total-row" style="font-weight: bold;">
+              <span>Total general:</span>
+              <span>$${discountedTotal.toFixed(2)}</span>
+            </div>
+            <div class="total-row">
+              <span>Método de pago:</span>
+              <span>${paymentTypeValue}</span>
+            </div>
+          </div>
+          <div class="barcode">
+            ${generateBarcode()}
+          </div>
+          <div class="thank-you">
+            <p>Gracias por su compra</p>
+          </div>
+        </div>
+      `;
+      
+      invoicePrintContent.innerHTML = invoiceHTML;
+      
+      // Guardar la factura en la colección facturacionCarrito
+      await saveInvoiceToFirebase(paymentTypeValue, change);
+    };
+
+    const generateBarcode = () => {
+      const randomNumber = Math.floor(Math.random() * 1000000000000).toString();
+      return `*${randomNumber}*`;
+    };
+
+    const saveInvoiceToFirebase = async (paymentTypeValue, change = 0) => {
+      try {
+        const businessDetails = await getBusinessDetails();
+        const totalITBIS = totalDOP * 0.18;
+        
+        const invoiceData = {
+          businessName: businessDetails.name,
+          businessRNC: businessDetails.rnc,
+          businessAddress: businessDetails.address,
+          user: currentUser.displayName || currentUser.email,
+          userId: currentUser.uid,
+          items: invoice.items.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            pricePerUnit: item.pricePerUnit,
+            total: item.quantity * item.pricePerUnit,
+            itbis: item.quantity * item.pricePerUnit * 0.18
+          })),
+          subtotal: totalDOP,
+          discount: discount > 0 ? (totalDOP * discount / 100) : 0,
+          discountPercentage: discount,
+          itbis: totalITBIS,
+          total: discountedTotal,
+          paymentType: paymentTypeValue,
+          change: paymentTypeValue === 'Efectivo' ? change : 0,
+          date: Timestamp.now(),
+          barcode: generateBarcode()
+        };
+
+        await addDoc(collection(db, "facturacionCarrito"), invoiceData);
+      } catch (error) {
+        console.error("Error al guardar la factura:", error);
+      }
+    };
+
+    const processPayment = async (paymentTypeValue) => {
+      try {
+        if (!invoice) {
+          alert("No hay factura para pagar.");
+          return;
+        }
+
+        for (const item of invoice.items) {
+          const productRef = doc(db, "businesses", item.businessName, "products", item.productId);
+          const productDoc = await getDoc(productRef);
+
+          if (productDoc.exists()) {
+            const productData = productDoc.data();
+            const currentQuantity = productData.quantity || 0;
+            const newQuantity = currentQuantity - item.quantity;
+
+            if (newQuantity < 0) {
+              alert(`No hay suficiente stock de ${item.name}.`);
+              return;
+            }
+
+            await updateDoc(productRef, { quantity: newQuantity });
+            await recordSaleHistory(item, paymentTypeValue);
+          }
+        }
+
+        const change = paymentTypeValue === 'Efectivo' ? 
+          (parseFloat(efectivoReceived.value) || 0) - discountedTotal : 0;
+        
+        await generateInvoice(paymentTypeValue, change);
+        printModal.style.display = "block";
+
+        await clearInvoice();
+      } catch (error) {
+        console.error("Error al procesar el pago:", error);
+      }
+    };
+
+    const recordSaleHistory = async (item, paymentTypeValue) => {
+      try {
+        const salesHistoryRef = collection(db, "users", currentUser.uid, "salesHistory");
+        const q = query(salesHistoryRef, where("productName", "==", item.name), where("paymentType", "==", paymentTypeValue));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          querySnapshot.forEach(async (doc) => {
+            const existingSale = doc.data();
+            const newQuantity = existingSale.quantitySold + item.quantity;
+            await updateDoc(doc.ref, { quantitySold: newQuantity });
+          });
+        } else {
+          const saleData = {
+            productName: item.name,
+            quantitySold: item.quantity,
+            paymentType: paymentTypeValue,
+            date: Timestamp.now(),
+          };
+          await addDoc(salesHistoryRef, saleData);
+        }
+      } catch (error) {
+        console.error("Error al registrar el historial de ventas:", error);
+      }
+    };
+
+    const applyDiscount = async () => {
+      passwordModal.style.display = "block";
+    };
+
+    const calculateChange = () => {
+      const received = parseFloat(efectivoReceived.value) || 0;
+      const change = received - discountedTotal;
+      efectivoChange.textContent = `DOP $${change.toFixed(2)}`;
+    };
+
+    submitPassword.addEventListener("click", async () => {
+      const password = passwordInput.value;
+      const discountRef = doc(db, "settings", "discount");
+      const discountDoc = await getDoc(discountRef);
+
+      if (discountDoc.exists()) {
+        const storedPassword = discountDoc.data().password;
+        discount = discountDoc.data().discount;
+
+        if (password === storedPassword) {
+          renderInvoice();
+          passwordModal.style.display = "none";
+          discountMessage.textContent = `Descuento del ${discount}% aplicado.`;
+          discountAppliedModal.style.display = "block";
+        } else {
+          passwordError.style.display = "block";
+        }
+      } else {
+        console.error("No se encontró la configuración de descuento.");
+      }
+    });
+
+    btnEfectivo.addEventListener("click", () => {
+      if (!invoice) {
+        alert("No hay factura para pagar.");
+        return;
+      }
+      efectivoModal.style.display = "flex";
+    });
+
+    confirmEfectivo.addEventListener("click", () => {
+      const received = parseFloat(efectivoReceived.value) || 0;
+      if (received < discountedTotal) {
+        alert("El monto recibido es insuficiente.");
+        return;
+      }
+      processPayment("Efectivo");
+      efectivoModal.style.display = "none";
+      efectivoReceived.value = "";
+      efectivoChange.textContent = "DOP $0.00";
+    });
+
+    btnTarjeta.addEventListener("click", () => {
+      if (!invoice) {
+        alert("No hay factura para pagar.");
+        return;
+      }
+      tarjetaModal.style.display = "flex";
+    });
+
+    confirmTarjeta.addEventListener("click", () => {
+      processPayment("Tarjeta");
+      tarjetaModal.style.display = "none";
+    });
+
+    efectivoReceived.addEventListener("input", calculateChange);
+
+    closeModal.addEventListener("click", () => printModal.style.display = "none");
+    closeEfectivoModal.addEventListener("click", () => {
+      efectivoModal.style.display = "none";
+      efectivoReceived.value = "";
+      efectivoChange.textContent = "DOP $0.00";
+    });
+    closeTarjetaModal.addEventListener("click", () => tarjetaModal.style.display = "none");
+    closePasswordModal.addEventListener("click", () => {
+      passwordModal.style.display = "none";
+      passwordError.style.display = "none";
+    });
+    closeDiscountModal.addEventListener("click", () => discountAppliedModal.style.display = "none");
+
+    btnPrint.addEventListener("click", () => {
+      const printContent = invoicePrintContent.innerHTML;
+      const printWindow = window.open('', '', 'height=400,width=600');
+      printWindow.document.write('<html><head><title>Imprimir Factura</title>');
+      printWindow.document.write('<style>body { font-family: Arial; width: 80mm; margin: 0; padding: 10px; } p, h2, h3 { color: #000; margin: 5px 0; } button { display: none; } .invoice-container { width: 100%; max-width: 80mm; margin: 0 auto; padding: 10px; font-family: Arial, sans-serif; } .invoice-header { text-align: center; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 10px; } .invoice-header h2 { margin: 5px 0; font-size: 18px; } .invoice-header p { margin: 3px 0; font-size: 14px; } .invoice-user { margin: 10px 0; padding-bottom: 5px; border-bottom: 1px dashed #000; } .invoice-products { margin: 10px 0; } .product-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; } .product-name { flex: 3; } .product-quantity, .product-price, .product-total, .product-itbis { flex: 1; text-align: right; } .invoice-totals { margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px; } .total-row { display: flex; justify-content: space-between; margin-bottom: 5px; } .barcode { text-align: center; margin-top: 15px; font-family: "Libre Barcode 39", cursive; font-size: 36px; } .thank-you { text-align: center; margin-top: 10px; font-style: italic; }</style></head><body>');
+      printWindow.document.write(printContent);
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      printWindow.print();
+      printWindow.close();
+    });
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        invoiceUser.textContent = `${user.displayName || user.email}`;
+        getLatestInvoice();
+      } else {
+        invoiceUser.textContent = "No se ha iniciado sesión";
+      }
+    });
+
+    getBusinessDetails();
+    getExchangeRates();
+  </script>
+</body>
+</html>
