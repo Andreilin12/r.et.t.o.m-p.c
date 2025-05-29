@@ -1,0 +1,2129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Punto de Ventas</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">  
+  <style>
+    /* Estilo general */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-user-drag: none;
+      -moz-user-drag: none;
+      user-drag: none;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #2c3e50, #34495e);
+      color: #ecf0f1;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Login Styles */
+    .login-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #2c3e50, #34495e);
+    }
+
+    .login-form {
+      background: rgba(44, 62, 80, 0.9);
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .login-form h2 {
+      margin-bottom: 20px;
+      color: #16e086;
+    }
+
+    .login-form input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #ecf0f1;
+      font-size: 16px;
+    }
+
+    .login-form button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 20px;
+      border: none;
+      border-radius: 5px;
+      background: #16e086;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .login-form button:hover {
+      background: #15a086;
+    }
+
+    .login-error {
+      color: #ff7675;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #47627d;
+      padding: 10px 20px;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .header-icons {
+      display: flex;
+      gap: 15px;
+    }
+
+    .icon {
+      color: #15a086;
+      font-size: 1.8em;
+      transition: transform 0.3s ease, color 0.3s ease;
+      cursor: pointer;
+    }
+
+    .icon:hover {
+      transform: scale(1.2);
+      color: #16e086;
+    }
+
+    #invoiceUser {
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+
+    /* Main Layout */
+    .main-container {
+      display: flex;
+      margin-top: 60px;
+      flex-grow: 1;
+      min-height: calc(100vh - 120px);
+    }
+
+    /* Left: Product List */
+    .product-list-container {
+      flex: 3;
+      padding: 20px;
+      overflow-y: auto;
+      background: #34495e;
+      border-radius: 10px;
+      margin: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .product-list-container h1 {
+      font-size: 1.8em;
+      margin-bottom: 20px;
+      color: #16e086;
+    }
+
+    /* Right: Current Invoice */
+    .products-container {
+      flex: 3;
+      padding: 20px;
+      overflow-y: auto;
+      background: #2c3e50;
+      border-radius: 10px;
+      margin: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .products-container h1 {
+      font-size: 1.8em;
+      margin-bottom: 20px;
+      color: #16e086;
+    }
+
+    /* Search Container */
+    .search-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .search-container input {
+      flex-grow: 1;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 25px;
+      outline: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: #dfe6e9;
+      transition: background 0.3s ease;
+    }
+
+    .search-container input:focus {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Product Items */
+    .product-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      margin-bottom: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      transition: transform 0.3s ease, background 0.3s ease;
+      cursor: pointer;
+    }
+
+    .product-item:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-5px);
+    }
+
+    .invoice-item {
+      padding: 10px;
+      border-bottom: 1px solid #95a5a6;
+      margin-bottom: 10px;
+      background: #2c3e50;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: transform 0.3s ease;
+    }
+
+    .invoice-item:hover {
+      transform: translateX(5px);
+    }
+
+    .remove-btn {
+      background-color: #d63031;
+      color: #fff;
+      padding: 5px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin-left: auto;
+    }
+
+    .remove-btn:hover {
+      background-color: #ff7675;
+    }
+
+    /* Bottom Totals Bar */
+    .totals-bar {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #2c3e50;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+    }
+
+    .totals-bar .total-container {
+      background: #47627d;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 1em;
+      color: #ecf0f1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .totals-bar .total-container i {
+      font-size: 1.2em;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .button {
+      padding: 12px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 1em;
+      color: #ecf0f1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.3s, transform 0.3s;
+      text-decoration: none;
+    }
+
+    .button:hover {
+      transform: scale(1.05);
+    }
+
+    .button i {
+      font-size: 1.2em;
+    }
+
+    .button-efectivo {
+      background-color: #27ae60;
+    }
+
+    .button-efectivo:hover {
+      background-color: #2ecc71;
+    }
+
+    .button-tarjeta {
+      background-color: #2980b9;
+    }
+
+    .button-tarjeta:hover {
+      background-color: #3498db;
+    }
+
+    .button-descuento {
+      background-color: #e67e22;
+    }
+
+    .button-descuento:hover {
+      background-color: #d35400;
+    }
+
+    .button-home {
+      background-color: #8e44ad;
+    }
+
+    .button-home:hover {
+      background-color: #9b59b6;
+    }
+
+    .button-pay {
+      background: linear-gradient(135deg, #16e086, #15a086);
+      color: #fff;
+      font-size: 18px;
+      padding: 12px 25px;
+      border-radius: 50px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .button-pay:hover {
+      background: linear-gradient(135deg, #15a086, #16e086);
+    }
+
+    /* Modals */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: #2c3e50;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80mm;
+      max-width: 90%;
+      border-radius: 10px;
+      color: #ecf0f1;
+      text-align: center;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: #fff;
+    }
+
+    /* Payment Modals */
+    .payment-modal-content {
+      background-color: #2c3e50;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 300px;
+      max-width: 90%;
+      border-radius: 10px;
+      color: #ecf0f1;
+      text-align: center;
+    }
+
+    .payment-modal-content input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #888;
+      background-color: #34495e;
+      color: #ecf0f1;
+      font-size: 1em;
+    }
+
+    .payment-modal-content button {
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 1em;
+      background-color: #27ae60;
+      color: #ecf0f1;
+      transition: background 0.3s, transform 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 10px auto;
+    }
+
+    .payment-modal-content button:hover {
+      background-color: #2ecc71;
+      transform: scale(1.05);
+    }
+
+    /* Password Modal */
+    .password-modal-content {
+      background-color: #2c3e50;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 300px;
+      max-width: 90%;
+      border-radius: 10px;
+      color: #ecf0f1;
+      text-align: center;
+    }
+
+    .password-modal-content input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #888;
+      background-color: #34495e;
+      color: #ecf0f1;
+    }
+
+    .password-modal-content button {
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 1em;
+      background-color: #27ae60;
+      color: #ecf0f1;
+      transition: background 0.3s, transform 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .password-modal-content button:hover {
+      background-color: #2ecc71;
+      transform: scale(1.05);
+    }
+
+    /* Discount Applied Modal */
+    .discount-applied-modal {
+      background-color: #2c3e50;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 300px;
+      max-width: 90%;
+      border-radius: 10px;
+      color: #ecf0f1;
+      text-align: center;
+    }
+
+    /* Numeric Keyboard */
+    .numeric-keyboard {
+      display: none;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 15px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+      backdrop-filter: blur(10px);
+      text-align: center;
+    }
+
+    .numeric-btn {
+      padding: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
+      background: linear-gradient(145deg, #2c3e50, #222);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: 0 0 8px rgba(22, 224, 136);
+      transition: all 0.3s ease-in-out;
+    }
+
+    .numeric-btn:hover {
+      background: #16e086;
+      color: #000;
+      box-shadow: 0 0 15px rgba(22, 224, 134);
+      transform: scale(1.1);
+    }
+
+    #backspaceBtn {
+      background: #ff004c;
+      color: white;
+      box-shadow: 0 0 10px rgba(255, 0, 76, 0.6);
+    }
+
+    #backspaceBtn:hover {
+      background: #ff3366;
+      box-shadow: 0 0 20px rgba(255, 0, 76, 1); 
+      transform: scale(1.1);
+    }
+
+    #acceptBtn {
+      background: #15a086;
+      color: #fff;
+      font-size: 18px;
+      padding: 15px 50px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(21, 160, 135);
+      grid-column: span 3;
+    }
+
+    #acceptBtn:hover {
+      background: #16e086;
+      box-shadow: 0 0 20px rgba(22, 224, 134);
+      transform: scale(1.05);
+    }
+
+    /* Text Keyboard */
+    .text-keyboard {
+      display: none;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 8px;
+      margin-top: 15px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+      backdrop-filter: blur(10px);
+    }
+
+    .text-keyboard button {
+      padding: 10px;
+      font-size: 16px;
+      background: #2c3e50;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .text-keyboard button:hover {
+      background: #16e086;
+      transform: scale(1.1);
+    }
+
+    .text-keyboard .space {
+      grid-column: span 4;
+    }
+
+    .text-keyboard .enter {
+      grid-column: span 3;
+      background: #27ae60;
+    }
+
+    .text-keyboard .shift {
+      grid-column: span 2;
+      background: #e67e22;
+    }
+
+    .text-keyboard .backspace {
+      grid-column: span 2;
+      background: #d63031;
+    }
+
+    /* Factura Styles */
+    .invoice-container {
+      width: 100%;
+      max-width: 80mm;
+      margin: 0 auto;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+    }
+
+    .invoice-header {
+      text-align: center;
+      margin-bottom: 10px;
+      border-bottom: 1px dashed #000;
+      padding-bottom: 10px;
+    }
+
+    .invoice-header h2 {
+      margin: 5px 0;
+      font-size: 18px;
+    }
+
+    .invoice-header p {
+      margin: 3px 0;
+      font-size: 14px;
+    }
+
+    .invoice-user {
+      margin: 10px 0;
+      padding-bottom: 5px;
+      border-bottom: 1px dashed #000;
+    }
+
+    .invoice-products {
+      margin: 10px 0;
+    }
+
+    .product-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    .product-name {
+      flex: 3;
+    }
+
+    .product-quantity, .product-price, .product-total, .product-itbis {
+      flex: 1;
+      text-align: right;
+    }
+
+    .invoice-totals {
+      margin-top: 15px;
+      border-top: 1px dashed #000;
+      padding-top: 10px;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .barcode {
+      text-align: center;
+      margin-top: 15px;
+      font-family: 'Libre Barcode 39', cursive;
+      font-size: 36px;
+    }
+
+    .thank-you {
+      text-align: center;
+      margin-top: 10px;
+      font-style: italic;
+    }
+
+    /* Reports Section */
+    .reports-section {
+      display: none;
+      padding: 20px;
+      margin-top: 60px;
+      background: #34495e;
+      border-radius: 10px;
+      margin: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .reports-section h1 {
+      font-size: 1.8em;
+      margin-bottom: 20px;
+      color: #16e086;
+    }
+
+    .report-item {
+      padding: 15px;
+      margin-bottom: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+    }
+
+    .report-total {
+      font-weight: bold;
+      font-size: 1.2em;
+      margin-top: 20px;
+      padding: 10px;
+      background: rgba(22, 224, 134, 0.2);
+      border-radius: 5px;
+    }
+
+    /* User Info Modal */
+    .user-info-modal {
+      background-color: #2c3e50;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 300px;
+      max-width: 90%;
+      border-radius: 10px;
+      color: #ecf0f1;
+      text-align: center;
+    }
+
+    .user-info-modal h2 {
+      margin-bottom: 15px;
+      color: #16e086;
+    }
+
+    .user-info-modal p {
+      margin: 10px 0;
+    }
+
+    .logout-btn {
+      background: #d63031;
+      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.3s;
+    }
+
+    .logout-btn:hover {
+      background: #ff7675;
+    }
+
+    /* Exchange Rates Modal */
+    .exchange-rates-modal {
+      background-color: #2c3e50;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 300px;
+      max-width: 90%;
+      border-radius: 10px;
+      color: #ecf0f1;
+      text-align: center;
+    }
+
+    .exchange-rates-modal h2 {
+      margin-bottom: 15px;
+      color: #16e086;
+    }
+
+    .exchange-rates-modal p {
+      margin: 10px 0;
+      font-size: 1.2em;
+    }
+
+    /* Elegant Alerts */
+    .alert-modal {
+      background-color: #2c3e50;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 300px;
+      max-width: 90%;
+      border-radius: 10px;
+      color: #ecf0f1;
+      text-align: center;
+      animation: slideIn 0.3s ease;
+    }
+
+    .alert-modal h2 {
+      margin-bottom: 15px;
+    }
+
+    .alert-success h2 {
+      color: #16e086;
+    }
+
+    .alert-error h2 {
+      color: #ff7675;
+    }
+
+    .alert-warning h2 {
+      color: #fdcb6e;
+    }
+
+    .alert-modal button {
+      background: #16e086;
+      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.3s;
+    }
+
+    .alert-modal button:hover {
+      background: #15a086;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .main-container {
+        flex-direction: column;
+      }
+
+      .products-container, .product-list-container, .reports-section {
+        margin: 5px;
+        padding: 10px;
+      }
+
+      .totals-bar {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .action-buttons {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .button {
+        flex: 1 1 45%;
+      }
+
+      .text-keyboard {
+        grid-template-columns: repeat(8, 1fr);
+      }
+
+      .text-keyboard .space {
+        grid-column: span 3;
+      }
+
+      .text-keyboard .enter {
+        grid-column: span 2;
+      }
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      .modal-content, .modal-content * {
+        visibility: visible;
+      }
+      .modal-content {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+        color: #000;
+      }
+      .modal-content button {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Section -->
+  <div id="loginSection" class="login-container">
+    <div class="login-form">
+      <h2>Iniciar Sesión</h2>
+      <input type="email" id="loginEmail" placeholder="Correo electrónico">
+      <input type="password" id="loginPassword" placeholder="Contraseña">
+      <button id="loginButton">Iniciar Sesión</button>
+      <p id="loginError" class="login-error">Credenciales incorrectas</p>
+    </div>
+  </div>
+
+  <!-- POS Section (hidden by default) -->
+  <div id="posSection" style="display: none;">
+    <header>
+      <div class="header-icons">
+        <a href="#" id="homeBtn"><i class="fa-solid fa-house icon"></i></a>
+        <a href="#" id="inventoryBtn"><i class="fa-solid fa-box icon"></i></a>
+        <a href="#" id="reportsBtn"><i class="fa-solid fa-chart-line icon"></i></a>
+        <a href="#" id="invoicesBtn"><i class="fa-solid fa-receipt icon"></i></a>
+        <a href="#" id="exchangeRatesBtn"><i class="fa-solid fa-dollar-sign icon"></i></a>
+        <a href="#" id="userBtn"><i class="fa-solid fa-user icon"></i></a>
+      </div>
+      <span id="invoiceUser"></span>
+    </header>
+
+    <div class="main-container">
+      <!-- Left: Product List -->
+      <div class="product-list-container" id="productListSection">
+        <h1>Todos los Productos</h1>
+        <div class="search-container">
+          <input type="text" id="searchInput" placeholder="Buscar por EAN o UPC" autofocus>
+          <input type="text" id="searchByNameInput" placeholder="Buscar por nombre">
+        </div>
+        <!-- Teclado numérico para búsqueda EAN/UPC -->
+        <div id="numericKeyboard" class="numeric-keyboard">
+          <button class="numeric-btn" data-value="1">1</button>
+          <button class="numeric-btn" data-value="2">2</button>
+          <button class="numeric-btn" data-value="3">3</button>
+          <button class="numeric-btn" data-value="4">4</button>
+          <button class="numeric-btn" data-value="5">5</button>
+          <button class="numeric-btn" data-value="6">6</button>
+          <button class="numeric-btn" data-value="7">7</button>
+          <button class="numeric-btn" data-value="8">8</button>
+          <button class="numeric-btn" data-value="9">9</button>
+          <button class="numeric-btn" data-value="0">0</button>
+          <button class="numeric-btn" id="backspaceBtn">⌫</button>
+          <button class="numeric-btn" id="acceptBtn">Aceptar</button>
+        </div>
+        <!-- Teclado de texto para búsqueda por nombre -->
+        <div id="textKeyboard" class="text-keyboard">
+          <!-- Primera fila -->
+          <button data-value="q">q</button>
+          <button data-value="w">w</button>
+          <button data-value="e">e</button>
+          <button data-value="r">r</button>
+          <button data-value="t">t</button>
+          <button data-value="y">y</button>
+          <button data-value="u">u</button>
+          <button data-value="i">i</button>
+          <button data-value="o">o</button>
+          <button data-value="p">p</button>
+          <!-- Segunda fila -->
+          <button data-value="a">a</button>
+          <button data-value="s">s</button>
+          <button data-value="d">d</button>
+          <button data-value="f">f</button>
+          <button data-value="g">g</button>
+          <button data-value="h">h</button>
+          <button data-value="j">j</button>
+          <button data-value="k">k</button>
+          <button data-value="l">l</button>
+          <button class="backspace">⌫</button>
+          <!-- Tercera fila -->
+          <button data-value="z">z</button>
+          <button data-value="x">x</button>
+          <button data-value="c">c</button>
+          <button data-value="v">v</button>
+          <button data-value="b">b</button>
+          <button data-value="n">n</button>
+          <button data-value="m">m</button>
+          <button data-value=",">,</button>
+          <button data-value=".">.</button>
+          <button class="shift">Shift</button>
+          <!-- Cuarta fila -->
+          <button class="space">Espacio</button>
+          <button class="enter">Enter</button>
+        </div>
+        <div id="productList" class="products-list"></div>
+      </div>
+
+      <!-- Right: Current Invoice -->
+      <div class="products-container" id="invoiceSection">
+        <h1>Factura Actual</h1>
+        <div id="invoiceItems"></div>
+      </div>
+
+      <!-- Reports Section -->
+      <div class="reports-section" id="reportsSection">
+        <h1>Reporte de Ventas</h1>
+        <div id="salesReport"></div>
+        <div class="report-total" id="salesTotal"></div>
+      </div>
+
+      <!-- Invoices Section -->
+      <div class="reports-section" id="invoicesSection">
+        <h1>Facturas del Día</h1>
+        <div id="dailyInvoices"></div>
+      </div>
+    </div>
+
+    <!-- Bottom Totals Bar -->
+    <div class="totals-bar">
+      <div class="total-container" id="invoiceTotal"><i class="fa-solid fa-calculator"></i> Total: DOP $0.00</div>
+      <div class="action-buttons">
+        <button class="button button-descuento" id="btnApplyDiscount"><i class="fa-solid fa-percent"></i> Descuento</button>
+        <button class="button button-efectivo" id="btnEfectivo"><i class="fa-solid fa-money-bill"></i> Efectivo</button>
+        <button class="button button-tarjeta" id="btnTarjeta"><i class="fa-solid fa-credit-card"></i> Tarjeta</button>
+        <button class="button button-pay" id="payButton"><i class="fa-solid fa-credit-card"></i> Facturar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Print Modal -->
+  <div id="printModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeModal">×</span>
+      <div id="invoicePrintContent"></div>
+      <button id="btnPrint"><i class="fa-solid fa-print"></i> Imprimir</button>
+    </div>
+  </div>
+
+  <!-- Payment Modal (Efectivo) -->
+  <div id="efectivoModal" class="modal">
+    <div class="payment-modal-content">
+      <span class="close" id="closeEfectivoModal">×</span>
+      <h2>Pago en Efectivo</h2>
+      <p>Total a Pagar: <span id="efectivoTotal"></span></p>
+      <input type="number" id="efectivoReceived" placeholder="Monto Recibido (DOP)">
+      <p>Cambio: <span id="efectivoChange">DOP $0.00</span></p>
+      <button id="confirmEfectivo"><i class="fa-solid fa-check"></i> Confirmar Pago</button>
+    </div>
+  </div>
+
+  <!-- Payment Modal (Tarjeta) -->
+  <div id="tarjetaModal" class="modal">
+    <div class="payment-modal-content">
+      <span class="close" id="closeTarjetaModal">×</span>
+      <h2>Pago con Tarjeta</h2>
+      <p>Total a Pagar: <span id="tarjetaTotal"></span></p>
+      <button id="confirmTarjeta"><i class="fa-solid fa-check"></i> Confirmar Pago</button>
+    </div>
+  </div>
+
+  <!-- Password Modal -->
+  <div id="passwordModal" class="modal">
+    <div class="password-modal-content">
+      <span class="close" id="closePasswordModal">×</span>
+      <h2>Introduce la Contraseña</h2>
+      <input type="password" id="passwordInput" placeholder="Contraseña de 6 dígitos">
+      <button id="submitPassword"><i class="fa-solid fa-lock"></i> Aceptar</button>
+      <p id="passwordError" style="color: #e74c3c; display: none;">Contraseña incorrecta</p>
+    </div>
+  </div>
+
+  <!-- Discount Applied Modal -->
+  <div id="discountAppliedModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeDiscountModal">×</span>
+      <h2>Descuento Aplicado</h2>
+      <p id="discountMessage"></p>
+    </div>
+  </div>
+
+  <!-- User Info Modal -->
+  <div id="userInfoModal" class="modal">
+    <div class="user-info-modal">
+      <span class="close" id="closeUserModal">×</span>
+      <h2>Información del Usuario</h2>
+      <p id="userName"></p>
+      <p id="userEmail"></p>
+      <button id="logoutBtn" class="logout-btn">Cerrar Sesión</button>
+    </div>
+  </div>
+
+  <!-- Exchange Rates Modal -->
+  <div id="exchangeRatesModal" class="modal">
+    <div class="exchange-rates-modal">
+      <span class="close" id="closeExchangeModal">×</span>
+      <h2>Tasas de Cambio</h2>
+      <p>USD: <span id="usdRate">$0.00</span></p>
+      <p>EUR: <span id="eurRate">€0.00</span></p>
+    </div>
+  </div>
+
+  <!-- Alert Modals -->
+  <div id="successAlert" class="modal">
+    <div class="alert-modal alert-success">
+      <span class="close" id="closeSuccessAlert">×</span>
+      <h2>Éxito</h2>
+      <p id="successMessage"></p>
+      <button id="successOkBtn">Aceptar</button>
+    </div>
+  </div>
+
+  <div id="errorAlert" class="modal">
+    <div class="alert-modal alert-error">
+      <span class="close" id="closeErrorAlert">×</span>
+      <h2>Error</h2>
+      <p id="errorMessage"></p>
+      <button id="errorOkBtn">Aceptar</button>
+    </div>
+  </div>
+
+  <div id="warningAlert" class="modal">
+    <div class="alert-modal alert-warning">
+      <span class="close" id="closeWarningAlert">×</span>
+      <h2>Advertencia</h2>
+      <p id="warningMessage"></p>
+      <button id="warningOkBtn">Aceptar</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      query,
+      orderBy,
+      limit,
+      getDocs,
+      doc,
+      getDoc,
+      updateDoc,
+      addDoc,
+      deleteDoc,
+      Timestamp,
+      where,
+      setDoc,
+      arrayUnion
+    } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { 
+      getAuth, 
+      onAuthStateChanged, 
+      signInWithEmailAndPassword,
+      signOut 
+    } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+      authDomain: "inventario-35d6b.firebaseapp.com",
+      projectId: "inventario-35d6b",
+      storageBucket: "inventario-35d6b.appspot.com",
+      messagingSenderId: "266100399659",
+      appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // Elementos del DOM
+    const loginSection = document.getElementById("loginSection");
+    const posSection = document.getElementById("posSection");
+    const loginEmail = document.getElementById("loginEmail");
+    const loginPassword = document.getElementById("loginPassword");
+    const loginButton = document.getElementById("loginButton");
+    const loginError = document.getElementById("loginError");
+
+    const searchInput = document.getElementById("searchInput");
+    const searchByNameInput = document.getElementById("searchByNameInput");
+    const productList = document.getElementById("productList");
+    const invoiceItems = document.getElementById("invoiceItems");
+    const invoiceTotal = document.getElementById("invoiceTotal");
+    const payButton = document.getElementById("payButton");
+    const numericKeyboard = document.getElementById("numericKeyboard");
+    const numericButtons = document.querySelectorAll(".numeric-btn");
+    const backspaceBtn = document.getElementById("backspaceBtn");
+    const acceptBtn = document.getElementById("acceptBtn");
+    const textKeyboard = document.getElementById("textKeyboard");
+    const textButtons = document.querySelectorAll(".text-keyboard button");
+    const invoiceUser = document.getElementById("invoiceUser");
+
+    // Elementos de facturación
+    const btnEfectivo = document.getElementById("btnEfectivo");
+    const btnTarjeta = document.getElementById("btnTarjeta");
+    const btnApplyDiscount = document.getElementById("btnApplyDiscount");
+    const printModal = document.getElementById("printModal");
+    const invoicePrintContent = document.getElementById("invoicePrintContent");
+    const closeModal = document.getElementById("closeModal");
+    const btnPrint = document.getElementById("btnPrint");
+
+    const efectivoModal = document.getElementById("efectivoModal");
+    const closeEfectivoModal = document.getElementById("closeEfectivoModal");
+    const efectivoReceived = document.getElementById("efectivoReceived");
+    const efectivoTotal = document.getElementById("efectivoTotal");
+    const efectivoChange = document.getElementById("efectivoChange");
+    const confirmEfectivo = document.getElementById("confirmEfectivo");
+
+    const tarjetaModal = document.getElementById("tarjetaModal");
+    const closeTarjetaModal = document.getElementById("closeTarjetaModal");
+    const tarjetaTotal = document.getElementById("tarjetaTotal");
+    const confirmTarjeta = document.getElementById("confirmTarjeta");
+
+    const passwordModal = document.getElementById("passwordModal");
+    const closePasswordModal = document.getElementById("closePasswordModal");
+    const passwordInput = document.getElementById("passwordInput");
+    const submitPassword = document.getElementById("submitPassword");
+    const passwordError = document.getElementById("passwordError");
+
+    const discountAppliedModal = document.getElementById("discountAppliedModal");
+    const closeDiscountModal = document.getElementById("closeDiscountModal");
+    const discountMessage = document.getElementById("discountMessage");
+
+    // Elementos de navegación
+    const homeBtn = document.getElementById("homeBtn");
+    const inventoryBtn = document.getElementById("inventoryBtn");
+    const reportsBtn = document.getElementById("reportsBtn");
+    const invoicesBtn = document.getElementById("invoicesBtn");
+    const exchangeRatesBtn = document.getElementById("exchangeRatesBtn");
+    const userBtn = document.getElementById("userBtn");
+
+    // Secciones
+    const productListSection = document.getElementById("productListSection");
+    const invoiceSection = document.getElementById("invoiceSection");
+    const reportsSection = document.getElementById("reportsSection");
+    const invoicesSection = document.getElementById("invoicesSection");
+    const salesReport = document.getElementById("salesReport");
+    const salesTotal = document.getElementById("salesTotal");
+    const dailyInvoices = document.getElementById("dailyInvoices");
+
+    // Modales de usuario y tasas
+    const userInfoModal = document.getElementById("userInfoModal");
+    const closeUserModal = document.getElementById("closeUserModal");
+    const userName = document.getElementById("userName");
+    const userEmail = document.getElementById("userEmail");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const exchangeRatesModal = document.getElementById("exchangeRatesModal");
+    const closeExchangeModal = document.getElementById("closeExchangeModal");
+    const usdRate = document.getElementById("usdRate");
+    const eurRate = document.getElementById("eurRate");
+
+    // Alertas elegantes
+    const successAlert = document.getElementById("successAlert");
+    const successMessage = document.getElementById("successMessage");
+    const closeSuccessAlert = document.getElementById("closeSuccessAlert");
+    const successOkBtn = document.getElementById("successOkBtn");
+
+    const errorAlert = document.getElementById("errorAlert");
+    const errorMessage = document.getElementById("errorMessage");
+    const closeErrorAlert = document.getElementById("closeErrorAlert");
+    const errorOkBtn = document.getElementById("errorOkBtn");
+
+    const warningAlert = document.getElementById("warningAlert");
+    const warningMessage = document.getElementById("warningMessage");
+    const closeWarningAlert = document.getElementById("closeWarningAlert");
+    const warningOkBtn = document.getElementById("warningOkBtn");
+
+    // Variables globales
+    let invoice = [];
+    let totalPrice = 0;
+    let currentUser = null;
+    let exchangeRates = { usd: 62.15, eur: 64.42 };
+    let discount = 0;
+    let discountedTotal = 0;
+    let invoiceId = null;
+    let isShiftPressed = false;
+
+    // Función para mostrar alertas elegantes
+    function showAlert(type, message) {
+      if (type === 'success') {
+        successMessage.textContent = message;
+        successAlert.style.display = 'flex';
+      } else if (type === 'error') {
+        errorMessage.textContent = message;
+        errorAlert.style.display = 'flex';
+      } else if (type === 'warning') {
+        warningMessage.textContent = message;
+        warningAlert.style.display = 'flex';
+      }
+    }
+
+    // Función para cerrar todas las alertas
+    function closeAllAlerts() {
+      successAlert.style.display = 'none';
+      errorAlert.style.display = 'none';
+      warningAlert.style.display = 'none';
+    }
+
+    // Event listeners para alertas
+    closeSuccessAlert.addEventListener('click', closeAllAlerts);
+    successOkBtn.addEventListener('click', closeAllAlerts);
+    closeErrorAlert.addEventListener('click', closeAllAlerts);
+    errorOkBtn.addEventListener('click', closeAllAlerts);
+    closeWarningAlert.addEventListener('click', closeAllAlerts);
+    warningOkBtn.addEventListener('click', closeAllAlerts);
+
+    // Observador de autenticación
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        loginSection.style.display = 'none';
+        posSection.style.display = 'block';
+        
+        // Mostrar nombre del usuario (no el correo)
+        if (user.displayName) {
+          invoiceUser.textContent = user.displayName;
+          userName.textContent = `Nombre: ${user.displayName}`;
+        } else {
+          // Si no hay displayName, usar el nombre antes del @ en el correo
+          const nameFromEmail = user.email.split('@')[0];
+          invoiceUser.textContent = nameFromEmail;
+          userName.textContent = `Nombre: ${nameFromEmail}`;
+        }
+        
+        userEmail.textContent = `Correo: ${user.email}`;
+        
+        // Guardar sesión en localStorage
+        localStorage.setItem('userLoggedIn', 'true');
+        
+        getExchangeRates();
+        renderProducts();
+      } else {
+        // No hay usuario autenticado
+        loginSection.style.display = 'flex';
+        posSection.style.display = 'none';
+        localStorage.removeItem('userLoggedIn');
+      }
+    });
+
+    // Verificar si hay sesión guardada
+    if (localStorage.getItem('userLoggedIn') === 'true') {
+      loginSection.style.display = 'none';
+      posSection.style.display = 'block';
+    } else {
+      loginSection.style.display = 'flex';
+      posSection.style.display = 'none';
+    }
+
+    // Login
+    loginButton.addEventListener('click', async () => {
+      try {
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          loginEmail.value,
+          loginPassword.value
+        );
+        loginError.style.display = 'none';
+      } catch (error) {
+        loginError.style.display = 'block';
+        loginError.textContent = 'Credenciales incorrectas';
+        console.error('Error al iniciar sesión:', error);
+      }
+    });
+
+    // Logout
+    logoutBtn.addEventListener('click', async () => {
+      try {
+        await signOut(auth);
+        userInfoModal.style.display = 'none';
+        showAlert('success', 'Sesión cerrada correctamente');
+      } catch (error) {
+        console.error('Error al cerrar sesión:', error);
+        showAlert('error', 'Error al cerrar sesión');
+      }
+    });
+
+    // Funciones de negocio
+    const getBusinessDetails = async () => {
+      const businessRef = doc(db, "businessDetails", "info");
+      const businessDoc = await getDoc(businessRef);
+      if (businessDoc.exists()) {
+        return businessDoc.data();
+      }
+      return { name: "Nombre del Negocio", address: "Dirección del Negocio", rnc: "123456789" };
+    };
+
+    const getExchangeRates = async () => {
+      const ratesRef = doc(db, "exchangeRates", "rates");
+      const ratesDoc = await getDoc(ratesRef);
+      if (ratesDoc.exists()) {
+        exchangeRates = ratesDoc.data();
+        usdRate.textContent = `$${exchangeRates.usd.toFixed(2)}`;
+        eurRate.textContent = `€${exchangeRates.eur.toFixed(2)}`;
+      }
+    };
+
+    // Funciones de productos
+    const renderProducts = async (eanTerm = "", nameTerm = "") => {
+      if (!currentUser) return;
+
+      try {
+        const businessesRef = collection(db, "businesses");
+        const businessesSnapshot = await getDocs(businessesRef);
+
+        productList.innerHTML = "";
+
+        if (businessesSnapshot.empty) {
+          productList.innerHTML = "<p>No hay productos disponibles.</p>";
+          return;
+        }
+
+        businessesSnapshot.forEach(async (businessDoc) => {
+          const productsRef = collection(db, "businesses", businessDoc.id, "products");
+          let productsQuery = query(productsRef);
+
+          if (eanTerm) {
+            productsQuery = query(productsRef, where("eanUpcCode", "==", eanTerm));
+          } else if (nameTerm) {
+            productsQuery = query(productsRef, where("name", ">=", nameTerm), where("name", "<=", nameTerm + '\uf8ff'));
+          }
+
+          const querySnapshot = await getDocs(productsQuery);
+          querySnapshot.forEach((doc) => {
+            const product = doc.data();
+            const productDiv = document.createElement("div");
+            productDiv.classList.add("product-item");
+            
+            // Mostrar alerta si el stock es cero
+            if (product.quantity === 0) {
+              productDiv.innerHTML = `
+                <div>${product.name} (AGOTADO)</div>
+                <div>Precio: $${product.pricePerUnit}</div>
+              `;
+              productDiv.style.backgroundColor = 'rgba(255, 99, 71, 0.2)';
+            } else {
+              productDiv.innerHTML = `
+                <div>${product.name}</div>
+                <div>Precio: $${product.pricePerUnit}</div>
+                <div>Stock: ${product.quantity}</div>
+              `;
+            }
+            
+            productDiv.addEventListener("click", () => {
+              if (product.quantity === 0) {
+                showAlert('warning', 'Este producto está agotado');
+                return;
+              }
+              updateInvoice(product, businessDoc.id, doc.id);
+            });
+            productList.appendChild(productDiv);
+          });
+        });
+
+        if (eanTerm) addToInvoiceBySearch(eanTerm);
+      } catch (error) {
+        console.error("Error al obtener los productos:", error);
+        showAlert('error', 'Error al cargar los productos');
+      }
+    };
+
+    const addToInvoiceBySearch = (eanTerm) => {
+      const businessesRef = collection(db, "businesses");
+
+      getDocs(businessesRef).then((businessesSnapshot) => {
+        businessesSnapshot.forEach((businessDoc) => {
+          const productsRef = collection(db, "businesses", businessDoc.id, "products");
+          const productsQuery = query(productsRef, where("eanUpcCode", "==", eanTerm));
+
+          getDocs(productsQuery).then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+              const product = doc.data();
+              if (product.quantity === 0) {
+                showAlert('warning', 'Este producto está agotado');
+                return;
+              }
+              updateInvoice(product, businessDoc.id, doc.id);
+            });
+          });
+        });
+      });
+    };
+
+    // Funciones de facturación
+    const updateInvoice = (product, businessName, productId) => {
+      const existingProduct = invoice.find((item) => item.productId === productId);
+      if (existingProduct) {
+        // Verificar si hay suficiente stock antes de agregar
+        if (existingProduct.quantity >= product.quantity) {
+          showAlert('warning', 'No hay suficiente stock de este producto');
+          return;
+        }
+        existingProduct.quantity += 1;
+      } else {
+        invoice.push({ ...product, businessName, productId, quantity: 1 });
+      }
+
+      const profitPercentage = product.profitPercentage || 10;
+      const priceWithProfit = product.pricePerUnit * (1 + profitPercentage / 100);
+      totalPrice += priceWithProfit * 1.18; // Agregar IVA
+      renderInvoice();
+      updateTotalApagarVentas(product);
+    };
+
+    const renderInvoice = () => {
+      invoiceItems.innerHTML = "";
+      totalPrice = 0;
+
+      invoice.forEach((item) => {
+        const profitPercentage = item.profitPercentage || 10;
+        const priceWithProfit = item.pricePerUnit * (1 + profitPercentage / 100);
+        const totalItemPrice = priceWithProfit * 1.18 * item.quantity;
+
+        const productDiv = document.createElement("div");
+        productDiv.classList.add("invoice-item");
+        productDiv.innerHTML = `
+          <i class="fa-solid fa-box"></i> ${item.name} x ${item.quantity} - $${totalItemPrice.toFixed(2)}
+          <button class="remove-btn" onclick="removeProduct('${item.productId}')">Eliminar</button>
+        `;
+        invoiceItems.appendChild(productDiv);
+        totalPrice += totalItemPrice;
+      });
+
+      discountedTotal = discount > 0 ? totalPrice - (totalPrice * discount / 100) : totalPrice;
+      
+      const totalUSD = (discountedTotal / exchangeRates.usd).toFixed(2);
+      const totalEUR = (discountedTotal / exchangeRates.eur).toFixed(2);
+      
+      invoiceTotal.innerHTML = `<i class="fa-solid fa-calculator"></i> Total: DOP $${discountedTotal.toFixed(2)} (USD: $${totalUSD}, EUR: €${totalEUR})`;
+      efectivoTotal.textContent = `DOP $${discountedTotal.toFixed(2)}`;
+      tarjetaTotal.textContent = `DOP $${discountedTotal.toFixed(2)}`;
+    };
+
+    window.removeProduct = (productId) => {
+      const productIndex = invoice.findIndex((item) => item.productId === productId);
+      if (productIndex > -1) {
+        const profitPercentage = invoice[productIndex].profitPercentage || 10;
+        const priceWithProfit = invoice[productIndex].pricePerUnit * (1 + profitPercentage / 100);
+        totalPrice -= priceWithProfit * 1.18;
+        invoice[productIndex].quantity -= 1;
+        if (invoice[productIndex].quantity === 0) {
+          invoice.splice(productIndex, 1);
+        }
+        renderInvoice();
+      }
+    };
+
+    // Funciones de pago y facturación
+    const generateInvoice = async (paymentTypeValue, change = 0) => {
+      const businessDetails = await getBusinessDetails();
+      const totalITBIS = totalPrice * 0.18;
+      
+      const invoiceHTML = `
+        <div class="invoice-container">
+          <div class="invoice-header">
+            <h2>${businessDetails.name}</h2>
+            <p>RNC: ${businessDetails.rnc}</p>
+            <p>${businessDetails.address}</p>
+          </div>
+          <div class="invoice-user">
+            <p>Atendido por: ${currentUser.displayName || currentUser.email.split('@')[0]}</p>
+          </div>
+          <div class="invoice-products">
+            <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px;">
+              <span class="product-name">Producto</span>
+              <span class="product-quantity">Cant</span>
+              <span class="product-price">Precio</span>
+              <span class="product-total">Total</span>
+              <span class="product-itbis">ITBIS</span>
+            </div>
+            ${invoice.map(item => {
+              const profitPercentage = item.profitPercentage || 10;
+              const priceWithProfit = item.pricePerUnit * (1 + profitPercentage / 100);
+              const itemTotal = priceWithProfit * item.quantity;
+              const itbis = itemTotal * 0.18;
+              
+              return `
+                <div class="product-row">
+                  <span class="product-name">${item.name}</span>
+                  <span class="product-quantity">${item.quantity}</span>
+                  <span class="product-price">$${priceWithProfit.toFixed(2)}</span>
+                  <span class="product-total">$${itemTotal.toFixed(2)}</span>
+                  <span class="product-itbis">$${itbis.toFixed(2)}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+          <div class="invoice-totals">
+            <div class="total-row">
+              <span>Descuento:</span>
+              <span>${discount > 0 ? `$${(totalPrice * discount / 100).toFixed(2)} (${discount}%)` : '$0.00'}</span>
+            </div>
+            ${paymentTypeValue === 'Efectivo' ? `
+              <div class="total-row">
+                <span>Devuelta:</span>
+                <span>$${change.toFixed(2)}</span>
+              </div>
+            ` : ''}
+            <div class="total-row">
+              <span>Total ITBIS:</span>
+              <span>$${totalITBIS.toFixed(2)}</span>
+            </div>
+            <div class="total-row" style="font-weight: bold;">
+              <span>Total general:</span>
+              <span>$${discountedTotal.toFixed(2)}</span>
+            </div>
+            <div class="total-row">
+              <span>Método de pago:</span>
+              <span>${paymentTypeValue}</span>
+            </div>
+          </div>
+          <div class="barcode">
+            ${generateBarcode()}
+          </div>
+          <div class="thank-you">
+            <p>Gracias por su compra</p>
+          </div>
+        </div>
+      `;
+      
+      invoicePrintContent.innerHTML = invoiceHTML;
+      await saveInvoiceToFirebase(paymentTypeValue, change);
+    };
+
+    const generateBarcode = () => {
+      const randomNumber = Math.floor(Math.random() * 1000000000000).toString();
+      return `*${randomNumber}*`;
+    };
+
+    const saveInvoiceToFirebase = async (paymentTypeValue, change = 0) => {
+      try {
+        const businessDetails = await getBusinessDetails();
+        const totalITBIS = totalPrice * 0.18;
+        
+        const invoiceData = {
+          businessName: businessDetails.name,
+          businessRNC: businessDetails.rnc,
+          businessAddress: businessDetails.address,
+          user: currentUser.displayName || currentUser.email.split('@')[0],
+          userId: currentUser.uid,
+          items: invoice.map(item => {
+            const profitPercentage = item.profitPercentage || 10;
+            const priceWithProfit = item.pricePerUnit * (1 + profitPercentage / 100);
+            const itemTotal = priceWithProfit * item.quantity;
+            const itbis = itemTotal * 0.18;
+            
+            return {
+              name: item.name,
+              quantity: item.quantity,
+              pricePerUnit: item.pricePerUnit,
+              total: itemTotal,
+              itbis: itbis
+            };
+          }),
+          subtotal: totalPrice,
+          discount: discount > 0 ? (totalPrice * discount / 100) : 0,
+          discountPercentage: discount,
+          itbis: totalITBIS,
+          total: discountedTotal,
+          paymentType: paymentTypeValue,
+          change: paymentTypeValue === 'Efectivo' ? change : 0,
+          date: Timestamp.now(),
+          barcode: generateBarcode(),
+          timestamp: new Date().getTime()
+        };
+
+        // Guardar en facturacionCarrito
+        await addDoc(collection(db, "facturacionCarrito"), invoiceData);
+        
+        // Guardar en el historial del usuario
+        const invoiceRef = collection(db, "users", currentUser.uid, "invoiceHistory");
+        await addDoc(invoiceRef, invoiceData);
+        
+        showAlert('success', 'Factura generada y guardada correctamente');
+      } catch (error) {
+        console.error("Error al guardar la factura:", error);
+        showAlert('error', 'Error al guardar la factura');
+      }
+    };
+
+    const processPayment = async (paymentTypeValue) => {
+      try {
+        if (invoice.length === 0) {
+          showAlert('warning', 'No hay productos en la factura');
+          return;
+        }
+
+        for (const item of invoice) {
+          const productRef = doc(db, "businesses", item.businessName, "products", item.productId);
+          const productDoc = await getDoc(productRef);
+
+          if (productDoc.exists()) {
+            const productData = productDoc.data();
+            const currentQuantity = productData.quantity || 0;
+            const newQuantity = currentQuantity - item.quantity;
+
+            if (newQuantity < 0) {
+              showAlert('warning', `No hay suficiente stock de ${item.name}`);
+              return;
+            }
+
+            await updateDoc(productRef, { quantity: newQuantity });
+            await recordSaleHistory(item, paymentTypeValue);
+          }
+        }
+
+        const change = paymentTypeValue === 'Efectivo' ? 
+          (parseFloat(efectivoReceived.value) || 0) - discountedTotal : 0;
+        
+        await generateInvoice(paymentTypeValue, change);
+        printModal.style.display = "block";
+
+        // Limpiar factura
+        invoice = [];
+        totalPrice = 0;
+        discount = 0;
+        discountedTotal = 0;
+        renderInvoice();
+      } catch (error) {
+        console.error("Error al procesar el pago:", error);
+        showAlert('error', 'Error al procesar el pago');
+      }
+    };
+
+    const recordSaleHistory = async (item, paymentTypeValue) => {
+      try {
+        const salesHistoryRef = collection(db, "users", currentUser.uid, "salesHistory");
+        const q = query(salesHistoryRef, where("productName", "==", item.name), where("paymentType", "==", paymentTypeValue));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          querySnapshot.forEach(async (doc) => {
+            const existingSale = doc.data();
+            const newQuantity = existingSale.quantitySold + item.quantity;
+            await updateDoc(doc.ref, { quantitySold: newQuantity });
+          });
+        } else {
+          const saleData = {
+            productName: item.name,
+            quantitySold: item.quantity,
+            paymentType: paymentTypeValue,
+            date: Timestamp.now(),
+          };
+          await addDoc(salesHistoryRef, saleData);
+        }
+      } catch (error) {
+        console.error("Error al registrar el historial de ventas:", error);
+      }
+    };
+
+    const updateTotalApagarVentas = async (product) => {
+      if (!currentUser) return;
+
+      const totalApagarVentasRef = doc(db, "users", currentUser.uid, "totalApagarVentas", "currentVenta");
+      try {
+        await updateDoc(totalApagarVentasRef, {
+          productos: arrayUnion({
+            nombre: product.name,
+            precio: product.pricePerUnit,
+            cantidad: product.quantity,
+            total: totalPrice.toFixed(2),
+          }),
+        });
+      } catch (error) {
+        console.error("Error al actualizar totalApagarVentas en Firebase:", error);
+      }
+    };
+
+    // Funciones de descuento
+    const applyDiscount = async () => {
+      passwordModal.style.display = "block";
+    };
+
+    const calculateChange = () => {
+      const received = parseFloat(efectivoReceived.value) || 0;
+      const change = received - discountedTotal;
+      efectivoChange.textContent = `DOP $${change.toFixed(2)}`;
+    };
+
+    // Funciones de reportes
+    const loadDailyInvoices = async () => {
+      if (!currentUser) return;
+
+      try {
+        // Obtener la fecha de hoy a medianoche
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const invoicesRef = collection(db, "users", currentUser.uid, "invoiceHistory");
+        const q = query(invoicesRef, where("date", ">=", Timestamp.fromDate(today)));
+        
+        const querySnapshot = await getDocs(q);
+        dailyInvoices.innerHTML = "";
+        
+        if (querySnapshot.empty) {
+          dailyInvoices.innerHTML = "<p>No hay facturas para hoy</p>";
+          return;
+        }
+        
+        let totalSales = 0;
+        querySnapshot.forEach((doc) => {
+          const invoiceData = doc.data();
+          const invoiceDate = invoiceData.date.toDate();
+          const invoiceTime = invoiceDate.toLocaleTimeString();
+          
+          totalSales += invoiceData.total;
+          
+          const invoiceDiv = document.createElement("div");
+          invoiceDiv.classList.add("report-item");
+          invoiceDiv.innerHTML = `
+            <p><strong>Factura:</strong> ${doc.id}</p>
+            <p><strong>Hora:</strong> ${invoiceTime}</p>
+            <p><strong>Total:</strong> $${invoiceData.total.toFixed(2)}</p>
+            <p><strong>Método:</strong> ${invoiceData.paymentType}</p>
+          `;
+          dailyInvoices.appendChild(invoiceDiv);
+        });
+        
+        const totalDiv = document.createElement("div");
+        totalDiv.classList.add("report-total");
+        totalDiv.textContent = `Total vendido hoy: $${totalSales.toFixed(2)}`;
+        dailyInvoices.appendChild(totalDiv);
+        
+      } catch (error) {
+        console.error("Error al cargar facturas del día:", error);
+        showAlert('error', 'Error al cargar facturas');
+      }
+    };
+
+    const loadSalesReport = async () => {
+      if (!currentUser) return;
+
+      try {
+        // Obtener la fecha de hoy a medianoche
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const salesRef = collection(db, "users", currentUser.uid, "salesHistory");
+        const q = query(salesRef, where("date", ">=", Timestamp.fromDate(today)));
+        
+        const querySnapshot = await getDocs(q);
+        salesReport.innerHTML = "";
+        
+        if (querySnapshot.empty) {
+          salesReport.innerHTML = "<p>No hay ventas para hoy</p>";
+          return;
+        }
+        
+        const salesMap = new Map();
+        let totalSales = 0;
+        
+        querySnapshot.forEach((doc) => {
+          const sale = doc.data();
+          
+          if (salesMap.has(sale.productName)) {
+            const existingSale = salesMap.get(sale.productName);
+            existingSale.quantity += sale.quantitySold;
+            existingSale.total += sale.quantitySold * (sale.price || 0);
+          } else {
+            salesMap.set(sale.productName, {
+              quantity: sale.quantitySold,
+              total: sale.quantitySold * (sale.price || 0)
+            });
+          }
+          
+          totalSales += sale.quantitySold * (sale.price || 0);
+        });
+        
+        salesMap.forEach((value, key) => {
+          const saleDiv = document.createElement("div");
+          saleDiv.classList.add("report-item");
+          saleDiv.innerHTML = `
+            <p><strong>Producto:</strong> ${key}</p>
+            <p><strong>Cantidad:</strong> ${value.quantity}</p>
+            <p><strong>Total:</strong> $${value.total.toFixed(2)}</p>
+          `;
+          salesReport.appendChild(saleDiv);
+        });
+        
+        salesTotal.textContent = `Total vendido hoy: $${totalSales.toFixed(2)}`;
+        
+      } catch (error) {
+        console.error("Error al cargar reporte de ventas:", error);
+        showAlert('error', 'Error al cargar reporte');
+      }
+    };
+
+    // Navegación
+    homeBtn.addEventListener('click', () => {
+      productListSection.style.display = 'block';
+      invoiceSection.style.display = 'block';
+      reportsSection.style.display = 'none';
+      invoicesSection.style.display = 'none';
+    });
+
+    inventoryBtn.addEventListener('click', () => {
+      // Aquí puedes implementar la navegación al inventario si es necesario
+      showAlert('info', 'Funcionalidad de inventario en desarrollo');
+    });
+
+    reportsBtn.addEventListener('click', async () => {
+      // Mostrar modal de contraseña para acceder a reportes
+      passwordModal.style.display = 'block';
+      // Configurar una función especial para el botón de aceptar
+      const originalSubmit = submitPassword.onclick;
+      
+      submitPassword.onclick = async () => {
+        const password = passwordInput.value;
+        const discountRef = doc(db, "settings", "discount");
+        const discountDoc = await getDoc(discountRef);
+
+        if (discountDoc.exists()) {
+          const storedPassword = discountDoc.data().password;
+
+          if (password === storedPassword) {
+            passwordModal.style.display = "none";
+            passwordError.style.display = "none";
+            
+            // Mostrar sección de reportes
+            productListSection.style.display = 'none';
+            invoiceSection.style.display = 'none';
+            reportsSection.style.display = 'block';
+            invoicesSection.style.display = 'none';
+            
+            // Cargar reportes
+            await loadSalesReport();
+          } else {
+            passwordError.style.display = "block";
+          }
+        }
+      };
+      
+      // Restaurar el evento original al cerrar el modal
+      closePasswordModal.onclick = () => {
+        passwordModal.style.display = "none";
+        passwordError.style.display = "none";
+        submitPassword.onclick = originalSubmit;
+      };
+    });
+
+    invoicesBtn.addEventListener('click', async () => {
+      // Mostrar modal de contraseña para acceder a facturas
+      passwordModal.style.display = 'block';
+      // Configurar una función especial para el botón de aceptar
+      const originalSubmit = submitPassword.onclick;
+      
+      submitPassword.onclick = async () => {
+        const password = passwordInput.value;
+        const discountRef = doc(db, "settings", "discount");
+        const discountDoc = await getDoc(discountRef);
+
+        if (discountDoc.exists()) {
+          const storedPassword = discountDoc.data().password;
+
+          if (password === storedPassword) {
+            passwordModal.style.display = "none";
+            passwordError.style.display = "none";
+            
+            // Mostrar sección de facturas
+            productListSection.style.display = 'none';
+            invoiceSection.style.display = 'none';
+            reportsSection.style.display = 'none';
+            invoicesSection.style.display = 'block';
+            
+            // Cargar facturas del día
+            await loadDailyInvoices();
+          } else {
+            passwordError.style.display = "block";
+          }
+        }
+      };
+      
+      // Restaurar el evento original al cerrar el modal
+      closePasswordModal.onclick = () => {
+        passwordModal.style.display = "none";
+        passwordError.style.display = "none";
+        submitPassword.onclick = originalSubmit;
+      };
+    });
+
+    exchangeRatesBtn.addEventListener('click', () => {
+      exchangeRatesModal.style.display = 'flex';
+    });
+
+    userBtn.addEventListener('click', () => {
+      userInfoModal.style.display = 'flex';
+    });
+
+    // Event Listeners
+    submitPassword.addEventListener("click", async () => {
+      const password = passwordInput.value;
+      const discountRef = doc(db, "settings", "discount");
+      const discountDoc = await getDoc(discountRef);
+
+      if (discountDoc.exists()) {
+        const storedPassword = discountDoc.data().password;
+        discount = discountDoc.data().discount;
+
+        if (password === storedPassword) {
+          renderInvoice();
+          passwordModal.style.display = "none";
+          discountMessage.textContent = `Descuento del ${discount}% aplicado.`;
+          discountAppliedModal.style.display = "block";
+        } else {
+          passwordError.style.display = "block";
+        }
+      } else {
+        console.error("No se encontró la configuración de descuento.");
+      }
+    });
+
+    btnEfectivo.addEventListener("click", () => {
+      if (invoice.length === 0) {
+        showAlert('warning', 'No hay factura para pagar');
+        return;
+      }
+      efectivoModal.style.display = "flex";
+    });
+
+    confirmEfectivo.addEventListener("click", () => {
+      const received = parseFloat(efectivoReceived.value) || 0;
+      if (received < discountedTotal) {
+        showAlert('warning', 'El monto recibido es insuficiente');
+        return;
+      }
+      processPayment("Efectivo");
+      efectivoModal.style.display = "none";
+      efectivoReceived.value = "";
+      efectivoChange.textContent = "DOP $0.00";
+    });
+
+    btnTarjeta.addEventListener("click", () => {
+      if (invoice.length === 0) {
+        showAlert('warning', 'No hay factura para pagar');
+        return;
+      }
+      tarjetaModal.style.display = "flex";
+    });
+
+    confirmTarjeta.addEventListener("click", () => {
+      processPayment("Tarjeta");
+      tarjetaModal.style.display = "none";
+    });
+
+    btnApplyDiscount.addEventListener("click", applyDiscount);
+
+    payButton.addEventListener("click", () => {
+      if (invoice.length === 0) {
+        showAlert('warning', 'No hay productos en la factura');
+        return;
+      }
+      efectivoModal.style.display = "flex";
+    });
+
+    efectivoReceived.addEventListener("input", calculateChange);
+
+    // Eventos del teclado numérico
+    searchInput.addEventListener("click", () => {
+      numericKeyboard.style.display = "grid";
+      textKeyboard.style.display = "none";
+    });
+
+    searchByNameInput.addEventListener("click", () => {
+      textKeyboard.style.display = "grid";
+      numericKeyboard.style.display = "none";
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!searchInput.contains(e.target) && !numericKeyboard.contains(e.target)) {
+        numericKeyboard.style.display = "none";
+      }
+      if (!searchByNameInput.contains(e.target) && !textKeyboard.contains(e.target)) {
+        textKeyboard.style.display = "none";
+      }
+    });
+
+    numericButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        if (button.id !== "backspaceBtn" && button.id !== "acceptBtn") {
+          searchInput.value += button.getAttribute("data-value");
+        }
+      });
+    });
+
+    backspaceBtn.addEventListener("click", () => {
+      searchInput.value = searchInput.value.slice(0, -1);
+    });
+
+    acceptBtn.addEventListener("click", () => {
+      renderProducts(searchInput.value, "");
+      numericKeyboard.style.display = "none";
+    });
+
+    // Eventos del teclado de texto
+    textButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        if (button.classList.contains('backspace')) {
+          searchByNameInput.value = searchByNameInput.value.slice(0, -1);
+        } else if (button.classList.contains('space')) {
+          searchByNameInput.value += ' ';
+        } else if (button.classList.contains('enter')) {
+          renderProducts("", searchByNameInput.value);
+          textKeyboard.style.display = "none";
+        } else if (button.classList.contains('shift')) {
+          isShiftPressed = !isShiftPressed;
+        } else {
+          const value = isShiftPressed ? 
+            button.getAttribute("data-value").toUpperCase() : 
+            button.getAttribute("data-value");
+          searchByNameInput.value += value;
+        }
+      });
+    });
+
+    searchInput.addEventListener("input", (e) => {
+      if (e.target.value.trim() === "") {
+        productList.innerHTML = "";
+        return;
+      }
+      renderProducts(e.target.value, searchByNameInput.value);
+    });
+
+    searchByNameInput.addEventListener("input", (e) => {
+      if (e.target.value.trim() === "") {
+        productList.innerHTML = "";
+        return;
+      }
+      renderProducts(searchInput.value, e.target.value);
+    });
+
+    // Eventos de cierre de modales
+    closeModal.addEventListener("click", () => printModal.style.display = "none");
+    closeEfectivoModal.addEventListener("click", () => {
+      efectivoModal.style.display = "none";
+      efectivoReceived.value = "";
+      efectivoChange.textContent = "DOP $0.00";
+    });
+    closeTarjetaModal.addEventListener("click", () => tarjetaModal.style.display = "none");
+    closePasswordModal.addEventListener("click", () => {
+      passwordModal.style.display = "none";
+      passwordError.style.display = "none";
+    });
+    closeDiscountModal.addEventListener("click", () => discountAppliedModal.style.display = "none");
+    closeUserModal.addEventListener("click", () => userInfoModal.style.display = "none");
+    closeExchangeModal.addEventListener("click", () => exchangeRatesModal.style.display = "none");
+
+    btnPrint.addEventListener("click", () => {
+      const printContent = invoicePrintContent.innerHTML;
+      const printWindow = window.open('', '', 'height=400,width=600');
+      printWindow.document.write('<html><head><title>Imprimir Factura</title>');
+      printWindow.document.write('<style>body { font-family: Arial; width: 80mm; margin: 0; padding: 10px; } p, h2, h3 { color: #000; margin: 5px 0; } button { display: none; } .invoice-container { width: 100%; max-width: 80mm; margin: 0 auto; padding: 10px; font-family: Arial, sans-serif; } .invoice-header { text-align: center; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 10px; } .invoice-header h2 { margin: 5px 0; font-size: 18px; } .invoice-header p { margin: 3px 0; font-size: 14px; } .invoice-user { margin: 10px 0; padding-bottom: 5px; border-bottom: 1px dashed #000; } .invoice-products { margin: 10px 0; } .product-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; } .product-name { flex: 3; } .product-quantity, .product-price, .product-total, .product-itbis { flex: 1; text-align: right; } .invoice-totals { margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px; } .total-row { display: flex; justify-content: space-between; margin-bottom: 5px; } .barcode { text-align: center; margin-top: 15px; font-family: "Libre Barcode 39", cursive; font-size: 36px; } .thank-you { text-align: center; margin-top: 10px; font-style: italic; }</style></head><body>');
+      printWindow.document.write(printContent);
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      printWindow.print();
+      printWindow.close();
+    });
+
+    // Enfocar automáticamente el campo de búsqueda EAN/UPC al cargar la página
+    window.onload = function() {
+      if (localStorage.getItem('userLoggedIn') === 'true') {
+        searchInput.focus();
+        searchInput.select();
+      } else {
+        loginEmail.focus();
+      }
+    };
+  </script> 
+</body>
+</html>
