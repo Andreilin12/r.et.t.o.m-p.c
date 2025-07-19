@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Punto de Ventas</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     /* Estilo general */
     * {
@@ -364,12 +365,15 @@
       border-radius: 10px;
       color: #ecf0f1;
       text-align: center;
-      animation: slideIn 0.3s ease;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
 
     @keyframes slideIn {
-      from { transform: translateY(-50px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+      from { transform: translate(-50%, -100px); opacity: 0; }
+      to { transform: translate(-50%, -50%); opacity: 1; }
     }
 
     .close {
@@ -395,6 +399,10 @@
       border-radius: 10px;
       color: #ecf0f1;
       text-align: center;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
 
     .payment-modal-content input {
@@ -438,6 +446,10 @@
       border-radius: 10px;
       color: #ecf0f1;
       text-align: center;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
 
     .password-modal-content input {
@@ -479,6 +491,10 @@
       border-radius: 10px;
       color: #ecf0f1;
       text-align: center;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
 
     /* Numeric Keyboard */
@@ -670,6 +686,34 @@
       font-style: italic;
     }
 
+    /* Print Button Style */
+    #btnPrint {
+      background: linear-gradient(135deg, #16e086, #15a086);
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 50px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    #btnPrint:hover {
+      background: linear-gradient(135deg, #15a086, #16e086);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    #btnPrint i {
+      font-size: 18px;
+    }
+
     /* Reports Section */
     .reports-section {
       display: none;
@@ -679,12 +723,16 @@
       border-radius: 10px;
       margin: 10px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      width: calc(100% - 20px);
+      height: calc(100vh - 180px);
+      overflow-y: auto;
     }
 
     .reports-section h1 {
       font-size: 1.8em;
       margin-bottom: 20px;
       color: #16e086;
+      text-align: center;
     }
 
     .report-item {
@@ -692,6 +740,12 @@
       margin-bottom: 15px;
       background: rgba(255, 255, 255, 0.1);
       border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .report-item:hover {
+      background: rgba(255, 255, 255, 0.2);
     }
 
     .report-total {
@@ -701,6 +755,7 @@
       padding: 10px;
       background: rgba(22, 224, 134, 0.2);
       border-radius: 5px;
+      text-align: center;
     }
 
     /* User Info Modal */
@@ -713,6 +768,10 @@
       border-radius: 10px;
       color: #ecf0f1;
       text-align: center;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
 
     .user-info-modal h2 {
@@ -739,28 +798,6 @@
       background: #ff7675;
     }
 
-    /* Exchange Rates Modal */
-    .exchange-rates-modal {
-      background-color: #2c3e50;
-      padding: 20px;
-      border: 1px solid #888;
-      width: 300px;
-      max-width: 90%;
-      border-radius: 10px;
-      color: #ecf0f1;
-      text-align: center;
-    }
-
-    .exchange-rates-modal h2 {
-      margin-bottom: 15px;
-      color: #16e086;
-    }
-
-    .exchange-rates-modal p {
-      margin: 10px 0;
-      font-size: 1.2em;
-    }
-
     /* Elegant Alerts */
     .alert-modal {
       background-color: #2c3e50;
@@ -772,6 +809,10 @@
       color: #ecf0f1;
       text-align: center;
       animation: slideIn 0.3s ease;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
 
     .alert-modal h2 {
@@ -862,6 +903,137 @@
       .modal-content button {
         display: none;
       }
+      .report-print-container, .report-print-container * {
+        visibility: visible;
+      }
+      .report-print-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+        color: #000;
+        padding: 20px;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+
+    /* Nuevos estilos para las secciones de reportes */
+    .report-container {
+      display: flex;
+      width: 100%;
+      gap: 20px;
+    }
+
+    .report-list {
+      flex: 1;
+      overflow-y: auto;
+      max-height: calc(100vh - 200px);
+    }
+
+    .report-detail {
+      flex: 1;
+      background: #2c3e50;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      max-height: calc(100vh - 200px);
+      overflow-y: auto;
+    }
+
+    .invoice-ticket {
+      width: 80mm;
+      margin: 0 auto;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+      background: white;
+      color: black;
+      border-radius: 5px;
+    }
+
+    .date-filter {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .date-filter input {
+      padding: 8px;
+      border-radius: 5px;
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: #ecf0f1;
+    }
+
+    .date-filter button {
+      padding: 8px 15px;
+      background: #16e086;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .chart-container {
+      margin-top: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 10px;
+    }
+
+    /* Estilos para los totales en diferentes monedas */
+    .currency-totals {
+      display: flex;
+      gap: 10px;
+      margin-left: 10px;
+    }
+
+    .currency-total {
+      background: #47627d;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 0.9em;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .currency-total i {
+      font-size: 1em;
+    }
+
+    /* Nuevos estilos para botones de impresión */
+    .print-btn {
+      background: linear-gradient(135deg, #16e086, #15a086);
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+    }
+
+    .print-btn:hover {
+      background: linear-gradient(135deg, #15a086, #16e086);
+      transform: translateY(-2px);
+    }
+
+    .print-btn i {
+      font-size: 16px;
+    }
+
+    /* Estilo para el contenedor de impresión de reportes */
+    .report-print-container {
+      display: none;
     }
   </style>
 </head>
@@ -881,12 +1053,11 @@
   <div id="posSection" style="display: none;">
     <header>
       <div class="header-icons">
-        <a href="#" id="homeBtn"><i class="fa-solid fa-house icon"></i></a>
-        <a href="#" id="inventoryBtn"><i class="fa-solid fa-box icon"></i></a>
-        <a href="#" id="reportsBtn"><i class="fa-solid fa-chart-line icon"></i></a>
-        <a href="#" id="invoicesBtn"><i class="fa-solid fa-receipt icon"></i></a>
-        <a href="#" id="exchangeRatesBtn"><i class="fa-solid fa-dollar-sign icon"></i></a>
-        <a href="#" id="userBtn"><i class="fa-solid fa-user icon"></i></a>
+        <a href="#" id="homeBtn" title="Inicio"><i class="fa-solid fa-house icon"></i></a>
+        <a href="#" id="inventoryBtn" title="Inventario"><i class="fa-solid fa-box icon"></i></a>
+        <a href="#" id="reportsBtn" title="Reportes"><i class="fa-solid fa-chart-line icon"></i></a>
+        <a href="#" id="invoicesBtn" title="Facturas"><i class="fa-solid fa-receipt icon"></i></a>
+        <a href="#" id="userBtn" title="Usuario"><i class="fa-solid fa-user icon"></i></a>
       </div>
       <span id="invoiceUser"></span>
     </header>
@@ -964,21 +1135,59 @@
 
       <!-- Reports Section -->
       <div class="reports-section" id="reportsSection">
-        <h1>Reporte de Ventas</h1>
-        <div id="salesReport"></div>
-        <div class="report-total" id="salesTotal"></div>
+        <div class="report-container">
+          <div class="report-list">
+            <h1>Ventas del Día</h1>
+            <div class="date-filter">
+              <input type="date" id="salesDateFilter">
+              <button id="applySalesFilter">Filtrar</button>
+              <button id="printSalesReport" class="print-btn no-print"><i class="fas fa-print"></i> Imprimir Reporte</button>
+            </div>
+            <div id="salesReport"></div>
+          </div>
+          <div class="report-detail">
+            <h2>Resumen de Ventas</h2>
+            <div id="salesSummary">
+              <div class="report-total" id="salesTotal"></div>
+              <div class="report-total" id="salesDiscount"></div>
+              <div class="chart-container">
+                <canvas id="salesChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Invoices Section -->
       <div class="reports-section" id="invoicesSection">
-        <h1>Facturas del Día</h1>
-        <div id="dailyInvoices"></div>
+        <div class="report-container">
+          <div class="report-list">
+            <h1>Facturas del Día</h1>
+            <div class="date-filter">
+              <input type="date" id="invoicesDateFilter">
+              <button id="applyInvoicesFilter">Filtrar</button>
+              <button id="printInvoicesReport" class="print-btn no-print"><i class="fas fa-print"></i> Imprimir Reporte</button>
+            </div>
+            <div id="dailyInvoices"></div>
+          </div>
+          <div class="report-detail">
+            <h2>Detalle de Factura</h2>
+            <div id="invoiceDetail" class="invoice-ticket"></div>
+            <button id="printInvoiceDetail" class="print-btn no-print"><i class="fas fa-print"></i> Imprimir Factura</button>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Bottom Totals Bar -->
     <div class="totals-bar">
-      <div class="total-container" id="invoiceTotal"><i class="fa-solid fa-calculator"></i> Total: DOP $0.00</div>
+      <div style="display: flex; align-items: center;">
+        <div class="total-container" id="invoiceTotal"><i class="fa-solid fa-calculator"></i> Total: DOP $0.00</div>
+        <div class="currency-totals">
+          <div class="currency-total" id="usdTotal"><i class="fa-solid fa-dollar-sign"></i> USD $0.00</div>
+          <div class="currency-total" id="eurTotal"><i class="fa-solid fa-euro-sign"></i> EUR €0.00</div>
+        </div>
+      </div>
       <div class="action-buttons">
         <button class="button button-descuento" id="btnApplyDiscount"><i class="fa-solid fa-percent"></i> Descuento</button>
         <button class="button button-efectivo" id="btnEfectivo"><i class="fa-solid fa-money-bill"></i> Efectivo</button>
@@ -1004,6 +1213,7 @@
       <h2>Pago en Efectivo</h2>
       <p>Total a Pagar: <span id="efectivoTotal"></span></p>
       <input type="number" id="efectivoReceived" placeholder="Monto Recibido (DOP)">
+      <p>Monto Recibido: <span id="efectivoReceivedDisplay">DOP $0.00</span></p>
       <p>Cambio: <span id="efectivoChange">DOP $0.00</span></p>
       <button id="confirmEfectivo"><i class="fa-solid fa-check"></i> Confirmar Pago</button>
     </div>
@@ -1050,16 +1260,6 @@
     </div>
   </div>
 
-  <!-- Exchange Rates Modal -->
-  <div id="exchangeRatesModal" class="modal">
-    <div class="exchange-rates-modal">
-      <span class="close" id="closeExchangeModal">×</span>
-      <h2>Tasas de Cambio</h2>
-      <p>USD: <span id="usdRate">$0.00</span></p>
-      <p>EUR: <span id="eurRate">€0.00</span></p>
-    </div>
-  </div>
-
   <!-- Alert Modals -->
   <div id="successAlert" class="modal">
     <div class="alert-modal alert-success">
@@ -1088,7 +1288,11 @@
     </div>
   </div>
 
-  <script type="module">
+  <!-- Contenedor para imprimir reportes (oculto) -->
+  <div id="reportPrintContainer" class="report-print-container"></div>
+
+<link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+39+Text&display=swap" rel="stylesheet">
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
     import {
       getFirestore,
@@ -1140,6 +1344,8 @@
     const productList = document.getElementById("productList");
     const invoiceItems = document.getElementById("invoiceItems");
     const invoiceTotal = document.getElementById("invoiceTotal");
+    const usdTotal = document.getElementById("usdTotal");
+    const eurTotal = document.getElementById("eurTotal");
     const payButton = document.getElementById("payButton");
     const numericKeyboard = document.getElementById("numericKeyboard");
     const numericButtons = document.querySelectorAll(".numeric-btn");
@@ -1161,6 +1367,7 @@
     const efectivoModal = document.getElementById("efectivoModal");
     const closeEfectivoModal = document.getElementById("closeEfectivoModal");
     const efectivoReceived = document.getElementById("efectivoReceived");
+    const efectivoReceivedDisplay = document.getElementById("efectivoReceivedDisplay");
     const efectivoTotal = document.getElementById("efectivoTotal");
     const efectivoChange = document.getElementById("efectivoChange");
     const confirmEfectivo = document.getElementById("confirmEfectivo");
@@ -1185,7 +1392,6 @@
     const inventoryBtn = document.getElementById("inventoryBtn");
     const reportsBtn = document.getElementById("reportsBtn");
     const invoicesBtn = document.getElementById("invoicesBtn");
-    const exchangeRatesBtn = document.getElementById("exchangeRatesBtn");
     const userBtn = document.getElementById("userBtn");
 
     // Secciones
@@ -1195,19 +1401,23 @@
     const invoicesSection = document.getElementById("invoicesSection");
     const salesReport = document.getElementById("salesReport");
     const salesTotal = document.getElementById("salesTotal");
+    const salesDiscount = document.getElementById("salesDiscount");
     const dailyInvoices = document.getElementById("dailyInvoices");
+    const invoiceDetail = document.getElementById("invoiceDetail");
+    const salesChart = document.getElementById("salesChart");
 
-    // Modales de usuario y tasas
+    // Filtros de fecha
+    const salesDateFilter = document.getElementById("salesDateFilter");
+    const applySalesFilter = document.getElementById("applySalesFilter");
+    const invoicesDateFilter = document.getElementById("invoicesDateFilter");
+    const applyInvoicesFilter = document.getElementById("applyInvoicesFilter");
+
+    // Modales de usuario
     const userInfoModal = document.getElementById("userInfoModal");
     const closeUserModal = document.getElementById("closeUserModal");
     const userName = document.getElementById("userName");
     const userEmail = document.getElementById("userEmail");
     const logoutBtn = document.getElementById("logoutBtn");
-
-    const exchangeRatesModal = document.getElementById("exchangeRatesModal");
-    const closeExchangeModal = document.getElementById("closeExchangeModal");
-    const usdRate = document.getElementById("usdRate");
-    const eurRate = document.getElementById("eurRate");
 
     // Alertas elegantes
     const successAlert = document.getElementById("successAlert");
@@ -1225,15 +1435,68 @@
     const closeWarningAlert = document.getElementById("closeWarningAlert");
     const warningOkBtn = document.getElementById("warningOkBtn");
 
+    // Botones de impresión
+    const printSalesReport = document.getElementById("printSalesReport");
+    const printInvoicesReport = document.getElementById("printInvoicesReport");
+    const printInvoiceDetail = document.getElementById("printInvoiceDetail");
+    const reportPrintContainer = document.getElementById("reportPrintContainer");
+
+    // Barra de progreso
+    const progressBarContainer = document.createElement("div");
+    progressBarContainer.style.position = "fixed";
+    progressBarContainer.style.bottom = "20px";
+    progressBarContainer.style.left = "50%";
+    progressBarContainer.style.transform = "translateX(-50%)";
+    progressBarContainer.style.width = "300px";
+    progressBarContainer.style.backgroundColor = "#f1f1f1";
+    progressBarContainer.style.borderRadius = "5px";
+    progressBarContainer.style.padding = "10px";
+    progressBarContainer.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
+    progressBarContainer.style.zIndex = "1000";
+    progressBarContainer.style.display = "none";
+
+    const progressBar = document.createElement("div");
+    progressBar.style.height = "20px";
+    progressBar.style.backgroundColor = "#4CAF50";
+    progressBar.style.borderRadius = "3px";
+    progressBar.style.width = "0%";
+    progressBar.style.transition = "width 0.3s";
+
+    const progressText = document.createElement("div");
+    progressText.style.textAlign = "center";
+    progressText.style.marginTop = "5px";
+    progressText.style.fontSize = "12px";
+    progressText.style.color = "#333";
+
+    progressBarContainer.appendChild(progressBar);
+    progressBarContainer.appendChild(progressText);
+    document.body.appendChild(progressBarContainer);
+
     // Variables globales
     let invoice = [];
     let totalPrice = 0;
     let currentUser = null;
-    let exchangeRates = { usd: 62.15, eur: 64.42 };
+    let exchangeRates = { usd: 56.50, eur: 61.20 }; // Tasas de cambio
     let discount = 0;
     let discountedTotal = 0;
     let invoiceId = null;
     let isShiftPressed = false;
+    let salesChartInstance = null;
+    let selectedInvoiceId = null;
+    let amountReceived = 0; // Variable para almacenar el monto recibido
+
+    // Función para mostrar la barra de progreso
+    function showProgressBar(percentage, message) {
+      progressBar.style.width = `${percentage}%`;
+      progressText.textContent = message;
+      progressBarContainer.style.display = "block";
+      
+      if (percentage >= 100) {
+        setTimeout(() => {
+          progressBarContainer.style.display = "none";
+        }, 2000);
+      }
+    }
 
     // Función para mostrar alertas elegantes
     function showAlert(type, message) {
@@ -1271,26 +1534,28 @@
         loginSection.style.display = 'none';
         posSection.style.display = 'block';
         
-        // Mostrar nombre del usuario (no el correo)
         if (user.displayName) {
           invoiceUser.textContent = user.displayName;
           userName.textContent = `Nombre: ${user.displayName}`;
         } else {
-          // Si no hay displayName, usar el nombre antes del @ en el correo
           const nameFromEmail = user.email.split('@')[0];
           invoiceUser.textContent = nameFromEmail;
           userName.textContent = `Nombre: ${nameFromEmail}`;
         }
         
         userEmail.textContent = `Correo: ${user.email}`;
-        
-        // Guardar sesión en localStorage
         localStorage.setItem('userLoggedIn', 'true');
         
-        getExchangeRates();
-        renderProducts();
+        // Mostrar barra de progreso al cargar productos
+        showProgressBar(0, "Cargando productos...");
+        renderProducts().then(() => {
+          showProgressBar(100, "Productos cargados con éxito");
+        });
+        
+        const today = new Date().toISOString().split('T')[0];
+        salesDateFilter.value = today;
+        invoicesDateFilter.value = today;
       } else {
-        // No hay usuario autenticado
         loginSection.style.display = 'flex';
         posSection.style.display = 'none';
         localStorage.removeItem('userLoggedIn');
@@ -1309,15 +1574,18 @@
     // Login
     loginButton.addEventListener('click', async () => {
       try {
+        showProgressBar(30, "Iniciando sesión...");
         const userCredential = await signInWithEmailAndPassword(
           auth,
           loginEmail.value,
           loginPassword.value
         );
         loginError.style.display = 'none';
+        showProgressBar(100, "Sesión iniciada con éxito");
       } catch (error) {
         loginError.style.display = 'block';
         loginError.textContent = 'Credenciales incorrectas';
+        showProgressBar(0, "Error al iniciar sesión");
         console.error('Error al iniciar sesión:', error);
       }
     });
@@ -1325,32 +1593,51 @@
     // Logout
     logoutBtn.addEventListener('click', async () => {
       try {
+        showProgressBar(30, "Cerrando sesión...");
         await signOut(auth);
         userInfoModal.style.display = 'none';
+        showProgressBar(100, "Sesión cerrada correctamente");
         showAlert('success', 'Sesión cerrada correctamente');
       } catch (error) {
         console.error('Error al cerrar sesión:', error);
+        showProgressBar(0, "Error al cerrar sesión");
         showAlert('error', 'Error al cerrar sesión');
       }
     });
 
     // Funciones de negocio
     const getBusinessDetails = async () => {
-      const businessRef = doc(db, "businessDetails", "info");
-      const businessDoc = await getDoc(businessRef);
-      if (businessDoc.exists()) {
-        return businessDoc.data();
-      }
-      return { name: "Nombre del Negocio", address: "Dirección del Negocio", rnc: "123456789" };
-    };
-
-    const getExchangeRates = async () => {
-      const ratesRef = doc(db, "exchangeRates", "rates");
-      const ratesDoc = await getDoc(ratesRef);
-      if (ratesDoc.exists()) {
-        exchangeRates = ratesDoc.data();
-        usdRate.textContent = `$${exchangeRates.usd.toFixed(2)}`;
-        eurRate.textContent = `€${exchangeRates.eur.toFixed(2)}`;
+      try {
+        showProgressBar(20, "Obteniendo detalles del negocio...");
+        const businessRef = doc(db, "businessDetails", "info");
+        const businessDoc = await getDoc(businessRef);
+        
+        if (businessDoc.exists()) {
+          const data = businessDoc.data();
+          showProgressBar(100, "Detalles cargados");
+          return {
+            name: data.name || "Nombre del Negocio",
+            address: data.address || "Dirección del Negocio",
+            rnc: data.rnc || "123456789"
+          };
+        } else {
+          const defaultData = {
+            name: "Nombre del Negocio",
+            address: "Dirección del Negocio",
+            rnc: "123456789"
+          };
+          await setDoc(businessRef, defaultData);
+          showProgressBar(100, "Detalles creados");
+          return defaultData;
+        }
+      } catch (error) {
+        console.error("Error al obtener detalles del negocio:", error);
+        showProgressBar(0, "Error al cargar detalles");
+        return {
+          name: "Nombre del Negocio",
+          address: "Dirección del Negocio",
+          rnc: "123456789"
+        };
       }
     };
 
@@ -1359,6 +1646,7 @@
       if (!currentUser) return;
 
       try {
+        showProgressBar(0, "Buscando productos...");
         const businessesRef = collection(db, "businesses");
         const businessesSnapshot = await getDocs(businessesRef);
 
@@ -1366,9 +1654,13 @@
 
         if (businessesSnapshot.empty) {
           productList.innerHTML = "<p>No hay productos disponibles.</p>";
+          showProgressBar(100, "No hay productos");
           return;
         }
 
+        let productsCount = 0;
+        const businessPromises = [];
+        
         businessesSnapshot.forEach(async (businessDoc) => {
           const productsRef = collection(db, "businesses", businessDoc.id, "products");
           let productsQuery = query(productsRef);
@@ -1379,41 +1671,51 @@
             productsQuery = query(productsRef, where("name", ">=", nameTerm), where("name", "<=", nameTerm + '\uf8ff'));
           }
 
-          const querySnapshot = await getDocs(productsQuery);
-          querySnapshot.forEach((doc) => {
-            const product = doc.data();
-            const productDiv = document.createElement("div");
-            productDiv.classList.add("product-item");
-            
-            // Mostrar alerta si el stock es cero
-            if (product.quantity === 0) {
-              productDiv.innerHTML = `
-                <div>${product.name} (AGOTADO)</div>
-                <div>Precio: $${product.pricePerUnit}</div>
-              `;
-              productDiv.style.backgroundColor = 'rgba(255, 99, 71, 0.2)';
-            } else {
-              productDiv.innerHTML = `
-                <div>${product.name}</div>
-                <div>Precio: $${product.pricePerUnit}</div>
-                <div>Stock: ${product.quantity}</div>
-              `;
-            }
-            
-            productDiv.addEventListener("click", () => {
+          const promise = getDocs(productsQuery).then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+              const product = doc.data();
+              const productDiv = document.createElement("div");
+              productDiv.classList.add("product-item");
+              
               if (product.quantity === 0) {
-                showAlert('warning', 'Este producto está agotado');
-                return;
+                productDiv.innerHTML = `
+                  <div>${product.name} (AGOTADO)</div>
+                  <div>Precio: $${product.pricePerUnit}</div>
+                `;
+                productDiv.style.backgroundColor = 'rgba(255, 99, 71, 0.2)';
+              } else {
+                productDiv.innerHTML = `
+                  <div>${product.name}</div>
+                  <div>Precio: $${product.pricePerUnit}</div>
+                  <div>Stock: ${product.quantity}</div>
+                `;
               }
-              updateInvoice(product, businessDoc.id, doc.id);
+              
+              productDiv.addEventListener("click", () => {
+                if (product.quantity === 0) {
+                  showAlert('warning', 'Este producto está agotado');
+                  return;
+                }
+                updateInvoice(product, businessDoc.id, doc.id);
+              });
+              productList.appendChild(productDiv);
+              productsCount++;
+              
+              // Actualizar barra de progreso
+              const progress = Math.min(90, Math.floor((productsCount / 50) * 90));
+              showProgressBar(progress, `Cargando productos (${productsCount})`);
             });
-            productList.appendChild(productDiv);
           });
+          businessPromises.push(promise);
         });
+
+        await Promise.all(businessPromises);
+        showProgressBar(100, `Productos cargados: ${productsCount}`);
 
         if (eanTerm) addToInvoiceBySearch(eanTerm);
       } catch (error) {
         console.error("Error al obtener los productos:", error);
+        showProgressBar(0, "Error al cargar productos");
         showAlert('error', 'Error al cargar los productos');
       }
     };
@@ -1444,7 +1746,6 @@
     const updateInvoice = (product, businessName, productId) => {
       const existingProduct = invoice.find((item) => item.productId === productId);
       if (existingProduct) {
-        // Verificar si hay suficiente stock antes de agregar
         if (existingProduct.quantity >= product.quantity) {
           showAlert('warning', 'No hay suficiente stock de este producto');
           return;
@@ -1456,9 +1757,8 @@
 
       const profitPercentage = product.profitPercentage || 10;
       const priceWithProfit = product.pricePerUnit * (1 + profitPercentage / 100);
-      totalPrice += priceWithProfit * 1.18; // Agregar IVA
+      totalPrice += priceWithProfit * 1.18;
       renderInvoice();
-      updateTotalApagarVentas(product);
     };
 
     const renderInvoice = () => {
@@ -1482,12 +1782,15 @@
 
       discountedTotal = discount > 0 ? totalPrice - (totalPrice * discount / 100) : totalPrice;
       
-      const totalUSD = (discountedTotal / exchangeRates.usd).toFixed(2);
-      const totalEUR = (discountedTotal / exchangeRates.eur).toFixed(2);
-      
-      invoiceTotal.innerHTML = `<i class="fa-solid fa-calculator"></i> Total: DOP $${discountedTotal.toFixed(2)} (USD: $${totalUSD}, EUR: €${totalEUR})`;
+      invoiceTotal.innerHTML = `<i class="fa-solid fa-calculator"></i> Total: DOP $${discountedTotal.toFixed(2)}`;
       efectivoTotal.textContent = `DOP $${discountedTotal.toFixed(2)}`;
       tarjetaTotal.textContent = `DOP $${discountedTotal.toFixed(2)}`;
+      
+      const usdAmount = (discountedTotal / exchangeRates.usd).toFixed(2);
+      const eurAmount = (discountedTotal / exchangeRates.eur).toFixed(2);
+      
+      usdTotal.innerHTML = `<i class="fa-solid fa-dollar-sign"></i> USD $${usdAmount}`;
+      eurTotal.innerHTML = `<i class="fa-solid fa-euro-sign"></i> EUR €${eurAmount}`;
     };
 
     window.removeProduct = (productId) => {
@@ -1508,6 +1811,22 @@
     const generateInvoice = async (paymentTypeValue, change = 0) => {
       const businessDetails = await getBusinessDetails();
       const totalITBIS = totalPrice * 0.18;
+      
+      // Asegurarnos de que amountReceived tenga un valor válido
+      const receivedAmount = paymentTypeValue === 'Efectivo' ? parseFloat(amountReceived) || 0 : 0;
+      
+      // Generar código de barras con formato visual (6 dígitos)
+      const barcodeData = generateBarcode();
+      const barcodeHTML = `
+        <div style="text-align: center; margin: 10px 0;">
+          <div style="font-family: 'Libre Barcode 39 Text', cursive; font-size: 48px; letter-spacing: 2px;">
+            ${barcodeData}
+          </div>
+          <div style="font-family: monospace; font-size: 14px; margin-top: 5px;">
+            ${barcodeData.replace(/\*/g, '')}
+          </div>
+        </div>
+      `;
       
       const invoiceHTML = `
         <div class="invoice-container">
@@ -1551,7 +1870,11 @@
             </div>
             ${paymentTypeValue === 'Efectivo' ? `
               <div class="total-row">
-                <span>Devuelta:</span>
+                <span>Monto Recibido:</span>
+                <span>$${receivedAmount.toFixed(2)}</span>
+              </div>
+              <div class="total-row">
+                <span>Cambio:</span>
                 <span>$${change.toFixed(2)}</span>
               </div>
             ` : ''}
@@ -1569,7 +1892,7 @@
             </div>
           </div>
           <div class="barcode">
-            ${generateBarcode()}
+            ${barcodeHTML}
           </div>
           <div class="thank-you">
             <p>Gracias por su compra</p>
@@ -1578,18 +1901,26 @@
       `;
       
       invoicePrintContent.innerHTML = invoiceHTML;
-      await saveInvoiceToFirebase(paymentTypeValue, change);
+      await saveInvoiceToFirebase(paymentTypeValue, change, receivedAmount, barcodeData);
     };
 
     const generateBarcode = () => {
-      const randomNumber = Math.floor(Math.random() * 1000000000000).toString();
+      // Generar código de 6 dígitos
+      const randomNumber = Math.floor(100000 + Math.random() * 900000).toString();
       return `*${randomNumber}*`;
     };
 
-    const saveInvoiceToFirebase = async (paymentTypeValue, change = 0) => {
+    const saveInvoiceToFirebase = async (paymentTypeValue, change = 0, receivedAmount = 0, barcode = '') => {
       try {
+        showProgressBar(0, "Guardando factura...");
         const businessDetails = await getBusinessDetails();
         const totalITBIS = totalPrice * 0.18;
+        
+        const subtotalSinITBIS = invoice.reduce((sum, item) => {
+          const profitPercentage = item.profitPercentage || 10;
+          const priceWithProfit = item.pricePerUnit * (1 + profitPercentage / 100);
+          return sum + (priceWithProfit * item.quantity);
+        }, 0);
         
         const invoiceData = {
           businessName: businessDetails.name,
@@ -1607,33 +1938,65 @@
               name: item.name,
               quantity: item.quantity,
               pricePerUnit: item.pricePerUnit,
+              priceWithProfit: priceWithProfit,
               total: itemTotal,
-              itbis: itbis
+              itbis: itbis,
+              productId: item.productId,
+              businessName: item.businessName
             };
           }),
-          subtotal: totalPrice,
+          subtotal: subtotalSinITBIS,
           discount: discount > 0 ? (totalPrice * discount / 100) : 0,
           discountPercentage: discount,
           itbis: totalITBIS,
           total: discountedTotal,
           paymentType: paymentTypeValue,
+          amountReceived: paymentTypeValue === 'Efectivo' ? parseFloat(receivedAmount) : 0,
           change: paymentTypeValue === 'Efectivo' ? change : 0,
           date: Timestamp.now(),
-          barcode: generateBarcode(),
+          barcode: barcode || generateBarcode(),
           timestamp: new Date().getTime()
         };
 
+        showProgressBar(30, "Guardando en facturación...");
         // Guardar en facturacionCarrito
-        await addDoc(collection(db, "facturacionCarrito"), invoiceData);
+        const carritoRef = await addDoc(collection(db, "facturacionCarrito"), invoiceData);
         
+        showProgressBar(60, "Actualizando historial...");
         // Guardar en el historial del usuario
-        const invoiceRef = collection(db, "users", currentUser.uid, "invoiceHistory");
-        await addDoc(invoiceRef, invoiceData);
+        const userInvoiceRef = collection(db, "users", currentUser.uid, "invoiceHistory");
+        await addDoc(userInvoiceRef, {
+          ...invoiceData,
+          carritoId: carritoRef.id
+        });
         
+        showProgressBar(80, "Actualizando cuadres...");
+        // Guardar en FacturaDeCuadres
+        await addDoc(collection(db, "FacturaDeCuadres"), invoiceData);
+        
+        showProgressBar(90, "Actualizando stock...");
+        // Actualizar stock
+        for (const item of invoice) {
+          const productRef = doc(db, "businesses", item.businessName, "products", item.productId);
+          const productDoc = await getDoc(productRef);
+          
+          if (productDoc.exists()) {
+            const currentStock = productDoc.data().quantity;
+            await updateDoc(productRef, {
+              quantity: currentStock - item.quantity
+            });
+            
+            // Actualizar la lista de productos después de actualizar el stock
+            renderProducts();
+          }
+        }
+        
+        showProgressBar(100, "Factura guardada con éxito");
         showAlert('success', 'Factura generada y guardada correctamente');
       } catch (error) {
         console.error("Error al guardar la factura:", error);
-        showAlert('error', 'Error al guardar la factura');
+        showProgressBar(0, "Error al guardar factura");
+        showAlert('error', 'Error al guardar la factura: ' + error.message);
       }
     };
 
@@ -1644,6 +2007,8 @@
           return;
         }
 
+        showProgressBar(10, "Verificando stock...");
+        // Verificar stock
         for (const item of invoice) {
           const productRef = doc(db, "businesses", item.businessName, "products", item.productId);
           const productDoc = await getDoc(productRef);
@@ -1651,21 +2016,30 @@
           if (productDoc.exists()) {
             const productData = productDoc.data();
             const currentQuantity = productData.quantity || 0;
-            const newQuantity = currentQuantity - item.quantity;
-
-            if (newQuantity < 0) {
+            
+            if (currentQuantity < item.quantity) {
               showAlert('warning', `No hay suficiente stock de ${item.name}`);
               return;
             }
-
-            await updateDoc(productRef, { quantity: newQuantity });
-            await recordSaleHistory(item, paymentTypeValue);
+          } else {
+            showAlert('warning', `Producto ${item.name} no encontrado`);
+            return;
           }
         }
 
-        const change = paymentTypeValue === 'Efectivo' ? 
-          (parseFloat(efectivoReceived.value) || 0) - discountedTotal : 0;
+        showProgressBar(30, "Validando pago...");
+        // Solo validar monto para pagos en efectivo
+        if (paymentTypeValue === 'Efectivo') {
+          const received = parseFloat(amountReceived) || 0;
+          if (received < discountedTotal) {
+            showAlert('warning', 'El monto recibido es insuficiente');
+            return;
+          }
+        }
         
+        const change = paymentTypeValue === 'Efectivo' ? amountReceived - discountedTotal : 0;
+        
+        showProgressBar(50, "Generando factura...");
         await generateInvoice(paymentTypeValue, change);
         printModal.style.display = "block";
 
@@ -1674,54 +2048,17 @@
         totalPrice = 0;
         discount = 0;
         discountedTotal = 0;
+        amountReceived = 0;
         renderInvoice();
+        
+        // Actualizar lista de productos después del pago
+        renderProducts();
+        
+        showProgressBar(100, "Pago procesado con éxito");
       } catch (error) {
         console.error("Error al procesar el pago:", error);
-        showAlert('error', 'Error al procesar el pago');
-      }
-    };
-
-    const recordSaleHistory = async (item, paymentTypeValue) => {
-      try {
-        const salesHistoryRef = collection(db, "users", currentUser.uid, "salesHistory");
-        const q = query(salesHistoryRef, where("productName", "==", item.name), where("paymentType", "==", paymentTypeValue));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-          querySnapshot.forEach(async (doc) => {
-            const existingSale = doc.data();
-            const newQuantity = existingSale.quantitySold + item.quantity;
-            await updateDoc(doc.ref, { quantitySold: newQuantity });
-          });
-        } else {
-          const saleData = {
-            productName: item.name,
-            quantitySold: item.quantity,
-            paymentType: paymentTypeValue,
-            date: Timestamp.now(),
-          };
-          await addDoc(salesHistoryRef, saleData);
-        }
-      } catch (error) {
-        console.error("Error al registrar el historial de ventas:", error);
-      }
-    };
-
-    const updateTotalApagarVentas = async (product) => {
-      if (!currentUser) return;
-
-      const totalApagarVentasRef = doc(db, "users", currentUser.uid, "totalApagarVentas", "currentVenta");
-      try {
-        await updateDoc(totalApagarVentasRef, {
-          productos: arrayUnion({
-            nombre: product.name,
-            precio: product.pricePerUnit,
-            cantidad: product.quantity,
-            total: totalPrice.toFixed(2),
-          }),
-        });
-      } catch (error) {
-        console.error("Error al actualizar totalApagarVentas en Firebase:", error);
+        showProgressBar(0, "Error al procesar pago");
+        showAlert('error', 'Error al procesar el pago: ' + error.message);
       }
     };
 
@@ -1732,398 +2069,712 @@
 
     const calculateChange = () => {
       const received = parseFloat(efectivoReceived.value) || 0;
+      amountReceived = received; // Actualizar la variable global
       const change = received - discountedTotal;
       efectivoChange.textContent = `DOP $${change.toFixed(2)}`;
+      efectivoReceivedDisplay.textContent = `DOP $${received.toFixed(2)}`;
     };
 
     // Funciones de reportes
-    const loadDailyInvoices = async () => {
+    const loadDailyInvoices = async (date = null) => {
       if (!currentUser) return;
 
       try {
-        // Obtener la fecha de hoy a medianoche
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        showProgressBar(0, "Cargando facturas...");
+        let startDate = new Date();
+        startDate.setHours(0, 0, 0, 0);
+        
+        if (date) {
+          startDate = new Date(date);
+          startDate.setHours(0, 0, 0, 0);
+        }
+        
+        const endDate = new Date(startDate);
+        endDate.setHours(23, 59, 59, 999);
         
         const invoicesRef = collection(db, "users", currentUser.uid, "invoiceHistory");
-        const q = query(invoicesRef, where("date", ">=", Timestamp.fromDate(today)));
+        const q = query(invoicesRef, 
+          where("date", ">=", Timestamp.fromDate(startDate)),
+          where("date", "<=", Timestamp.fromDate(endDate)),
+          orderBy("date", "desc")
+        );
         
         const querySnapshot = await getDocs(q);
         dailyInvoices.innerHTML = "";
         
         if (querySnapshot.empty) {
-          dailyInvoices.innerHTML = "<p>No hay facturas para hoy</p>";
+          dailyInvoices.innerHTML = "<p>No hay facturas para esta fecha</p>";
+          invoiceDetail.innerHTML = "<p>Seleccione una factura para ver el detalle</p>";
+          showProgressBar(100, "No hay facturas");
           return;
         }
         
-        let totalSales = 0;
+        let invoicesLoaded = 0;
         querySnapshot.forEach((doc) => {
           const invoiceData = doc.data();
           const invoiceDate = invoiceData.date.toDate();
           const invoiceTime = invoiceDate.toLocaleTimeString();
           
-          totalSales += invoiceData.total;
-          
           const invoiceDiv = document.createElement("div");
           invoiceDiv.classList.add("report-item");
+          invoiceDiv.dataset.invoiceId = doc.id;
           invoiceDiv.innerHTML = `
-            <p><strong>Factura:</strong> ${doc.id}</p>
+            <p><strong>Factura ID:</strong> ${doc.id.substring(0, 8)}...</p>
             <p><strong>Hora:</strong> ${invoiceTime}</p>
             <p><strong>Total:</strong> $${invoiceData.total.toFixed(2)}</p>
             <p><strong>Método:</strong> ${invoiceData.paymentType}</p>
+            <p><strong>Productos:</strong> ${invoiceData.items.length}</p>
           `;
+          
+          invoiceDiv.addEventListener("click", () => {
+            showInvoiceDetail(invoiceData, doc.id);
+            selectedInvoiceId = doc.id;
+          });
+          
           dailyInvoices.appendChild(invoiceDiv);
+          invoicesLoaded++;
+          
+          const progress = Math.min(90, Math.floor((invoicesLoaded / querySnapshot.size) * 90));
+          showProgressBar(progress, `Cargando facturas (${invoicesLoaded}/${querySnapshot.size})`);
         });
         
-        const totalDiv = document.createElement("div");
-        totalDiv.classList.add("report-total");
-        totalDiv.textContent = `Total vendido hoy: $${totalSales.toFixed(2)}`;
-        dailyInvoices.appendChild(totalDiv);
+        if (querySnapshot.docs.length > 0) {
+          const firstDoc = querySnapshot.docs[0];
+          showInvoiceDetail(firstDoc.data(), firstDoc.id);
+          selectedInvoiceId = firstDoc.id;
+        }
         
+        showProgressBar(100, `Facturas cargadas: ${invoicesLoaded}`);
       } catch (error) {
         console.error("Error al cargar facturas del día:", error);
+        showProgressBar(0, "Error al cargar facturas");
         showAlert('error', 'Error al cargar facturas');
       }
     };
 
-    const loadSalesReport = async () => {
+    const loadSalesReport = async (date = null) => {
       if (!currentUser) return;
 
       try {
-        // Obtener la fecha de hoy a medianoche
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        showProgressBar(0, "Generando reporte...");
+        let startDate = new Date();
+        startDate.setHours(0, 0, 0, 0);
         
-        const salesRef = collection(db, "users", currentUser.uid, "salesHistory");
-        const q = query(salesRef, where("date", ">=", Timestamp.fromDate(today)));
+        if (date) {
+          startDate = new Date(date);
+          startDate.setHours(0, 0, 0, 0);
+        }
+        
+        const endDate = new Date(startDate);
+        endDate.setHours(23, 59, 59, 999);
+        
+        const salesRef = collection(db, "users", currentUser.uid, "invoiceHistory");
+        const q = query(salesRef, 
+          where("date", ">=", Timestamp.fromDate(startDate)),
+          where("date", "<=", Timestamp.fromDate(endDate))
+        );
         
         const querySnapshot = await getDocs(q);
         salesReport.innerHTML = "";
         
         if (querySnapshot.empty) {
-          salesReport.innerHTML = "<p>No hay ventas para hoy</p>";
+          salesReport.innerHTML = "<p>No hay ventas para esta fecha</p>";
+          salesTotal.textContent = "Total vendido: $0.00";
+          salesDiscount.textContent = "Total descuentos: $0.00";
+          updateSalesChart([], []);
+          showProgressBar(100, "No hay ventas");
           return;
         }
         
-        const salesMap = new Map();
+        const salesByProduct = {};
         let totalSales = 0;
+        let totalDiscount = 0;
         
+        let invoicesProcessed = 0;
         querySnapshot.forEach((doc) => {
-          const sale = doc.data();
+          const invoiceData = doc.data();
+          totalSales += invoiceData.total;
+          totalDiscount += invoiceData.discount || 0;
           
-          if (salesMap.has(sale.productName)) {
-            const existingSale = salesMap.get(sale.productName);
-            existingSale.quantity += sale.quantitySold;
-            existingSale.total += sale.quantitySold * (sale.price || 0);
-          } else {
-            salesMap.set(sale.productName, {
-              quantity: sale.quantitySold,
-              total: sale.quantitySold * (sale.price || 0)
-            });
-          }
+          invoiceData.items.forEach(item => {
+            if (!salesByProduct[item.name]) {
+              salesByProduct[item.name] = {
+                quantity: 0,
+                total: 0
+              };
+            }
+            salesByProduct[item.name].quantity += item.quantity;
+            salesByProduct[item.name].total += item.total;
+          });
           
-          totalSales += sale.quantitySold * (sale.price || 0);
+          invoicesProcessed++;
+          const progress = Math.min(90, Math.floor((invoicesProcessed / querySnapshot.size) * 90));
+          showProgressBar(progress, `Procesando facturas (${invoicesProcessed}/${querySnapshot.size})`);
         });
         
-        salesMap.forEach((value, key) => {
+        let productsProcessed = 0;
+        const totalProducts = Object.keys(salesByProduct).length;
+        Object.entries(salesByProduct).forEach(([productName, data]) => {
           const saleDiv = document.createElement("div");
           saleDiv.classList.add("report-item");
           saleDiv.innerHTML = `
-            <p><strong>Producto:</strong> ${key}</p>
-            <p><strong>Cantidad:</strong> ${value.quantity}</p>
-            <p><strong>Total:</strong> $${value.total.toFixed(2)}</p>
+            <p><strong>Producto:</strong> ${productName}</p>
+            <p><strong>Cantidad:</strong> ${data.quantity}</p>
+            <p><strong>Total:</strong> $${data.total.toFixed(2)}</p>
           `;
           salesReport.appendChild(saleDiv);
+          
+          productsProcessed++;
+          const progress = 90 + Math.floor((productsProcessed / totalProducts) * 10);
+          showProgressBar(progress, `Mostrando productos (${productsProcessed}/${totalProducts})`);
         });
         
-        salesTotal.textContent = `Total vendido hoy: $${totalSales.toFixed(2)}`;
+        salesTotal.textContent = `Total vendido: $${totalSales.toFixed(2)}`;
+        salesDiscount.textContent = `Total descuentos: $${totalDiscount.toFixed(2)}`;
         
+        const productNames = Object.keys(salesByProduct);
+        const productTotals = productNames.map(name => salesByProduct[name].total);
+        updateSalesChart(productNames, productTotals);
+        
+        showProgressBar(100, `Reporte generado: ${totalProducts} productos`);
       } catch (error) {
         console.error("Error al cargar reporte de ventas:", error);
+        showProgressBar(0, "Error al generar reporte");
         showAlert('error', 'Error al cargar reporte');
       }
     };
 
-    // Navegación
-    homeBtn.addEventListener('click', () => {
-      productListSection.style.display = 'block';
-      invoiceSection.style.display = 'block';
-      reportsSection.style.display = 'none';
-      invoicesSection.style.display = 'none';
-    });
-
-    inventoryBtn.addEventListener('click', () => {
-      // Aquí puedes implementar la navegación al inventario si es necesario
-      showAlert('info', 'Funcionalidad de inventario en desarrollo');
-    });
-
-    reportsBtn.addEventListener('click', async () => {
-      // Mostrar modal de contraseña para acceder a reportes
-      passwordModal.style.display = 'block';
-      // Configurar una función especial para el botón de aceptar
-      const originalSubmit = submitPassword.onclick;
+    const showInvoiceDetail = (invoiceData, invoiceId) => {
+      showProgressBar(0, "Mostrando detalle...");
+      const totalITBIS = invoiceData.itbis || 0;
+      const discountAmount = invoiceData.discount || 0;
       
-      submitPassword.onclick = async () => {
-        const password = passwordInput.value;
-        const discountRef = doc(db, "settings", "discount");
-        const discountDoc = await getDoc(discountRef);
+      const barcodeHTML = `
+        <div style="text-align: center; margin: 10px 0;">
+          <div style="font-family: 'Libre Barcode 39 Text', cursive; font-size: 48px; letter-spacing: 2px;">
+            ${invoiceData.barcode || generateBarcode()}
+          </div>
+          <div style="font-family: monospace; font-size: 14px; margin-top: 5px;">
+            ${(invoiceData.barcode || generateBarcode()).replace(/\*/g, '')}
+          </div>
+        </div>
+      `;
+      
+      const ticketHTML = `
+        <div class="invoice-header">
+          <h2>${invoiceData.businessName}</h2>
+          <p>RNC: ${invoiceData.businessRNC}</p>
+          <p>${invoiceData.businessAddress}</p>
+        </div>
+        <div class="invoice-user">
+          <p>Factura: ${invoiceId.substring(0, 8)}</p>
+          <p>Fecha: ${invoiceData.date.toDate().toLocaleString()}</p>
+          <p>Atendido por: ${invoiceData.user}</p>
+        </div>
+        <div class="invoice-products">
+          <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px;">
+            <span class="product-name">Producto</span>
+            <span class="product-quantity">Cant</span>
+            <span class="product-price">Precio</span>
+            <span class="product-total">Total</span>
+          </div>
+          ${invoiceData.items.map(item => {
+            return `
+              <div class="product-row">
+                <span class="product-name">${item.name}</span>
+                <span class="product-quantity">${item.quantity}</span>
+                <span class="product-price">$${item.priceWithProfit.toFixed(2)}</span>
+                <span class="product-total">$${item.total.toFixed(2)}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div class="invoice-totals">
+          ${discountAmount > 0 ? `
+            <div class="total-row">
+              <span>Descuento (${invoiceData.discountPercentage}%):</span>
+              <span>$${discountAmount.toFixed(2)}</span>
+            </div>
+          ` : ''}
+          <div class="total-row">
+            <span>Total ITBIS:</span>
+            <span>$${totalITBIS.toFixed(2)}</span>
+          </div>
+          ${invoiceData.paymentType === 'Efectivo' ? `
+            <div class="total-row">
+              <span>Monto Recibido:</span>
+              <span>$${invoiceData.amountReceived.toFixed(2)}</span>
+            </div>
+            <div class="total-row">
+              <span>Cambio:</span>
+              <span>$${invoiceData.change.toFixed(2)}</span>
+            </div>
+          ` : ''}
+          <div class="total-row" style="font-weight: bold;">
+            <span>Total general:</span>
+            <span>$${invoiceData.total.toFixed(2)}</span>
+          </div>
+          <div class="total-row">
+            <span>Método de pago:</span>
+            <span>${invoiceData.paymentType}</span>
+          </div>
+        </div>
+        <div class="barcode">
+          ${barcodeHTML}
+        </div>
+        <div class="thank-you">
+          <p>Gracias por su compra</p>
+        </div>
+      `;
+      
+      invoiceDetail.innerHTML = ticketHTML;
+      showProgressBar(100, "Detalle mostrado");
+    };
 
-        if (discountDoc.exists()) {
-          const storedPassword = discountDoc.data().password;
-
-          if (password === storedPassword) {
-            passwordModal.style.display = "none";
-            passwordError.style.display = "none";
-            
-            // Mostrar sección de reportes
-            productListSection.style.display = 'none';
-            invoiceSection.style.display = 'none';
-            reportsSection.style.display = 'block';
-            invoicesSection.style.display = 'none';
-            
-            // Cargar reportes
-            await loadSalesReport();
-          } else {
-            passwordError.style.display = "block";
+    const updateSalesChart = (labels, data) => {
+      showProgressBar(0, "Actualizando gráfico...");
+      if (salesChartInstance) {
+        salesChartInstance.destroy();
+      }
+      
+      const ctx = salesChart.getContext('2d');
+      salesChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Ventas por Producto',
+            data: data,
+            backgroundColor: 'rgba(22, 224, 134, 0.7)',
+            borderColor: 'rgba(22, 224, 134, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return '$' + value.toFixed(2);
+                }
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return '$' + context.raw.toFixed(2);
+                }
+              }
+            }
           }
         }
-      };
-      
-      // Restaurar el evento original al cerrar el modal
-      closePasswordModal.onclick = () => {
-        passwordModal.style.display = "none";
-        passwordError.style.display = "none";
-        submitPassword.onclick = originalSubmit;
-      };
-    });
+      });
+      showProgressBar(100, "Gráfico actualizado");
+    };
 
-    invoicesBtn.addEventListener('click', async () => {
-      // Mostrar modal de contraseña para acceder a facturas
-      passwordModal.style.display = 'block';
-      // Configurar una función especial para el botón de aceptar
-      const originalSubmit = submitPassword.onclick;
-      
-      submitPassword.onclick = async () => {
-        const password = passwordInput.value;
-        const discountRef = doc(db, "settings", "discount");
-        const discountDoc = await getDoc(discountRef);
-
-        if (discountDoc.exists()) {
-          const storedPassword = discountDoc.data().password;
-
-          if (password === storedPassword) {
-            passwordModal.style.display = "none";
-            passwordError.style.display = "none";
-            
-            // Mostrar sección de facturas
-            productListSection.style.display = 'none';
-            invoiceSection.style.display = 'none';
-            reportsSection.style.display = 'none';
-            invoicesSection.style.display = 'block';
-            
-            // Cargar facturas del día
-            await loadDailyInvoices();
-          } else {
-            passwordError.style.display = "block";
+    // Funciones para imprimir reportes
+    const printSalesReportContent = () => {
+      showProgressBar(0, "Preparando impresión...");
+      const today = new Date(salesDateFilter.value).toLocaleDateString();
+      const reportHTML = `
+        <div style="width: 100%; max-width: 210mm; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+          <h1 style="text-align: center; margin-bottom: 20px;">Reporte de Ventas</h1>
+          <p style="text-align: center; margin-bottom: 20px;"><strong>Fecha:</strong> ${today}</p>
+          
+          <div style="margin-bottom: 30px;">
+            <h2 style="text-align: center; margin-bottom: 15px;">Resumen de Ventas</h2>
+            <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 20px;">
+              <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; min-width: 200px; text-align: center;">
+                <h3 style="margin-bottom: 10px;">Total Vendido</h3>
+                <p style="font-size: 24px; font-weight: bold;">$${salesTotal.textContent.split('$')[1]}</p>
+              </div>
+              <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; min-width: 200px; text-align: center;">
+                <h3 style="margin-bottom: 10px;">Total Descuentos</h3>
+                <p style="font-size: 24px; font-weight: bold;">$${salesDiscount.textContent.split('$')[1]}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 30px;">
+            <h2 style="text-align: center; margin-bottom: 15px;">Ventas por Producto</h2>
+            <div style="margin: 0 auto; width: 80%;">
+              <canvas id="printSalesChart" height="300"></canvas>
+            </div>
+          </div>
+          
+          <div style="margin-top: 30px; text-align: center;">
+            <p>Reporte generado por: ${currentUser.displayName || currentUser.email.split('@')[0]}</p>
+            <p>${new Date().toLocaleString()}</p>
+          </div>
+      </div>
+    `;
+    
+    reportPrintContainer.innerHTML = reportHTML;
+    
+    const printCtx = document.getElementById('printSalesChart').getContext('2d');
+    const productNames = salesChartInstance.data.labels;
+    const productTotals = salesChartInstance.data.datasets[0].data;
+    
+    new Chart(printCtx, {
+      type: 'bar',
+      data: {
+        labels: productNames,
+        datasets: [{
+          label: 'Ventas por Producto',
+          data: productTotals,
+          backgroundColor: 'rgba(22, 224, 134, 0.7)',
+          borderColor: 'rgba(22, 224, 134, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return '$' + value.toFixed(2);
+              }
+            }
+          }
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return '$' + context.raw.toFixed(2);
+              }
+            },
+            legend: {
+              display: false
+            }
           }
         }
-      };
-      
-      // Restaurar el evento original al cerrar el modal
-      closePasswordModal.onclick = () => {
-        passwordModal.style.display = "none";
-        passwordError.style.display = "none";
-        submitPassword.onclick = originalSubmit;
-      };
-    });
-
-    exchangeRatesBtn.addEventListener('click', () => {
-      exchangeRatesModal.style.display = 'flex';
-    });
-
-    userBtn.addEventListener('click', () => {
-      userInfoModal.style.display = 'flex';
-    });
-
-    // Event Listeners
-    submitPassword.addEventListener("click", async () => {
-      const password = passwordInput.value;
-      const discountRef = doc(db, "settings", "discount");
-      const discountDoc = await getDoc(discountRef);
-
-      if (discountDoc.exists()) {
-        const storedPassword = discountDoc.data().password;
-        discount = discountDoc.data().discount;
-
-        if (password === storedPassword) {
-          renderInvoice();
-          passwordModal.style.display = "none";
-          discountMessage.textContent = `Descuento del ${discount}% aplicado.`;
-          discountAppliedModal.style.display = "block";
-        } else {
-          passwordError.style.display = "block";
-        }
-      } else {
-        console.error("No se encontró la configuración de descuento.");
       }
     });
-
-    btnEfectivo.addEventListener("click", () => {
-      if (invoice.length === 0) {
-        showAlert('warning', 'No hay factura para pagar');
-        return;
-      }
-      efectivoModal.style.display = "flex";
-    });
-
-    confirmEfectivo.addEventListener("click", () => {
-      const received = parseFloat(efectivoReceived.value) || 0;
-      if (received < discountedTotal) {
-        showAlert('warning', 'El monto recibido es insuficiente');
-        return;
-      }
-      processPayment("Efectivo");
-      efectivoModal.style.display = "none";
-      efectivoReceived.value = "";
-      efectivoChange.textContent = "DOP $0.00";
-    });
-
-    btnTarjeta.addEventListener("click", () => {
-      if (invoice.length === 0) {
-        showAlert('warning', 'No hay factura para pagar');
-        return;
-      }
-      tarjetaModal.style.display = "flex";
-    });
-
-    confirmTarjeta.addEventListener("click", () => {
-      processPayment("Tarjeta");
-      tarjetaModal.style.display = "none";
-    });
-
-    btnApplyDiscount.addEventListener("click", applyDiscount);
-
-    payButton.addEventListener("click", () => {
-      if (invoice.length === 0) {
-        showAlert('warning', 'No hay productos en la factura');
-        return;
-      }
-      efectivoModal.style.display = "flex";
-    });
-
-    efectivoReceived.addEventListener("input", calculateChange);
-
-    // Eventos del teclado numérico
-    searchInput.addEventListener("click", () => {
-      numericKeyboard.style.display = "grid";
-      textKeyboard.style.display = "none";
-    });
-
-    searchByNameInput.addEventListener("click", () => {
-      textKeyboard.style.display = "grid";
-      numericKeyboard.style.display = "none";
-    });
-
-    document.addEventListener("click", (e) => {
-      if (!searchInput.contains(e.target) && !numericKeyboard.contains(e.target)) {
-        numericKeyboard.style.display = "none";
-      }
-      if (!searchByNameInput.contains(e.target) && !textKeyboard.contains(e.target)) {
-        textKeyboard.style.display = "none";
-      }
-    });
-
-    numericButtons.forEach(button => {
-      button.addEventListener("click", () => {
-        if (button.id !== "backspaceBtn" && button.id !== "acceptBtn") {
-          searchInput.value += button.getAttribute("data-value");
-        }
-      });
-    });
-
-    backspaceBtn.addEventListener("click", () => {
-      searchInput.value = searchInput.value.slice(0, -1);
-    });
-
-    acceptBtn.addEventListener("click", () => {
-      renderProducts(searchInput.value, "");
-      numericKeyboard.style.display = "none";
-    });
-
-    // Eventos del teclado de texto
-    textButtons.forEach(button => {
-      button.addEventListener("click", () => {
-        if (button.classList.contains('backspace')) {
-          searchByNameInput.value = searchByNameInput.value.slice(0, -1);
-        } else if (button.classList.contains('space')) {
-          searchByNameInput.value += ' ';
-        } else if (button.classList.contains('enter')) {
-          renderProducts("", searchByNameInput.value);
-          textKeyboard.style.display = "none";
-        } else if (button.classList.contains('shift')) {
-          isShiftPressed = !isShiftPressed;
-        } else {
-          const value = isShiftPressed ? 
-            button.getAttribute("data-value").toUpperCase() : 
-            button.getAttribute("data-value");
-          searchByNameInput.value += value;
-        }
-      });
-    });
-
-    searchInput.addEventListener("input", (e) => {
-      if (e.target.value.trim() === "") {
-        productList.innerHTML = "";
-        return;
-      }
-      renderProducts(e.target.value, searchByNameInput.value);
-    });
-
-    searchByNameInput.addEventListener("input", (e) => {
-      if (e.target.value.trim() === "") {
-        productList.innerHTML = "";
-        return;
-      }
-      renderProducts(searchInput.value, e.target.value);
-    });
-
-    // Eventos de cierre de modales
-    closeModal.addEventListener("click", () => printModal.style.display = "none");
-    closeEfectivoModal.addEventListener("click", () => {
-      efectivoModal.style.display = "none";
-      efectivoReceived.value = "";
-      efectivoChange.textContent = "DOP $0.00";
-    });
-    closeTarjetaModal.addEventListener("click", () => tarjetaModal.style.display = "none");
-    closePasswordModal.addEventListener("click", () => {
-      passwordModal.style.display = "none";
-      passwordError.style.display = "none";
-    });
-    closeDiscountModal.addEventListener("click", () => discountAppliedModal.style.display = "none");
-    closeUserModal.addEventListener("click", () => userInfoModal.style.display = "none");
-    closeExchangeModal.addEventListener("click", () => exchangeRatesModal.style.display = "none");
-
-    btnPrint.addEventListener("click", () => {
-      const printContent = invoicePrintContent.innerHTML;
-      const printWindow = window.open('', '', 'height=400,width=600');
-      printWindow.document.write('<html><head><title>Imprimir Factura</title>');
-      printWindow.document.write('<style>body { font-family: Arial; width: 80mm; margin: 0; padding: 10px; } p, h2, h3 { color: #000; margin: 5px 0; } button { display: none; } .invoice-container { width: 100%; max-width: 80mm; margin: 0 auto; padding: 10px; font-family: Arial, sans-serif; } .invoice-header { text-align: center; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 10px; } .invoice-header h2 { margin: 5px 0; font-size: 18px; } .invoice-header p { margin: 3px 0; font-size: 14px; } .invoice-user { margin: 10px 0; padding-bottom: 5px; border-bottom: 1px dashed #000; } .invoice-products { margin: 10px 0; } .product-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; } .product-name { flex: 3; } .product-quantity, .product-price, .product-total, .product-itbis { flex: 1; text-align: right; } .invoice-totals { margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px; } .total-row { display: flex; justify-content: space-between; margin-bottom: 5px; } .barcode { text-align: center; margin-top: 15px; font-family: "Libre Barcode 39", cursive; font-size: 36px; } .thank-you { text-align: center; margin-top: 10px; font-style: italic; }</style></head><body>');
-      printWindow.document.write(printContent);
+    
+    showProgressBar(100, "Abriendo ventana de impresión...");
+    setTimeout(() => {
+      const printWindow = window.open('', '', 'width=800,height=600');
+      printWindow.document.write('<html><head><title>Reporte de Ventas</title>');
+      printWindow.document.write('<style>body { font-family: Arial; margin: 0; padding: 20px; }</style>');
+      printWindow.document.write('</head><body>');
+      printWindow.document.write(reportPrintContainer.innerHTML);
       printWindow.document.write('</body></html>');
       printWindow.document.close();
       printWindow.print();
-      printWindow.close();
-    });
+    }, 500);
+  };
 
-    // Enfocar automáticamente el campo de búsqueda EAN/UPC al cargar la página
-    window.onload = function() {
-      if (localStorage.getItem('userLoggedIn') === 'true') {
-        searchInput.focus();
-        searchInput.select();
+  const printInvoicesReportContent = () => {
+    showProgressBar(0, "Preparando impresión...");
+    const today = new Date(invoicesDateFilter.value).toLocaleDateString();
+    const invoices = Array.from(document.querySelectorAll('#dailyInvoices .report-item'));
+    
+    let invoicesHTML = '';
+    invoices.forEach(invoice => {
+      invoicesHTML += `
+        <div style="margin-bottom: 15px; padding: 10px; border-bottom: 1px solid #eee;">
+          <p><strong>Factura ID:</strong> ${invoice.querySelector('p:nth-child(1)').textContent.split(':')[1].trim()}</p>
+          <p><strong>Hora:</strong> ${invoice.querySelector('p:nth-child(2)').textContent.split(':')[1].trim()}</p>
+          <p><strong>Total:</strong> ${invoice.querySelector('p:nth-child(3)').textContent.split(':')[1].trim()}</p>
+          <p><strong>Método:</strong> ${invoice.querySelector('p:nth-child(4)').textContent.split(':')[1].trim()}</p>
+        </div>
+      `;
+    });
+    
+    const reportHTML = `
+      <div style="width: 100%; max-width: 210mm; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+        <h1 style="text-align: center; margin-bottom: 20px;">Reporte de Facturas</h1>
+        <p style="text-align: center; margin-bottom: 20px;"><strong>Fecha:</strong> ${today}</p>
+        
+        <div style="margin-bottom: 30px;">
+          <h2 style="text-align: center; margin-bottom: 15px;">Resumen de Facturas</h2>
+          <div style="margin-bottom: 20px;">
+            <p style="text-align: center; font-size: 18px;"><strong>Total Facturas:</strong> ${invoices.length}</p>
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 30px;">
+          <h2 style="text-align: center; margin-bottom: 15px;">Listado de Facturas</h2>
+          ${invoicesHTML}
+        </div>
+        
+        <div style="margin-top: 30px; text-align: center;">
+          <p>Reporte generado por: ${currentUser.displayName || currentUser.email.split('@')[0]}</p>
+          <p>${new Date().toLocaleString()}</p>
+        </div>
+      </div>
+    `;
+    
+    reportPrintContainer.innerHTML = reportHTML;
+    
+    showProgressBar(100, "Abriendo ventana de impresión...");
+    setTimeout(() => {
+      const printWindow = window.open('', '', 'width=800,height=600');
+      printWindow.document.write('<html><head><title>Reporte de Facturas</title>');
+      printWindow.document.write('<style>body { font-family: Arial; margin: 0; padding: 20px; }</style>');
+      printWindow.document.write('</head><body>');
+      printWindow.document.write(reportPrintContainer.innerHTML);
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      printWindow.print();
+    }, 500);
+  };
+
+  const printInvoiceDetailContent = () => {
+    showProgressBar(0, "Preparando impresión...");
+    const invoiceHTML = invoiceDetail.innerHTML;
+    
+    reportPrintContainer.innerHTML = `
+      <div style="width: 80mm; margin: 0 auto; padding: 10px; font-family: Arial, sans-serif;">
+        ${invoiceHTML}
+      </div>
+    `;
+    
+    showProgressBar(100, "Abriendo ventana de impresión...");
+    setTimeout(() => {
+      const printWindow = window.open('', '', 'width=800,height=600');
+      printWindow.document.write('<html><head><title>Factura</title>');
+      printWindow.document.write('<style>body { font-family: Arial; margin: 0; padding: 10px; } .invoice-container { width: 100%; max-width: 80mm; margin: 0 auto; padding: 10px; font-family: Arial, sans-serif; } .invoice-header { text-align: center; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 10px; } .invoice-header h2 { margin: 5px 0; font-size: 18px; } .invoice-header p { margin: 3px 0; font-size: 14px; } .invoice-user { margin: 10px 0; padding-bottom: 5px; border-bottom: 1px dashed #000; } .invoice-products { margin: 10px 0; } .product-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; } .product-name { flex: 3; } .product-quantity, .product-price, .product-total, .product-itbis { flex: 1; text-align: right; } .invoice-totals { margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px; } .total-row { display: flex; justify-content: space-between; margin-bottom: 5px; } .barcode { text-align: center; margin-top: 15px; font-family: "Libre Barcode 39 Text", cursive; font-size: 36px; } .thank-you { text-align: center; margin-top: 10px; font-style: italic; }</style>');
+      printWindow.document.write('</head><body>');
+      printWindow.document.write(reportPrintContainer.innerHTML);
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      printWindow.print();
+    }, 500);
+  };
+
+  // Navegación
+  homeBtn.addEventListener('click', () => {
+    productListSection.style.display = 'block';
+    invoiceSection.style.display = 'block';
+    reportsSection.style.display = 'none';
+    invoicesSection.style.display = 'none';
+  });
+
+  inventoryBtn.addEventListener('click', () => {
+    showAlert('info', 'Funcionalidad de inventario en desarrollo');
+  });
+
+  reportsBtn.addEventListener('click', () => {
+    productListSection.style.display = 'none';
+    invoiceSection.style.display = 'none';
+    reportsSection.style.display = 'block';
+    invoicesSection.style.display = 'none';
+    loadSalesReport();
+  });
+
+  invoicesBtn.addEventListener('click', () => {
+    productListSection.style.display = 'none';
+    invoiceSection.style.display = 'none';
+    reportsSection.style.display = 'none';
+    invoicesSection.style.display = 'block';
+    loadDailyInvoices();
+  });
+
+  userBtn.addEventListener('click', () => {
+    userInfoModal.style.display = 'flex';
+  });
+
+  // Filtros de fecha
+  applySalesFilter.addEventListener('click', () => {
+    loadSalesReport(salesDateFilter.value);
+  });
+
+  applyInvoicesFilter.addEventListener('click', () => {
+    loadDailyInvoices(invoicesDateFilter.value);
+  });
+
+  // Event Listeners
+  submitPassword.addEventListener("click", async () => {
+    const password = passwordInput.value;
+    const discountRef = doc(db, "settings", "discount");
+    const discountDoc = await getDoc(discountRef);
+
+    if (discountDoc.exists()) {
+      const storedPassword = discountDoc.data().password;
+      discount = discountDoc.data().discount;
+
+      if (password === storedPassword) {
+        renderInvoice();
+        passwordModal.style.display = "none";
+        discountMessage.textContent = `Descuento del ${discount}% aplicado.`;
+        discountAppliedModal.style.display = "block";
       } else {
-        loginEmail.focus();
+        passwordError.style.display = "block";
       }
-    };
-  </script> 
-</body>
-</html>
+    } else {
+      console.error("No se encontró la configuración de descuento.");
+    }
+  });
+
+  btnEfectivo.addEventListener("click", () => {
+    if (invoice.length === 0) {
+      showAlert('warning', 'No hay factura para pagar');
+      return;
+    }
+    efectivoModal.style.display = "flex";
+  });
+
+  confirmEfectivo.addEventListener("click", () => {
+    const received = parseFloat(efectivoReceived.value) || 0;
+    if (received < discountedTotal) {
+      showAlert('warning', 'El monto recibido es insuficiente');
+      return;
+    }
+    amountReceived = received;
+    processPayment("Efectivo");
+    efectivoModal.style.display = "none";
+    efectivoReceived.value = "";
+    efectivoChange.textContent = "DOP $0.00";
+    efectivoReceivedDisplay.textContent = "DOP $0.00";
+  });
+
+  btnTarjeta.addEventListener("click", () => {
+    if (invoice.length === 0) {
+      showAlert('warning', 'No hay factura para pagar');
+      return;
+    }
+    tarjetaModal.style.display = "flex";
+  });
+
+  confirmTarjeta.addEventListener("click", () => {
+    processPayment("Tarjeta");
+    tarjetaModal.style.display = "none";
+  });
+
+  btnApplyDiscount.addEventListener("click", applyDiscount);
+
+  payButton.addEventListener("click", () => {
+    if (invoice.length === 0) {
+      showAlert('warning', 'No hay productos en la factura');
+      return;
+    }
+    efectivoModal.style.display = "flex";
+  });
+
+  efectivoReceived.addEventListener("input", calculateChange);
+
+  // Eventos del teclado numérico
+  searchInput.addEventListener("click", () => {
+    numericKeyboard.style.display = "grid";
+    textKeyboard.style.display = "none";
+  });
+
+  searchByNameInput.addEventListener("click", () => {
+    textKeyboard.style.display = "grid";
+    numericKeyboard.style.display = "none";
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!searchInput.contains(e.target) && !numericKeyboard.contains(e.target)) {
+      numericKeyboard.style.display = "none";
+    }
+    if (!searchByNameInput.contains(e.target) && !textKeyboard.contains(e.target)) {
+      textKeyboard.style.display = "none";
+    }
+  });
+
+  numericButtons.forEach(button => {
+    button.addEventListener("click", () => {
+      if (button.id !== "backspaceBtn" && button.id !== "acceptBtn") {
+        searchInput.value += button.getAttribute("data-value");
+      }
+    });
+  });
+
+  backspaceBtn.addEventListener("click", () => {
+    searchInput.value = searchInput.value.slice(0, -1);
+  });
+
+  acceptBtn.addEventListener("click", () => {
+    renderProducts(searchInput.value, "");
+    numericKeyboard.style.display = "none";
+  });
+
+  // Eventos del teclado de texto
+  textButtons.forEach(button => {
+    button.addEventListener("click", () => {
+      if (button.classList.contains('backspace')) {
+        searchByNameInput.value = searchByNameInput.value.slice(0, -1);
+      } else if (button.classList.contains('space')) {
+        searchByNameInput.value += ' ';
+      } else if (button.classList.contains('enter')) {
+        renderProducts("", searchByNameInput.value);
+        textKeyboard.style.display = "none";
+      } else if (button.classList.contains('shift')) {
+        isShiftPressed = !isShiftPressed;
+      } else {
+        const value = isShiftPressed ? 
+          button.getAttribute("data-value").toUpperCase() : 
+          button.getAttribute("data-value");
+        searchByNameInput.value += value;
+      }
+    });
+  });
+
+  searchInput.addEventListener("input", (e) => {
+    if (e.target.value.trim() === "") {
+      productList.innerHTML = "";
+      return;
+    }
+    renderProducts(e.target.value, searchByNameInput.value);
+  });
+
+  searchByNameInput.addEventListener("input", (e) => {
+    if (e.target.value.trim() === "") {
+      productList.innerHTML = "";
+      return;
+    }
+    renderProducts(searchInput.value, e.target.value);
+  });
+
+  // Eventos de cierre de modales
+  closeModal.addEventListener("click", () => printModal.style.display = "none");
+  closeEfectivoModal.addEventListener("click", () => {
+    efectivoModal.style.display = "none";
+    efectivoReceived.value = "";
+    efectivoChange.textContent = "DOP $0.00";
+    efectivoReceivedDisplay.textContent = "DOP $0.00";
+  });
+  closeTarjetaModal.addEventListener("click", () => tarjetaModal.style.display = "none");
+  closePasswordModal.addEventListener("click", () => {
+    passwordModal.style.display = "none";
+    passwordError.style.display = "none";
+  });
+  closeDiscountModal.addEventListener("click", () => discountAppliedModal.style.display = "none");
+  closeUserModal.addEventListener("click", () => userInfoModal.style.display = "none");
+
+  btnPrint.addEventListener("click", () => {
+    const printContent = invoicePrintContent.innerHTML;
+    const printWindow = window.open('', '', 'height=400,width=600');
+    printWindow.document.write('<html><head><title>Imprimir Factura</title>');
+    printWindow.document.write('<style>body { font-family: Arial; width: 80mm; margin: 0; padding: 10px; } p, h2, h3 { color: #000; margin: 5px 0; } button { display: none; } .invoice-container { width: 100%; max-width: 80mm; margin: 0 auto; padding: 10px; font-family: Arial, sans-serif; } .invoice-header { text-align: center; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 10px; } .invoice-header h2 { margin: 5px 0; font-size: 18px; } .invoice-header p { margin: 3px 0; font-size: 14px; } .invoice-user { margin: 10px 0; padding-bottom: 5px; border-bottom: 1px dashed #000; } .invoice-products { margin: 10px 0; } .product-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; } .product-name { flex: 3; } .product-quantity, .product-price, .product-total, .product-itbis { flex: 1; text-align: right; } .invoice-totals { margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px; } .total-row { display: flex; justify-content: space-between; margin-bottom: 5px; } .barcode { text-align: center; margin-top: 15px; font-family: "Libre Barcode 39 Text", cursive; font-size: 36px; } .thank-you { text-align: center; margin-top: 10px; font-style: italic; }</style></head><body>');
+    printWindow.document.write(printContent);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.print();
+    printWindow.close();
+  });
+
+  // Eventos para imprimir reportes
+  printSalesReport.addEventListener("click", printSalesReportContent);
+  printInvoicesReport.addEventListener("click", printInvoicesReportContent);
+  printInvoiceDetail.addEventListener("click", printInvoiceDetailContent);
+
+  // Enfocar automáticamente el campo de búsqueda EAN/UPC al cargar la página
+  window.onload = function() {
+    if (localStorage.getItem('userLoggedIn') === 'true') {
+      searchInput.focus();
+      searchInput.select();
+    } else {
+      loginEmail.focus();
+    }
+  };
+</script>
