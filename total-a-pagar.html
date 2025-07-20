@@ -82,7 +82,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
     import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
     import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
@@ -100,6 +100,21 @@
 
     let currentUser = null;
 
+    // Función para formatear números con comas y dos decimales
+    const formatNumber = (num) => {
+        // Convertir a número por si viene como string
+        const number = typeof num === 'string' ? parseFloat(num) : num;
+        
+        // Verificar si es un número válido
+        if (isNaN(number)) return '0.00';
+        
+        // Formatear el número con comas y dos decimales
+        return number.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    };
+
     // Observador de autenticación
     onAuthStateChanged(auth, (user) => {
         if (user) {
@@ -110,24 +125,59 @@
             listenToProducts();
         } else {
             console.log("No hay usuario autenticado.");
+            // Mostrar formulario de login si no hay usuario
+            showLoginForm();
         }
     });
 
+    // Mostrar formulario de login
+    const showLoginForm = () => {
+        document.body.innerHTML = `
+            <div id="loginSection" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;">
+                <h1 style="color: white; margin-bottom: 20px;">Iniciar Sesión</h1>
+                <input type="email" id="loginEmail" placeholder="Correo electrónico" style="padding: 10px; margin-bottom: 10px; width: 250px;">
+                <input type="password" id="loginPassword" placeholder="Contraseña" style="padding: 10px; margin-bottom: 10px; width: 250px;">
+                <button id="loginButton" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">Iniciar Sesión</button>
+                <p id="loginError" style="color: #e74c3c; display: none; margin-top: 10px;">Credenciales incorrectas</p>
+            </div>
+        `;
+
+        document.getElementById('loginButton').addEventListener('click', async () => {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                document.getElementById('loginError').style.display = 'none';
+            } catch (error) {
+                console.error("Error al iniciar sesión:", error);
+                document.getElementById('loginError').style.display = 'block';
+            }
+        });
+    };
+
     // Escuchar cambios en el total
     const listenToTotal = () => {
+        if (!currentUser) return;
+        
         const totalRef = doc(db, "users", currentUser.uid, "totals", "currentTotal");
         onSnapshot(totalRef, (doc) => {
             if (doc.exists()) {
                 const data = doc.data();
-                document.getElementById('totalDisplay').textContent = `Total: $${data.total}`;
+                const formattedTotal = formatNumber(data.total);
+                document.getElementById('totalDisplay').textContent = `Total: $${formattedTotal}`;
             } else {
                 console.log("No hay datos en este documento.");
+                // Crear el documento si no existe
+                setDoc(totalRef, { total: 0 });
             }
         });
     };
 
     // Escuchar cambios en los productos seleccionados
     const listenToProducts = () => {
+        if (!currentUser) return;
+        
         const productosRef = doc(db, "users", currentUser.uid, "totalApagarVentas", "currentVenta");
         onSnapshot(productosRef, (doc) => {
             if (doc.exists()) {
@@ -142,7 +192,7 @@
                         productoItem.innerHTML = `
                             <p><strong>Nombre:</strong> ${producto.nombre}</p>
                             <p><strong>Cantidad:</strong> ${producto.cantidad}</p>
-                            <p><strong>Precio:</strong> $${producto.precio.toFixed(2)}</p>
+                            <p><strong>Precio:</strong> $${formatNumber(producto.precio)}</p>
                         `;
                         productosContainer.appendChild(productoItem);
                     });
@@ -151,6 +201,8 @@
                 }
             } else {
                 console.log("No hay datos en este documento.");
+                // Crear el documento si no existe
+                setDoc(productosRef, { productos: [] });
             }
         });
     };
