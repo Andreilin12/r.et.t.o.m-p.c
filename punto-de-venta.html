@@ -1934,6 +1934,7 @@
       signInWithEmailAndPassword,
       signOut 
     } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+    import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
@@ -1947,6 +1948,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
+    const storage = getStorage(app);
 
     // Elementos del DOM
     const loginSection = document.getElementById("loginSection");
@@ -2203,12 +2205,58 @@
         loadExchangeRates();
         // Cargar preferencia de vista de productos
         loadProductViewPreference();
+        
+        // Iniciar listeners para actualización en tiempo real
+        setupRealTimeListeners();
       } else {
         loginSection.style.display = 'flex';
         posSection.style.display = 'none';
         localStorage.removeItem('userLoggedIn');
       }
     });
+
+    // Configurar listeners para actualización en tiempo real
+    function setupRealTimeListeners() {
+      if (!currentUser) return;
+      
+      // Listener para el total actual
+      const totalRef = doc(db, "users", currentUser.uid, "totals", "currentTotal");
+      onSnapshot(totalRef, (doc) => {
+        if (doc.exists()) {
+          const data = doc.data();
+          invoiceTotal.innerHTML = `<i class="fa-solid fa-calculator"></i> Total: DOP $${data.total.toFixed(2)}`;
+          efectivoTotal.textContent = `DOP $${data.total.toFixed(2)}`;
+          tarjetaTotal.textContent = `DOP $${data.total.toFixed(2)}`;
+          
+          const usdAmount = (data.total / exchangeRates.usd).toFixed(2);
+          const eurAmount = (data.total / exchangeRates.eur).toFixed(2);
+          
+          usdTotal.innerHTML = `<i class="fa-solid fa-dollar-sign"></i> USD $${usdAmount}`;
+          eurTotal.innerHTML = `<i class="fa-solid fa-euro-sign"></i> EUR €${eurAmount}`;
+        }
+      });
+      
+      // Listener para los productos en la factura actual
+      const productosRef = doc(db, "users", currentUser.uid, "totalApagarVentas", "currentVenta");
+      onSnapshot(productosRef, (doc) => {
+        if (doc.exists()) {
+          const data = doc.data();
+          invoiceItems.innerHTML = "";
+          
+          if (data.productos && data.productos.length > 0) {
+            data.productos.forEach((producto) => {
+              const productDiv = document.createElement("div");
+              productDiv.classList.add("invoice-item");
+              productDiv.innerHTML = `
+                <i class="fa-solid fa-box"></i> ${producto.nombre} x ${producto.cantidad} - $${producto.precio.toFixed(2)}
+                <button class="remove-btn" onclick="removeProduct('${producto.id}')">Eliminar</button>
+              `;
+              invoiceItems.appendChild(productDiv);
+            });
+          }
+        }
+      });
+    }
 
     // Verificar si hay sesión guardada
     if (localStorage.getItem('userLoggedIn') === 'true') {
@@ -2486,6 +2534,41 @@
       const priceWithProfit = product.pricePerUnit * (1 + profitPercentage / 100);
       totalPrice += priceWithProfit * 1.18;
       renderInvoice();
+      
+      // Actualizar en Firestore para sincronización en tiempo real
+      updateRealTimeInvoice();
+    };
+
+    const updateRealTimeInvoice = async () => {
+      if (!currentUser) return;
+      
+      try {
+        const productos = invoice.map(item => {
+          const profitPercentage = item.profitPercentage || 10;
+          const priceWithProfit = item.pricePerUnit * (1 + profitPercentage / 100);
+          
+          return {
+            id: item.productId,
+            nombre: item.name,
+            cantidad: item.quantity,
+            precio: priceWithProfit * 1.18 * item.quantity
+          };
+        });
+        
+        // Actualizar total
+        const totalRef = doc(db, "users", currentUser.uid, "totals", "currentTotal");
+        await setDoc(totalRef, {
+          total: discountedTotal > 0 ? discountedTotal : totalPrice
+        }, { merge: true });
+        
+        // Actualizar productos
+        const productosRef = doc(db, "users", currentUser.uid, "totalApagarVentas", "currentVenta");
+        await setDoc(productosRef, {
+          productos: productos
+        }, { merge: true });
+      } catch (error) {
+        console.error("Error al actualizar factura en tiempo real:", error);
+      }
     };
 
     const renderInvoice = () => {
@@ -2518,6 +2601,9 @@
       
       usdTotal.innerHTML = `<i class="fa-solid fa-dollar-sign"></i> USD $${usdAmount}`;
       eurTotal.innerHTML = `<i class="fa-solid fa-euro-sign"></i> EUR €${eurAmount}`;
+      
+      // Actualizar en Firestore para sincronización en tiempo real
+      updateRealTimeInvoice();
     };
 
     window.removeProduct = (productId) => {
@@ -2629,6 +2715,27 @@
       
       invoicePrintContent.innerHTML = invoiceHTML;
       await saveInvoiceToFirebase(paymentTypeValue, change, receivedAmount, barcodeData);
+      
+      // Limpiar datos en tiempo real después de facturar
+      await clearRealTimeData();
+    };
+
+    const clearRealTimeData = async () => {
+      if (!currentUser) return;
+      
+      try {
+        const totalRef = doc(db, "users", currentUser.uid, "totals", "currentTotal");
+        await setDoc(totalRef, {
+          total: 0
+        }, { merge: true });
+        
+        const productosRef = doc(db, "users", currentUser.uid, "totalApagarVentas", "currentVenta");
+        await setDoc(productosRef, {
+          productos: []
+        }, { merge: true });
+      } catch (error) {
+        console.error("Error al limpiar datos en tiempo real:", error);
+      }
     };
 
     const generateBarcode = () => {
