@@ -39,6 +39,38 @@
       align-items: center;
       height: 100vh;
       background: linear-gradient(135deg, #2c3e50, #34495e);
+      position: relative;
+    }
+
+    .login-loading {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      display: none;
+    }
+
+    .loader {
+      width: 48px;
+      height: 48px;
+      border: 5px solid #16e086;
+      border-bottom-color: transparent;
+      border-radius: 50%;
+      display: inline-block;
+      box-sizing: border-box;
+      animation: rotation 1s linear infinite;
+    }
+
+    @keyframes rotation {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     .login-form {
@@ -49,6 +81,8 @@
       width: 100%;
       max-width: 400px;
       text-align: center;
+      position: relative;
+      z-index: 10;
     }
 
     .login-form h2 {
@@ -143,12 +177,232 @@
       border-radius: 10px;
       margin: 10px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      height: calc(100vh - 180px);
     }
 
     .product-list-container h1 {
       font-size: 1.8em;
       margin-bottom: 20px;
       color: #16e086;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .view-toggle {
+      display: flex;
+      gap: 10px;
+    }
+
+    .view-toggle-btn {
+      background: none;
+      border: none;
+      color: #15a086;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .view-toggle-btn:hover, .view-toggle-btn.active {
+      color: #16e086;
+      transform: scale(1.2);
+    }
+
+    /* Estilos para diferentes vistas de productos */
+    .products-list {
+      height: calc(100% - 100px);
+      overflow-y: auto;
+    }
+
+    .products-list.grid-view {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .products-list.grid-view .product-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      transition: all 0.3s;
+      cursor: pointer;
+      height: 220px;
+    }
+
+    .products-list.grid-view .product-item:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-5px);
+    }
+
+    .products-list.grid-view .product-item img {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+
+    .products-list.grid-view .product-item .product-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+      font-size: 0.9em;
+    }
+
+    .products-list.grid-view .product-item .product-price {
+      color: #16e086;
+      font-weight: bold;
+      font-size: 1em;
+    }
+
+    .products-list.grid-view .product-item .product-stock {
+      font-size: 0.8em;
+      color: #95a5a6;
+    }
+
+    .products-list.grid-overlay {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .products-list.grid-overlay .product-item {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      transition: all 0.3s;
+      cursor: pointer;
+      height: 220px;
+      overflow: hidden;
+    }
+
+    .products-list.grid-overlay .product-item img {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+
+    .products-list.grid-overlay .product-item .product-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(44, 62, 80, 0.9);
+      padding: 10px;
+      transform: translateY(100%);
+      transition: all 0.3s;
+    }
+
+    .products-list.grid-overlay .product-item:hover .product-info {
+      transform: translateY(0);
+    }
+
+    .products-list.grid-overlay .product-item .product-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+      font-size: 0.9em;
+    }
+
+    .products-list.grid-overlay .product-item .product-price {
+      color: #16e086;
+      font-weight: bold;
+      font-size: 1em;
+    }
+
+    .products-list.grid-overlay .product-item .product-stock {
+      font-size: 0.8em;
+      color: #95a5a6;
+    }
+
+    .products-list.list-view {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .products-list.list-view .product-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      transition: all 0.3s;
+      cursor: pointer;
+      height: auto;
+    }
+
+    .products-list.list-view .product-item:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .products-list.list-view .product-item img {
+      width: 50px;
+      height: 50px;
+      object-fit: contain;
+      margin-right: 15px;
+      border-radius: 5px;
+    }
+
+    .products-list.list-view .product-item .product-details {
+      flex-grow: 1;
+    }
+
+    .products-list.list-view .product-item .product-name {
+      font-weight: bold;
+      font-size: 0.9em;
+    }
+
+    .products-list.list-view .product-item .product-price {
+      color: #16e086;
+      font-weight: bold;
+      font-size: 1em;
+    }
+
+    .products-list.list-view .product-item .product-stock {
+      font-size: 0.8em;
+      color: #95a5a6;
+    }
+
+    .products-list.text-only {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .products-list.text-only .product-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      transition: all 0.3s;
+      cursor: pointer;
+      height: auto;
+    }
+
+    .products-list.text-only .product-item:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .products-list.text-only .product-item .product-name {
+      font-weight: bold;
+      font-size: 0.9em;
+    }
+
+    .products-list.text-only .product-item .product-price {
+      color: #16e086;
+      font-weight: bold;
+      font-size: 1em;
     }
 
     /* Right: Current Invoice */
@@ -160,6 +414,7 @@
       border-radius: 10px;
       margin: 10px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      height: calc(100vh - 180px);
     }
 
     .products-container h1 {
@@ -434,6 +689,54 @@
     .payment-modal-content button:hover {
       background-color: #2ecc71;
       transform: scale(1.05);
+    }
+
+    /* Modal de tasas de cambio */
+    .rates-modal-content {
+      background-color: #2c3e50;
+      padding: 30px;
+      border: 1px solid #888;
+      width: 350px;
+      max-width: 90%;
+      border-radius: 15px;
+      color: #ecf0f1;
+      text-align: center;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .rates-modal-content h2 {
+      margin-bottom: 20px;
+      color: #16e086;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .rates-modal-content .current-rates {
+      margin: 20px 0;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+
+    .rates-modal-content .current-rates h3 {
+      margin-bottom: 10px;
+      color: #16e086;
+    }
+
+    .rates-modal-content .current-rates p {
+      margin: 5px 0;
+      font-size: 1.1em;
+    }
+
+    .rates-modal-content .current-rates .rate-value {
+      font-weight: bold;
+      color: #16e086;
     }
 
     /* Password Modal */
@@ -1035,11 +1338,219 @@
     .report-print-container {
       display: none;
     }
+
+    /* Nueva sección de productos facturados */
+    .sales-analysis-section {
+      display: none;
+      padding: 20px;
+      margin-top: 60px;
+      background: #34495e;
+      border-radius: 10px;
+      margin: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      width: calc(100% - 20px);
+      height: calc(100vh - 180px);
+      overflow-y: auto;
+    }
+
+    .sales-analysis-section h1 {
+      font-size: 1.8em;
+      margin-bottom: 20px;
+      color: #16e086;
+      text-align: center;
+    }
+
+    .sales-categories {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .sales-category {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+      transition: all 0.3s;
+    }
+
+    .sales-category:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-5px);
+    }
+
+    .category-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .category-title {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #16e086;
+    }
+
+    .category-total {
+      font-weight: bold;
+      background: rgba(22, 224, 134, 0.2);
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+
+    .top-product {
+      margin-bottom: 15px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 5px;
+    }
+
+    .product-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .product-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9em;
+      color: #95a5a6;
+    }
+
+    .suggestion {
+      margin-top: 15px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 5px;
+      border-left: 3px solid #16e086;
+    }
+
+    .suggestion-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #16e086;
+    }
+
+    .suggestion-text {
+      font-size: 0.9em;
+    }
+
+    .no-products {
+      text-align: center;
+      padding: 20px;
+      color: #95a5a6;
+      font-style: italic;
+    }
+
+    .analysis-chart {
+      margin-top: 30px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 10px;
+    }
+    
+    /* Estilos corregidos para las vistas de productos */
+    .products-list.grid-view .product-item img,
+    .products-list.grid-overlay .product-item img {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+    
+    /* Estilos para la sección de análisis mejorada */
+    .analysis-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .analysis-charts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+    
+    .chart-wrapper {
+      flex: 1;
+      min-width: 300px;
+      max-width: 45%;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+    }
+    
+    .chart-title {
+      text-align: center;
+      margin-bottom: 15px;
+      color: #16e086;
+      font-weight: bold;
+    }
+    
+    .product-suggestion {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    .product-suggestion:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .suggestion-icon {
+      font-size: 1.2em;
+      color: #16e086;
+    }
+    
+    .suggestion-content {
+      flex: 1;
+    }
+    
+    .suggestion-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+    
+    .suggestion-product {
+      font-weight: bold;
+    }
+    
+    .suggestion-stats {
+      font-size: 0.8em;
+      color: #95a5a6;
+    }
+    
+    .suggestion-details {
+      display: none;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 5px;
+      margin-top: 5px;
+    }
+    
+    .suggestion.active .suggestion-details {
+      display: block;
+    }
   </style>
 </head>
 <body>
   <!-- Login Section -->
   <div id="loginSection" class="login-container">
+    <div class="login-loading" id="loginLoading">
+      <div class="loader"></div>
+      <p style="margin-top: 20px; font-size: 1.2em;">Iniciando sesión...</p>
+    </div>
     <div class="login-form">
       <h2>Iniciar Sesión</h2>
       <input type="email" id="loginEmail" placeholder="Correo electrónico">
@@ -1057,7 +1568,9 @@
         <a href="#" id="inventoryBtn" title="Inventario"><i class="fa-solid fa-box icon"></i></a>
         <a href="#" id="reportsBtn" title="Reportes"><i class="fa-solid fa-chart-line icon"></i></a>
         <a href="#" id="invoicesBtn" title="Facturas"><i class="fa-solid fa-receipt icon"></i></a>
+        <a href="#" id="salesAnalysisBtn" title="Análisis de Ventas"><i class="fa-solid fa-chart-pie icon"></i></a>
         <a href="#" id="userBtn" title="Usuario"><i class="fa-solid fa-user icon"></i></a>
+        <a href="#" id="ratesBtn" title="Tasas de Cambio"><i class="fa-solid fa-money-bill-transfer icon"></i></a>
       </div>
       <span id="invoiceUser"></span>
     </header>
@@ -1065,7 +1578,12 @@
     <div class="main-container">
       <!-- Left: Product List -->
       <div class="product-list-container" id="productListSection">
-        <h1>Todos los Productos</h1>
+        <h1>Todos los Productos
+          <div class="view-toggle">
+            <button class="view-toggle-btn" id="viewGrid" title="Vista de cuadrícula"><i class="fa-solid fa-grip"></i></button>
+            <button class="view-toggle-btn" id="viewList" title="Vista de lista"><i class="fa-solid fa-list"></i></button>
+          </div>
+        </h1>
         <div class="search-container">
           <input type="text" id="searchInput" placeholder="Buscar por EAN o UPC" autofocus>
           <input type="text" id="searchByNameInput" placeholder="Buscar por nombre">
@@ -1124,7 +1642,7 @@
           <button class="space">Espacio</button>
           <button class="enter">Enter</button>
         </div>
-        <div id="productList" class="products-list"></div>
+        <div id="productList" class="products-list grid-view"></div>
       </div>
 
       <!-- Right: Current Invoice -->
@@ -1177,6 +1695,82 @@
           </div>
         </div>
       </div>
+
+      <!-- Sales Analysis Section -->
+      <div class="sales-analysis-section" id="salesAnalysisSection">
+        <h1>Análisis de Productos Facturados</h1>
+        <div class="date-filter">
+          <input type="date" id="analysisDateFilter">
+          <button id="applyAnalysisFilter">Filtrar</button>
+          <button id="printAnalysisReport" class="print-btn no-print"><i class="fas fa-print"></i> Imprimir Análisis</button>
+        </div>
+        
+        <div id="salesAnalysisContent">
+          <div class="sales-categories">
+            <div class="sales-category">
+              <div class="category-header">
+                <span class="category-title">Más Vendidos</span>
+                <span class="category-total">Top 3</span>
+              </div>
+              <div id="topProducts">
+                <!-- Se llenará dinámicamente -->
+              </div>
+              <div class="suggestion">
+                <div class="suggestion-title">Sugerencia</div>
+                <div class="suggestion-text">Promocione estos productos como "Los más populares" para aumentar aún más sus ventas.</div>
+              </div>
+            </div>
+            
+            <div class="sales-category">
+              <div class="category-header">
+                <span class="category-title">Menos Vendidos</span>
+                <span class="category-total">Por mejorar</span>
+              </div>
+              <div id="bottomProducts">
+                <!-- Se llenará dinámicamente -->
+              </div>
+              <div class="suggestion">
+                <div class="suggestion-title">Sugerencia</div>
+                <div class="suggestion-text">Considere promociones especiales o paquetes para estos productos.</div>
+              </div>
+            </div>
+            
+            <div class="sales-category">
+              <div class="category-header">
+                <span class="category-title">Sin Ventas</span>
+                <span class="category-total">Oportunidad</span>
+              </div>
+              <div id="noSalesProducts">
+                <!-- Se llenará dinámicamente -->
+              </div>
+              <div class="suggestion">
+                <div class="suggestion-title">Sugerencia</div>
+                <div class="suggestion-text">Revise el precio, ubicación o considere eliminarlos si no generan interés.</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="analysis-charts-container" style="display: flex; flex-direction: row; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 20px; margin-top: 20px;">
+            <div style="flex: 1; min-width: 300px; max-width: 45%;">
+              <div style="background: #2c3e50; padding: 10px; border-radius: 8px 8px 0 0;">
+                <h3 style="color: white; text-align: center; margin: 0;">Productos Más Vendidos (Barras)</h3>
+              </div>
+              <div style="background: white; padding: 15px; border-radius: 0 0 8px 8px; height: 300px;">
+                <canvas id="topProductsChart"></canvas>
+              </div>
+            </div>
+            
+            <div style="flex: 1; min-width: 300px; max-width: 45%;">
+              <div style="background: #2c3e50; padding: 10px; border-radius: 8px 8px 0 0;">
+                <h3 style="color: white; text-align: center; margin: 0;">Distribución de Ventas (Dona)</h3>
+              </div>
+              <div style="background: white; padding: 15px; border-radius: 0 0 8px 8px; height: 300px;">
+                <canvas id="bottomProductsChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Bottom Totals Bar -->
@@ -1211,11 +1805,20 @@
     <div class="payment-modal-content">
       <span class="close" id="closeEfectivoModal">×</span>
       <h2>Pago en Efectivo</h2>
-      <p>Total a Pagar: <span id="efectivoTotal"></span></p>
-      <input type="number" id="efectivoReceived" placeholder="Monto Recibido (DOP)">
-      <p>Monto Recibido: <span id="efectivoReceivedDisplay">DOP $0.00</span></p>
-      <p>Cambio: <span id="efectivoChange">DOP $0.00</span></p>
-      <button id="confirmEfectivo"><i class="fa-solid fa-check"></i> Confirmar Pago</button>
+      <div style="margin: 20px 0; font-size: 1.2em;">
+        <p style="margin-bottom: 10px;">Total a Pagar:</p>
+        <p style="font-size: 1.5em; color: #16e086; font-weight: bold;" id="efectivoTotal">DOP $0.00</p>
+      </div>
+      <input type="number" id="efectivoReceived" placeholder="Monto Recibido (DOP)" style="font-size: 1.2em; padding: 15px;">
+      <div style="margin: 20px 0; font-size: 1.1em;">
+        <p style="margin-bottom: 5px;">Monto Recibido:</p>
+        <p style="font-size: 1.3em; color: #fdcb6e;" id="efectivoReceivedDisplay">DOP $0.00</p>
+      </div>
+      <div style="margin: 20px 0; font-size: 1.1em;">
+        <p style="margin-bottom: 5px;">Cambio:</p>
+        <p style="font-size: 1.3em; color: #00b894; font-weight: bold;" id="efectivoChange">DOP $0.00</p>
+      </div>
+      <button id="confirmEfectivo" style="padding: 15px 30px; font-size: 1.1em;"><i class="fa-solid fa-check"></i> Confirmar Pago</button>
     </div>
   </div>
 
@@ -1257,6 +1860,20 @@
       <p id="userName"></p>
       <p id="userEmail"></p>
       <button id="logoutBtn" class="logout-btn">Cerrar Sesión</button>
+    </div>
+  </div>
+
+  <!-- Rates Modal -->
+  <div id="ratesModal" class="modal">
+    <div class="rates-modal-content">
+      <span class="close" id="closeRatesModal">×</span>
+      <h2><i class="fa-solid fa-money-bill-transfer"></i> Tasas de Cambio</h2>
+      
+      <div class="current-rates">
+        <h3>Tasas Actuales</h3>
+        <p>Dólar (USD): <span class="rate-value" id="currentUsdRate">$56.50</span></p>
+        <p>Euro (EUR): <span class="rate-value" id="currentEurRate">€61.20</span></p>
+      </div>
     </div>
   </div>
 
@@ -1333,6 +1950,7 @@
 
     // Elementos del DOM
     const loginSection = document.getElementById("loginSection");
+    const loginLoading = document.getElementById("loginLoading");
     const posSection = document.getElementById("posSection");
     const loginEmail = document.getElementById("loginEmail");
     const loginPassword = document.getElementById("loginPassword");
@@ -1354,6 +1972,10 @@
     const textKeyboard = document.getElementById("textKeyboard");
     const textButtons = document.querySelectorAll(".text-keyboard button");
     const invoiceUser = document.getElementById("invoiceUser");
+
+    // Botones de vista de productos
+    const viewGrid = document.getElementById("viewGrid");
+    const viewList = document.getElementById("viewList");
 
     // Elementos de facturación
     const btnEfectivo = document.getElementById("btnEfectivo");
@@ -1392,25 +2014,35 @@
     const inventoryBtn = document.getElementById("inventoryBtn");
     const reportsBtn = document.getElementById("reportsBtn");
     const invoicesBtn = document.getElementById("invoicesBtn");
+    const salesAnalysisBtn = document.getElementById("salesAnalysisBtn");
     const userBtn = document.getElementById("userBtn");
+    const ratesBtn = document.getElementById("ratesBtn");
 
     // Secciones
     const productListSection = document.getElementById("productListSection");
     const invoiceSection = document.getElementById("invoiceSection");
     const reportsSection = document.getElementById("reportsSection");
     const invoicesSection = document.getElementById("invoicesSection");
+    const salesAnalysisSection = document.getElementById("salesAnalysisSection");
     const salesReport = document.getElementById("salesReport");
     const salesTotal = document.getElementById("salesTotal");
     const salesDiscount = document.getElementById("salesDiscount");
     const dailyInvoices = document.getElementById("dailyInvoices");
     const invoiceDetail = document.getElementById("invoiceDetail");
     const salesChart = document.getElementById("salesChart");
+    const topProductsChart = document.getElementById("topProductsChart");
+    const bottomProductsChart = document.getElementById("bottomProductsChart");
+    const topProducts = document.getElementById("topProducts");
+    const bottomProducts = document.getElementById("bottomProducts");
+    const noSalesProducts = document.getElementById("noSalesProducts");
 
     // Filtros de fecha
     const salesDateFilter = document.getElementById("salesDateFilter");
     const applySalesFilter = document.getElementById("applySalesFilter");
     const invoicesDateFilter = document.getElementById("invoicesDateFilter");
     const applyInvoicesFilter = document.getElementById("applyInvoicesFilter");
+    const analysisDateFilter = document.getElementById("analysisDateFilter");
+    const applyAnalysisFilter = document.getElementById("applyAnalysisFilter");
 
     // Modales de usuario
     const userInfoModal = document.getElementById("userInfoModal");
@@ -1418,6 +2050,12 @@
     const userName = document.getElementById("userName");
     const userEmail = document.getElementById("userEmail");
     const logoutBtn = document.getElementById("logoutBtn");
+
+    // Modales de tasas de cambio
+    const ratesModal = document.getElementById("ratesModal");
+    const closeRatesModal = document.getElementById("closeRatesModal");
+    const currentUsdRate = document.getElementById("currentUsdRate");
+    const currentEurRate = document.getElementById("currentEurRate");
 
     // Alertas elegantes
     const successAlert = document.getElementById("successAlert");
@@ -1439,6 +2077,7 @@
     const printSalesReport = document.getElementById("printSalesReport");
     const printInvoicesReport = document.getElementById("printInvoicesReport");
     const printInvoiceDetail = document.getElementById("printInvoiceDetail");
+    const printAnalysisReport = document.getElementById("printAnalysisReport");
     const reportPrintContainer = document.getElementById("reportPrintContainer");
 
     // Barra de progreso
@@ -1482,8 +2121,11 @@
     let invoiceId = null;
     let isShiftPressed = false;
     let salesChartInstance = null;
+    let topProductsChartInstance = null;
+    let bottomProductsChartInstance = null;
     let selectedInvoiceId = null;
     let amountReceived = 0; // Variable para almacenar el monto recibido
+    let currentView = 'grid'; // Vista actual de productos
 
     // Función para mostrar la barra de progreso
     function showProgressBar(percentage, message) {
@@ -1555,6 +2197,12 @@
         const today = new Date().toISOString().split('T')[0];
         salesDateFilter.value = today;
         invoicesDateFilter.value = today;
+        analysisDateFilter.value = today;
+
+        // Cargar tasas de cambio
+        loadExchangeRates();
+        // Cargar preferencia de vista de productos
+        loadProductViewPreference();
       } else {
         loginSection.style.display = 'flex';
         posSection.style.display = 'none';
@@ -1574,18 +2222,18 @@
     // Login
     loginButton.addEventListener('click', async () => {
       try {
-        showProgressBar(30, "Iniciando sesión...");
+        loginLoading.style.display = 'flex';
         const userCredential = await signInWithEmailAndPassword(
           auth,
           loginEmail.value,
           loginPassword.value
         );
         loginError.style.display = 'none';
-        showProgressBar(100, "Sesión iniciada con éxito");
+        loginLoading.style.display = 'none';
       } catch (error) {
         loginError.style.display = 'block';
         loginError.textContent = 'Credenciales incorrectas';
-        showProgressBar(0, "Error al iniciar sesión");
+        loginLoading.style.display = 'none';
         console.error('Error al iniciar sesión:', error);
       }
     });
@@ -1641,6 +2289,73 @@
       }
     };
 
+    // Cargar tasas de cambio
+    const loadExchangeRates = async () => {
+      try {
+        const ratesRef = doc(db, "exchangeRates", "rates");
+        const ratesDoc = await getDoc(ratesRef);
+        
+        if (ratesDoc.exists()) {
+          exchangeRates = ratesDoc.data();
+          currentUsdRate.textContent = `$${exchangeRates.usd}`;
+          currentEurRate.textContent = `€${exchangeRates.eur}`;
+        }
+      } catch (error) {
+        console.error("Error al cargar tasas de cambio:", error);
+      }
+    };
+
+    // Cargar preferencia de vista de productos
+    const loadProductViewPreference = async () => {
+      if (!currentUser) return;
+      
+      try {
+        const prefRef = doc(db, "userPreferences", currentUser.uid);
+        const prefDoc = await getDoc(prefRef);
+        
+        if (prefDoc.exists() && prefDoc.data().productView) {
+          currentView = prefDoc.data().productView;
+          setProductView(currentView);
+        }
+      } catch (error) {
+        console.error("Error al cargar preferencia de vista:", error);
+      }
+    };
+
+    // Guardar preferencia de vista de productos
+    const saveProductViewPreference = async (view) => {
+      if (!currentUser) return;
+      
+      try {
+        const prefRef = doc(db, "userPreferences", currentUser.uid);
+        await setDoc(prefRef, {
+          productView: view
+        }, { merge: true });
+      } catch (error) {
+        console.error("Error al guardar preferencia de vista:", error);
+      }
+    };
+
+    // Establecer vista de productos
+    const setProductView = (view) => {
+      currentView = view;
+      productList.className = `products-list ${view}-view`;
+      
+      // Actualizar botones activos
+      viewGrid.classList.remove('active');
+      viewList.classList.remove('active');
+      
+      if (view === 'grid') viewGrid.classList.add('active');
+      if (view === 'list') viewList.classList.add('active');
+      
+      // Guardar preferencia
+      saveProductViewPreference(view);
+    };
+
+    // Event listeners para botones de vista
+    viewGrid.addEventListener('click', () => setProductView('grid'));
+    viewList.addEventListener('click', () => setProductView('list'));
+
     // Funciones de productos
     const renderProducts = async (eanTerm = "", nameTerm = "") => {
       if (!currentUser) return;
@@ -1677,18 +2392,30 @@
               const productDiv = document.createElement("div");
               productDiv.classList.add("product-item");
               
+              // Imagen por defecto si no hay imagen
+              const productImage = product.imageUrl || 'https://via.placeholder.com/100x100?text=No+Image';
+              
+              if (currentView === 'grid') {
+                productDiv.innerHTML = `
+                  <img src="${productImage}" alt="${product.name}" style="width: 100px; height: 100px; object-fit: contain;">
+                  <div class="product-name">${product.name}</div>
+                  <div class="product-price">$${product.pricePerUnit}</div>
+                  <div class="product-stock">Stock: ${product.quantity}</div>
+                `;
+              } else if (currentView === 'list') {
+                productDiv.innerHTML = `
+                  <img src="${productImage}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: contain;">
+                  <div class="product-details">
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-price">$${product.pricePerUnit}</div>
+                    <div class="product-stock">Stock: ${product.quantity}</div>
+                  </div>
+                `;
+              }
+              
               if (product.quantity === 0) {
-                productDiv.innerHTML = `
-                  <div>${product.name} (AGOTADO)</div>
-                  <div>Precio: $${product.pricePerUnit}</div>
-                `;
                 productDiv.style.backgroundColor = 'rgba(255, 99, 71, 0.2)';
-              } else {
-                productDiv.innerHTML = `
-                  <div>${product.name}</div>
-                  <div>Precio: $${product.pricePerUnit}</div>
-                  <div>Stock: ${product.quantity}</div>
-                `;
+                productDiv.innerHTML += '<div style="color: #ff7675; font-weight: bold;">AGOTADO</div>';
               }
               
               productDiv.addEventListener("click", () => {
@@ -2244,6 +2971,290 @@
       }
     };
 
+    const loadSalesAnalysis = async (date = null) => {
+      if (!currentUser) return;
+
+      try {
+        showProgressBar(0, "Analizando ventas...");
+        let startDate = new Date();
+        startDate.setHours(0, 0, 0, 0);
+        
+        if (date) {
+          startDate = new Date(date);
+          startDate.setHours(0, 0, 0, 0);
+        }
+        
+        const endDate = new Date(startDate);
+        endDate.setHours(23, 59, 59, 999);
+        
+        // Obtener todas las facturas del día
+        const salesRef = collection(db, "users", currentUser.uid, "invoiceHistory");
+        const q = query(salesRef, 
+          where("date", ">=", Timestamp.fromDate(startDate)),
+          where("date", "<=", Timestamp.fromDate(endDate))
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+          topProducts.innerHTML = '<div class="no-products">No hay ventas para analizar</div>';
+          bottomProducts.innerHTML = '<div class="no-products">No hay ventas para analizar</div>';
+          noSalesProducts.innerHTML = '<div class="no-products">No hay productos sin ventas</div>';
+          showProgressBar(100, "No hay ventas para analizar");
+          return;
+        }
+        
+        // Obtener todos los productos disponibles
+        const businessesRef = collection(db, "businesses");
+        const businessesSnapshot = await getDocs(businessesRef);
+        
+        const allProducts = [];
+        const businessPromises = [];
+        
+        businessesSnapshot.forEach(businessDoc => {
+          const productsRef = collection(db, "businesses", businessDoc.id, "products");
+          const promise = getDocs(productsRef).then(productsSnapshot => {
+            productsSnapshot.forEach(productDoc => {
+              allProducts.push({
+                id: productDoc.id,
+                name: productDoc.data().name,
+                businessName: businessDoc.id,
+                sold: 0,
+                total: 0
+              });
+            });
+          });
+          businessPromises.push(promise);
+        });
+        
+        await Promise.all(businessPromises);
+        
+        // Procesar ventas
+        const salesByProduct = {};
+        let totalSales = 0;
+        
+        querySnapshot.forEach(doc => {
+          const invoiceData = doc.data();
+          invoiceData.items.forEach(item => {
+            if (!salesByProduct[item.name]) {
+              salesByProduct[item.name] = {
+                quantity: 0,
+                total: 0
+              };
+            }
+            salesByProduct[item.name].quantity += item.quantity;
+            salesByProduct[item.name].total += item.total;
+            totalSales += item.total;
+          });
+        });
+        
+        // Actualizar productos vendidos
+        allProducts.forEach(product => {
+          if (salesByProduct[product.name]) {
+            product.sold = salesByProduct[product.name].quantity;
+            product.total = salesByProduct[product.name].total;
+          }
+        });
+        
+        // Separar productos en categorías
+        const soldProducts = allProducts.filter(p => p.sold > 0);
+        const notSoldProducts = allProducts.filter(p => p.sold === 0);
+        
+        // Ordenar productos vendidos por cantidad
+        soldProducts.sort((a, b) => b.total - a.total);
+        
+        // Mostrar top 3 productos más vendidos
+        topProducts.innerHTML = '';
+        const top3 = soldProducts.slice(0, 3);
+        if (top3.length > 0) {
+          top3.forEach((product, index) => {
+            const productDiv = document.createElement("div");
+            productDiv.classList.add("top-product");
+            productDiv.innerHTML = `
+              <div class="product-name">${index + 1}. ${product.name}</div>
+              <div class="product-stats">
+                <span>Vendidos: ${product.sold}</span>
+                <span>Total: $${product.total.toFixed(2)}</span>
+              </div>
+            `;
+            topProducts.appendChild(productDiv);
+          });
+        } else {
+          topProducts.innerHTML = '<div class="no-products">No hay productos vendidos</div>';
+        }
+        
+        // Mostrar 3 productos menos vendidos (excluyendo los no vendidos)
+        bottomProducts.innerHTML = '';
+        const bottom3 = soldProducts.length > 3 ? soldProducts.slice(-3) : soldProducts.slice(0);
+        if (bottom3.length > 0) {
+          bottom3.forEach((product, index) => {
+            const productDiv = document.createElement("div");
+            productDiv.classList.add("top-product");
+            productDiv.innerHTML = `
+              <div class="product-name">${product.name}</div>
+              <div class="product-stats">
+                <span>Vendidos: ${product.sold}</span>
+                <span>Total: $${product.total.toFixed(2)}</span>
+              </div>
+            `;
+            bottomProducts.appendChild(productDiv);
+          });
+        } else {
+          bottomProducts.innerHTML = '<div class="no-products">No hay suficientes productos vendidos</div>';
+        }
+        
+        // Mostrar algunos productos no vendidos
+        noSalesProducts.innerHTML = '';
+        const sampleNotSold = notSoldProducts.slice(0, 3);
+        if (sampleNotSold.length > 0) {
+          sampleNotSold.forEach(product => {
+            const productDiv = document.createElement("div");
+            productDiv.classList.add("top-product");
+            productDiv.innerHTML = `
+              <div class="product-name">${product.name}</div>
+              <div class="product-stats">
+                <span>Vendidos: 0</span>
+              </div>
+            `;
+            noSalesProducts.appendChild(productDiv);
+          });
+          
+          if (notSoldProducts.length > 3) {
+            noSalesProducts.innerHTML += `<div style="text-align: center; margin-top: 10px; color: #95a5a6; font-size: 0.9em;">+ ${notSoldProducts.length - 3} más sin ventas</div>`;
+          }
+        } else {
+          noSalesProducts.innerHTML = '<div class="no-products">¡Todos los productos tuvieron ventas!</div>';
+        }
+        
+        // Actualizar gráficos de análisis
+        updateTopProductsChart(top3);
+        updateBottomProductsChart(bottom3);
+        
+        showProgressBar(100, "Análisis completado");
+      } catch (error) {
+        console.error("Error al analizar ventas:", error);
+        showProgressBar(0, "Error en análisis");
+        showAlert('error', 'Error al analizar ventas');
+      }
+    };
+
+    const updateTopProductsChart = (topProducts) => {
+      showProgressBar(0, "Actualizando gráfico de más vendidos...");
+      if (topProductsChartInstance) {
+        topProductsChartInstance.destroy();
+      }
+      
+      const ctx = topProductsChart.getContext('2d');
+      
+      const labels = topProducts.map(p => p.name);
+      const data = topProducts.map(p => p.total);
+      const backgroundColors = [
+        'rgba(22, 224, 134, 0.7)',
+        'rgba(54, 162, 235, 0.7)',
+        'rgba(255, 206, 86, 0.7)'
+      ];
+      
+      topProductsChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Productos Más Vendidos',
+            data: data,
+            backgroundColor: backgroundColors,
+            borderColor: backgroundColors.map(c => c.replace('0.7', '1')),
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          indexAxis: 'y',
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return '$' + value.toFixed(2);
+                }
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.label}: $${context.raw.toFixed(2)}`;
+                }
+              }
+            }
+          }
+        }
+      });
+      showProgressBar(100, "Gráfico de más vendidos actualizado");
+    };
+
+    const updateBottomProductsChart = (bottomProducts) => {
+      showProgressBar(0, "Actualizando gráfico de menos vendidos...");
+      if (bottomProductsChartInstance) {
+        bottomProductsChartInstance.destroy();
+      }
+      
+      const ctx = bottomProductsChart.getContext('2d');
+      
+      const labels = bottomProducts.map(p => p.name);
+      const data = bottomProducts.map(p => p.total);
+      
+      bottomProductsChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Productos Menos Vendidos',
+            data: data,
+            backgroundColor: [
+              'rgba(255, 99, 132, 0.7)',
+              'rgba(255, 159, 64, 0.7)',
+              'rgba(255, 206, 86, 0.7)'
+            ],
+            borderColor: [
+              'rgba(255, 99, 132, 1)',
+              'rgba(255, 159, 64, 1)',
+              'rgba(255, 206, 86, 1)'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                color: '#333',
+                font: {
+                  size: 12
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.label}: $${context.raw.toFixed(2)}`;
+                }
+              }
+            },
+            title: {
+              display: false
+            }
+          }
+        }
+      });
+      showProgressBar(100, "Gráfico de menos vendidos actualizado");
+    };
+
     const showInvoiceDetail = (invoiceData, invoiceId) => {
       showProgressBar(0, "Mostrando detalle...");
       const totalITBIS = invoiceData.itbis || 0;
@@ -2550,12 +3561,190 @@
     }, 500);
   };
 
+  const printAnalysisReportContent = () => {
+    showProgressBar(0, "Preparando impresión...");
+    const today = new Date(analysisDateFilter.value).toLocaleDateString();
+    
+    // Obtener datos de los productos más vendidos
+    const topProductsHTML = Array.from(document.querySelectorAll('#topProducts .top-product')).map(product => {
+      return `
+        <div style="margin-bottom: 10px; padding: 10px; border-bottom: 1px solid #eee;">
+          <p><strong>${product.querySelector('.product-name').textContent}</strong></p>
+          <p>${product.querySelector('.product-stats').textContent}</p>
+        </div>
+      `;
+    }).join('');
+    
+    // Obtener datos de los productos menos vendidos
+    const bottomProductsHTML = Array.from(document.querySelectorAll('#bottomProducts .top-product')).map(product => {
+      return `
+        <div style="margin-bottom: 10px; padding: 10px; border-bottom: 1px solid #eee;">
+          <p><strong>${product.querySelector('.product-name').textContent}</strong></p>
+          <p>${product.querySelector('.product-stats').textContent}</p>
+        </div>
+      `;
+    }).join('');
+    
+    // Obtener datos de los productos no vendidos
+    const noSalesProductsHTML = Array.from(document.querySelectorAll('#noSalesProducts .top-product')).map(product => {
+      return `
+        <div style="margin-bottom: 10px; padding: 10px; border-bottom: 1px solid #eee;">
+          <p><strong>${product.querySelector('.product-name').textContent}</strong></p>
+          <p>${product.querySelector('.product-stats').textContent}</p>
+        </div>
+      `;
+    }).join('');
+    
+    const reportHTML = `
+      <div style="width: 100%; max-width: 210mm; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+        <h1 style="text-align: center; margin-bottom: 20px;">Análisis de Ventas</h1>
+        <p style="text-align: center; margin-bottom: 20px;"><strong>Fecha:</strong> ${today}</p>
+        
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
+          <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+            <h3 style="text-align: center; margin-bottom: 15px;">Productos Más Vendidos</h3>
+            ${topProductsHTML || '<p style="text-align: center;">No hay datos</p>'}
+          </div>
+          
+          <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+            <h3 style="text-align: center; margin-bottom: 15px;">Productos Menos Vendidos</h3>
+            ${bottomProductsHTML || '<p style="text-align: center;">No hay datos</p>'}
+          </div>
+          
+          <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+            <h3 style="text-align: center; margin-bottom: 15px;">Productos Sin Ventas</h3>
+            ${noSalesProductsHTML || '<p style="text-align: center;">No hay datos</p>'}
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 30px;">
+          <h2 style="text-align: center; margin-bottom: 15px;">Distribución de Ventas</h2>
+          <div style="display: flex; gap: 20px; justify-content: center;">
+            <div style="width: 45%;">
+              <h3 style="text-align: center;">Más Vendidos</h3>
+              <canvas id="printTopProductsChart" height="300"></canvas>
+            </div>
+            <div style="width: 45%;">
+              <h3 style="text-align: center;">Menos Vendidos</h3>
+              <canvas id="printBottomProductsChart" height="300"></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <div style="margin-top: 30px; text-align: center;">
+          <p>Reporte generado por: ${currentUser.displayName || currentUser.email.split('@')[0]}</p>
+          <p>${new Date().toLocaleString()}</p>
+        </div>
+      </div>
+    `;
+    
+    reportPrintContainer.innerHTML = reportHTML;
+    
+    // Crear gráficos para imprimir
+    const printTopCtx = document.getElementById('printTopProductsChart').getContext('2d');
+    const printBottomCtx = document.getElementById('printBottomProductsChart').getContext('2d');
+    
+    // Gráfico de productos más vendidos
+    if (topProductsChartInstance) {
+      new Chart(printTopCtx, {
+        type: 'bar',
+        data: {
+          labels: topProductsChartInstance.data.labels,
+          datasets: [{
+            label: 'Productos Más Vendidos',
+            data: topProductsChartInstance.data.datasets[0].data,
+            backgroundColor: topProductsChartInstance.data.datasets[0].backgroundColor,
+            borderColor: topProductsChartInstance.data.datasets[0].borderColor,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          indexAxis: 'y',
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return '$' + value.toFixed(2);
+                }
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.label}: $${context.raw.toFixed(2)}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Gráfico de productos menos vendidos
+    if (bottomProductsChartInstance) {
+      new Chart(printBottomCtx, {
+        type: 'doughnut',
+        data: {
+          labels: bottomProductsChartInstance.data.labels,
+          datasets: [{
+            label: 'Productos Menos Vendidos',
+            data: bottomProductsChartInstance.data.datasets[0].data,
+            backgroundColor: bottomProductsChartInstance.data.datasets[0].backgroundColor,
+            borderColor: bottomProductsChartInstance.data.datasets[0].borderColor,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                color: '#333',
+                font: {
+                  size: 12
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.label}: $${context.raw.toFixed(2)}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    showProgressBar(100, "Abriendo ventana de impresión...");
+    setTimeout(() => {
+      const printWindow = window.open('', '', 'width=800,height=600');
+      printWindow.document.write('<html><head><title>Análisis de Ventas</title>');
+      printWindow.document.write('<style>body { font-family: Arial; margin: 0; padding: 20px; }</style>');
+      printWindow.document.write('</head><body>');
+      printWindow.document.write(reportPrintContainer.innerHTML);
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      printWindow.print();
+    }, 500);
+  };
+
   // Navegación
   homeBtn.addEventListener('click', () => {
     productListSection.style.display = 'block';
     invoiceSection.style.display = 'block';
     reportsSection.style.display = 'none';
     invoicesSection.style.display = 'none';
+    salesAnalysisSection.style.display = 'none';
   });
 
   inventoryBtn.addEventListener('click', () => {
@@ -2567,6 +3756,7 @@
     invoiceSection.style.display = 'none';
     reportsSection.style.display = 'block';
     invoicesSection.style.display = 'none';
+    salesAnalysisSection.style.display = 'none';
     loadSalesReport();
   });
 
@@ -2575,11 +3765,25 @@
     invoiceSection.style.display = 'none';
     reportsSection.style.display = 'none';
     invoicesSection.style.display = 'block';
+    salesAnalysisSection.style.display = 'none';
     loadDailyInvoices();
+  });
+
+  salesAnalysisBtn.addEventListener('click', () => {
+    productListSection.style.display = 'none';
+    invoiceSection.style.display = 'none';
+    reportsSection.style.display = 'none';
+    invoicesSection.style.display = 'none';
+    salesAnalysisSection.style.display = 'block';
+    loadSalesAnalysis();
   });
 
   userBtn.addEventListener('click', () => {
     userInfoModal.style.display = 'flex';
+  });
+
+  ratesBtn.addEventListener('click', () => {
+    ratesModal.style.display = 'flex';
   });
 
   // Filtros de fecha
@@ -2589,6 +3793,10 @@
 
   applyInvoicesFilter.addEventListener('click', () => {
     loadDailyInvoices(invoicesDateFilter.value);
+  });
+
+  applyAnalysisFilter.addEventListener('click', () => {
+    loadSalesAnalysis(analysisDateFilter.value);
   });
 
   // Event Listeners
@@ -2750,6 +3958,7 @@
   });
   closeDiscountModal.addEventListener("click", () => discountAppliedModal.style.display = "none");
   closeUserModal.addEventListener("click", () => userInfoModal.style.display = "none");
+  closeRatesModal.addEventListener("click", () => ratesModal.style.display = "none");
 
   btnPrint.addEventListener("click", () => {
     const printContent = invoicePrintContent.innerHTML;
@@ -2767,6 +3976,7 @@
   printSalesReport.addEventListener("click", printSalesReportContent);
   printInvoicesReport.addEventListener("click", printInvoicesReportContent);
   printInvoiceDetail.addEventListener("click", printInvoiceDetailContent);
+  printAnalysisReport.addEventListener("click", printAnalysisReportContent);
 
   // Enfocar automáticamente el campo de búsqueda EAN/UPC al cargar la página
   window.onload = function() {
@@ -2778,3 +3988,5 @@
     }
   };
 </script>
+</body>
+</html>
