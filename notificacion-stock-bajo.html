@@ -1,0 +1,1978 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notificaciones de Stock Bajo</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Estilos generales heredados del sistema principal */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-user-drag: none;
+      -moz-user-drag: none;
+      user-drag: none;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #2c3e50, #34495e);
+      color: #ecf0f1;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #47627d;
+      padding: 10px 20px;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .header-icons {
+      display: flex;
+      gap: 15px;
+    }
+
+    .icon {
+      color: #15a086;
+      font-size: 1.8em;
+      transition: transform 0.3s ease, color 0.3s ease;
+      cursor: pointer;
+    }
+
+    .icon:hover {
+      transform: scale(1.2);
+      color: #16e086;
+    }
+
+    /* Main Container */
+    .main-container {
+      display: flex;
+      margin-top: 60px;
+      flex-grow: 1;
+      min-height: calc(100vh - 120px);
+    }
+
+    /* Low Stock Section */
+    .low-stock-container {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background: #34495e;
+      border-radius: 10px;
+      margin: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      height: calc(100vh - 180px);
+    }
+
+    .low-stock-container h1 {
+      font-size: 1.8em;
+      margin-bottom: 20px;
+      color: #16e086;
+      text-align: center;
+      position: relative;
+    }
+
+    .low-stock-container h1::after {
+      content: '';
+      display: block;
+      width: 100px;
+      height: 3px;
+      background: linear-gradient(90deg, #16e086, transparent);
+      margin: 10px auto 0;
+    }
+
+    /* Threshold Control */
+    .threshold-control {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 8px;
+      flex-wrap: wrap;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .threshold-control label {
+      font-weight: bold;
+      color: #95a5a6;
+    }
+
+    .threshold-control input {
+      padding: 8px;
+      border-radius: 5px;
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: #ecf0f1;
+      width: 60px;
+      text-align: center;
+      transition: all 0.3s;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .threshold-control input:focus {
+      outline: none;
+      border-color: #16e086;
+      box-shadow: 0 0 0 2px rgba(22, 224, 134, 0.2);
+    }
+
+    .update-threshold-btn {
+      padding: 8px 15px;
+      background: #16e086;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 500;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .update-threshold-btn:hover {
+      background: #15a086;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Filter Controls */
+    .filter-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 8px;
+      flex-wrap: wrap;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .filter-controls select, .filter-controls input {
+      padding: 8px 12px;
+      border-radius: 5px;
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: #ecf0f1;
+      min-width: 120px;
+      transition: all 0.3s;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .filter-controls select:focus, .filter-controls input:focus {
+      outline: none;
+      border-color: #16e086;
+      box-shadow: 0 0 0 2px rgba(22, 224, 134, 0.2);
+    }
+
+    .filter-controls button {
+      padding: 8px 15px;
+      background: #2980b9;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 500;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .filter-controls button:hover {
+      background: #3498db;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Low Stock List */
+    .low-stock-list {
+      margin-top: 20px;
+    }
+
+    .low-stock-item {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .low-stock-item.critical {
+      background: rgba(255, 99, 71, 0.2);
+      border-left: 5px solid #ff6347;
+    }
+
+    .low-stock-item.warning {
+      background: rgba(255, 165, 0, 0.2);
+      border-left: 5px solid #ffa500;
+    }
+
+    .low-stock-item.reordered {
+      background: rgba(46, 204, 113, 0.2);
+      border-left: 5px solid #2ecc71;
+    }
+
+    .low-stock-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .product-image {
+      width: 60px;
+      height: 60px;
+      object-fit: contain;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .product-info {
+      flex: 1;
+    }
+
+    .product-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #16e086;
+      font-size: 1.1em;
+    }
+
+    .product-details {
+      display: flex;
+      gap: 15px;
+      font-size: 0.9em;
+      flex-wrap: wrap;
+    }
+
+    .product-detail {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .stock-indicator {
+      width: 100px;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 5px;
+      overflow: hidden;
+      margin-top: 5px;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .stock-level {
+      height: 100%;
+      background: #16e086;
+    }
+
+    .stock-level.critical {
+      background: #ff6347;
+    }
+
+    .stock-level.warning {
+      background: #ffa500;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .reorder-btn {
+      padding: 8px 15px;
+      background: #2980b9;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 500;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .reorder-btn:hover {
+      background: #3498db;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .reorder-btn.reordered {
+      background: #27ae60;
+    }
+
+    .reorder-btn.reordered:hover {
+      background: #2ecc71;
+    }
+
+    .view-btn {
+      padding: 8px 15px;
+      background: #16e086;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 500;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .view-btn:hover {
+      background: #15a086;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #95a5a6;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      margin: 20px 0;
+      border: 1px dashed rgba(255, 255, 255, 0.1);
+    }
+
+    .empty-state i {
+      font-size: 3em;
+      margin-bottom: 15px;
+      color: #16e086;
+    }
+
+    .empty-state h3 {
+      font-size: 1.3em;
+      margin-bottom: 10px;
+      color: #ecf0f1;
+    }
+
+    /* Totals Bar */
+    .totals-bar {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #2c3e50;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .total-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .button {
+      padding: 12px 15px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 1em;
+      color: #ecf0f1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s;
+      text-decoration: none;
+      font-weight: 500;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .button i {
+      font-size: 1.2em;
+    }
+
+    .button-home {
+      background-color: #8e44ad;
+    }
+
+    .button-home:hover {
+      background-color: #9b59b6;
+    }
+
+    .button-export {
+      background-color: #27ae60;
+    }
+
+    .button-export:hover {
+      background-color: #2ecc71;
+    }
+
+    .button-history {
+      background-color: #f39c12;
+    }
+
+    .button-history:hover {
+      background-color: #f1c40f;
+    }
+
+    .button-print {
+      background-color: #3498db;
+    }
+
+    .button-print:hover {
+      background-color: #2980b9;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(5px);
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background-color: #34495e;
+      padding: 25px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 700px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transform: translateY(20px);
+      transition: all 0.3s ease-out;
+      opacity: 0;
+    }
+
+    .modal.show .modal-content {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-title {
+      font-size: 1.5em;
+      color: #16e086;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .close-modal {
+      background: none;
+      border: none;
+      color: #ecf0f1;
+      font-size: 1.5em;
+      cursor: pointer;
+      transition: all 0.3s;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .close-modal:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: rotate(90deg);
+      color: #ff6347;
+    }
+
+    .modal-body {
+      margin-bottom: 20px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding-top: 15px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* History Table */
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 0.95em;
+    }
+
+    .history-table th, .history-table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .history-table th {
+      background-color: rgba(0, 0, 0, 0.2);
+      color: #16e086;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+    }
+
+    .history-table tr:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Reorder Modal */
+    .reorder-modal-content {
+      max-width: 500px;
+    }
+
+    .reorder-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-group label {
+      font-weight: 500;
+      color: #95a5a6;
+    }
+
+    .form-group input, .form-group textarea, .form-group select {
+      padding: 10px 12px;
+      border-radius: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.1);
+      color: #ecf0f1;
+      font-family: 'Roboto', sans-serif;
+      transition: all 0.3s;
+    }
+
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      outline: none;
+      border-color: #16e086;
+      box-shadow: 0 0 0 2px rgba(22, 224, 134, 0.2);
+    }
+
+    .form-group textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    /* Alert Styles */
+    .alert {
+      position: fixed;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 15px 25px;
+      border-radius: 8px;
+      z-index: 3000;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 500;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      animation: slideDown 0.4s ease-out, fadeOut 0.5s ease-in 2.5s forwards;
+      opacity: 0;
+    }
+
+    @keyframes slideDown {
+      from { 
+        opacity: 0;
+        transform: translate(-50%, -30px);
+      }
+      to { 
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    }
+
+    @keyframes fadeOut {
+      to { opacity: 0; }
+    }
+
+    .alert i {
+      font-size: 1.3em;
+    }
+
+    .alert-success {
+      background: rgba(46, 204, 113, 0.9);
+      color: white;
+    }
+
+    .alert-error {
+      background: rgba(231, 76, 60, 0.9);
+      color: white;
+    }
+
+    .alert-warning {
+      background: rgba(241, 196, 15, 0.9);
+      color: #2c3e50;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #16e086;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Print Styles */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      .low-stock-container, .low-stock-container * {
+        visibility: visible;
+      }
+      .low-stock-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: auto;
+        background: white;
+        color: black;
+      }
+      .threshold-control, .filter-controls, .reorder-btn, .view-btn, .totals-bar {
+        display: none !important;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .low-stock-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .product-details {
+        flex-wrap: wrap;
+      }
+
+      .action-buttons {
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      .modal-content {
+        width: 95%;
+        padding: 15px;
+      }
+
+      .history-table {
+        display: block;
+        overflow-x: auto;
+      }
+
+      .filter-controls {
+        flex-direction: column;
+      }
+
+      .filter-controls select, .filter-controls input {
+        width: 100%;
+      }
+
+      .button {
+        padding: 10px;
+        font-size: 0.9em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="header-icons">
+      <a href="#" id="homeBtn" title="Inicio"><i class="fa-solid fa-house icon"></i></a>
+      <a href="#" id="refreshBtn" title="Actualizar"><i class="fa-solid fa-rotate icon"></i></a>
+      <a href="#" id="printBtn" title="Imprimir"><i class="fa-solid fa-print icon"></i></a>
+    </div>
+    <span id="invoiceUser">Notificaciones de Stock Bajo</span>
+  </header>
+
+  <!-- Main Container -->
+  <div class="main-container">
+    <!-- Low Stock Section -->
+    <div class="low-stock-container">
+      <h1>Productos con Stock Bajo</h1>
+      
+      <!-- Threshold Control -->
+      <div class="threshold-control">
+        <label>Umbral de notificación:</label>
+        <input type="number" id="thresholdInput" min="1" value="5">
+        <button class="update-threshold-btn" id="updateThresholdBtn">
+          <i class="fa-solid fa-save"></i> Actualizar
+        </button>
+        <span style="margin-left: auto; font-size: 0.9em; color: #95a5a6;">
+          <i class="fa-solid fa-circle" style="color: #ff6347;"></i> Crítico 
+          <i class="fa-solid fa-circle" style="color: #ffa500; margin-left: 10px;"></i> Advertencia
+          <i class="fa-solid fa-circle" style="color: #2ecc71; margin-left: 10px;"></i> Reabastecido
+        </span>
+      </div>
+      
+      <!-- Filter Controls -->
+      <div class="filter-controls">
+        <select id="statusFilter">
+          <option value="all">Todos los estados</option>
+          <option value="critical">Solo críticos</option>
+          <option value="warning">Solo advertencias</option>
+          <option value="reordered">Solo reabastecidos</option>
+        </select>
+        <select id="categoryFilter">
+          <option value="all">Todas las categorías</option>
+          <!-- Categorías se llenarán dinámicamente -->
+        </select>
+        <input type="text" id="searchInput" placeholder="Buscar producto...">
+        <button id="applyFiltersBtn"><i class="fa-solid fa-filter"></i> Aplicar</button>
+        <button id="resetFiltersBtn"><i class="fa-solid fa-broom"></i> Limpiar</button>
+      </div>
+      
+      <!-- Low Stock List -->
+      <div class="low-stock-list" id="lowStockList">
+        <div class="empty-state">
+          <i class="fa-solid fa-check-circle"></i>
+          <h3>Todo en orden</h3>
+          <p>No hay productos con stock bajo según el umbral actual</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Totals Bar -->
+  <div class="totals-bar">
+    <div class="total-container" id="lowStockSummary">
+      <i class="fa-solid fa-boxes-stacked"></i> Resumen: 0 productos con stock bajo
+    </div>
+    <div class="action-buttons">
+      <button class="button button-history" id="historyBtn"><i class="fa-solid fa-clock-rotate-left"></i> Historial</button>
+      <button class="button button-export" id="exportBtn"><i class="fa-solid fa-file-export"></i> Exportar</button>
+      <button class="button button-print" id="printListBtn"><i class="fa-solid fa-print"></i> Imprimir</button>
+      <button class="button button-home" id="backToPosBtn"><i class="fa-solid fa-cash-register"></i> Volver al POS</button>
+    </div>
+  </div>
+
+  <!-- Product Detail Modal -->
+  <div class="modal" id="productModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalProductName"><i class="fa-solid fa-box-open"></i> Nombre del Producto</h3>
+        <button class="close-modal" id="closeModalBtn">&times;</button>
+      </div>
+      <div class="modal-body" id="modalProductDetails">
+        <!-- Detalles del producto se llenarán dinámicamente -->
+      </div>
+      <div class="modal-footer">
+        <button class="reorder-btn" id="modalReorderBtn"><i class="fa-solid fa-truck-arrow-right"></i> Reabastecer</button>
+        <button class="view-btn" id="viewProductBtn"><i class="fa-solid fa-eye"></i> Ver en Inventario</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Modal -->
+  <div class="modal" id="historyModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-clock-rotate-left"></i> Historial de Reabastecimientos</h3>
+        <button class="close-modal" id="closeHistoryModalBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="filter-controls" style="margin-bottom: 15px;">
+          <input type="text" id="historySearchInput" placeholder="Buscar en historial...">
+          <select id="historyDateFilter">
+            <option value="all">Todos los periodos</option>
+            <option value="today">Hoy</option>
+            <option value="week">Esta semana</option>
+            <option value="month">Este mes</option>
+          </select>
+          <button id="applyHistoryFiltersBtn"><i class="fa-solid fa-filter"></i> Filtrar</button>
+        </div>
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Usuario</th>
+              <th>Fecha</th>
+              <th>Cantidad</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody">
+            <!-- Historial se llenará dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button class="button button-export" id="exportHistoryBtn"><i class="fa-solid fa-file-export"></i> Exportar Historial</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reorder Modal -->
+  <div class="modal" id="reorderModal">
+    <div class="modal-content reorder-modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-truck-arrow-right"></i> Solicitar Reabastecimiento</h3>
+        <button class="close-modal" id="closeReorderModalBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form class="reorder-form" id="reorderForm">
+          <div class="form-group">
+            <label for="reorderProductName">Producto:</label>
+            <input type="text" id="reorderProductName" readonly>
+          </div>
+          <div class="form-group">
+            <label for="reorderCurrentStock">Stock Actual:</label>
+            <input type="text" id="reorderCurrentStock" readonly>
+          </div>
+          <div class="form-group">
+            <label for="reorderQuantity">Cantidad a Solicitar:</label>
+            <input type="number" id="reorderQuantity" min="1" required>
+          </div>
+          <div class="form-group">
+            <label for="reorderPriority">Prioridad:</label>
+            <select id="reorderPriority" required>
+              <option value="normal">Normal</option>
+              <option value="high">Alta</option>
+              <option value="urgent">Urgente</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="reorderNotes">Notas (opcional):</label>
+            <textarea id="reorderNotes" placeholder="Agregue notas adicionales..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="button" id="cancelReorderBtn" style="background: #e74c3c;">Cancelar</button>
+        <button type="submit" form="reorderForm" class="reorder-btn"><i class="fa-solid fa-paper-plane"></i> Enviar Solicitud</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { 
+      getFirestore, 
+      collection, 
+      query, 
+      where, 
+      getDocs,
+      doc,
+      getDoc,
+      updateDoc,
+      setDoc,
+      addDoc,
+      serverTimestamp,
+      orderBy,
+      Timestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+    import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
+
+    // Configuración de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLi-egzQlgbKW8XV_qIhU6313Gd8gocCg",
+      authDomain: "inventario-35d6b.firebaseapp.com",
+      projectId: "inventario-35d6b",
+      storageBucket: "inventario-35d6b.appspot.com",
+      messagingSenderId: "266100399659",
+      appId: "1:266100399659:web:92358d28cbd803c8a7d46e",
+    };
+
+    // Inicializar Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const storage = getStorage(app);
+
+    // Elementos del DOM
+    const homeBtn = document.getElementById('homeBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const printBtn = document.getElementById('printBtn');
+    const printListBtn = document.getElementById('printListBtn');
+    const backToPosBtn = document.getElementById('backToPosBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const historyBtn = document.getElementById('historyBtn');
+    const thresholdInput = document.getElementById('thresholdInput');
+    const updateThresholdBtn = document.getElementById('updateThresholdBtn');
+    const lowStockList = document.getElementById('lowStockList');
+    const lowStockSummary = document.getElementById('lowStockSummary');
+    const statusFilter = document.getElementById('statusFilter');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const searchInput = document.getElementById('searchInput');
+    const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+    const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+    const productModal = document.getElementById('productModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const modalProductName = document.getElementById('modalProductName');
+    const modalProductDetails = document.getElementById('modalProductDetails');
+    const modalReorderBtn = document.getElementById('modalReorderBtn');
+    const viewProductBtn = document.getElementById('viewProductBtn');
+    const historyModal = document.getElementById('historyModal');
+    const closeHistoryModalBtn = document.getElementById('closeHistoryModalBtn');
+    const historyTableBody = document.getElementById('historyTableBody');
+    const exportHistoryBtn = document.getElementById('exportHistoryBtn');
+    const historySearchInput = document.getElementById('historySearchInput');
+    const historyDateFilter = document.getElementById('historyDateFilter');
+    const applyHistoryFiltersBtn = document.getElementById('applyHistoryFiltersBtn');
+    const reorderModal = document.getElementById('reorderModal');
+    const closeReorderModalBtn = document.getElementById('closeReorderModalBtn');
+    const reorderForm = document.getElementById('reorderForm');
+    const reorderProductName = document.getElementById('reorderProductName');
+    const reorderCurrentStock = document.getElementById('reorderCurrentStock');
+    const reorderQuantity = document.getElementById('reorderQuantity');
+    const reorderPriority = document.getElementById('reorderPriority');
+    const reorderNotes = document.getElementById('reorderNotes');
+    const cancelReorderBtn = document.getElementById('cancelReorderBtn');
+
+    // Variables globales
+    let currentUser = null;
+    let currentThreshold = 5;
+    let lowStockProducts = [];
+    let allCategories = [];
+    let currentBusinessId = '';
+    let currentProductId = '';
+    let filteredProducts = [];
+    let reorderHistory = [];
+    let currentProductData = null;
+
+    // Observador de autenticación
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        loadThreshold();
+        loadCategories();
+        loadLowStockProducts();
+        loadReorderHistory();
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
+
+    // Mostrar modal con animación
+    function showModal(modal) {
+      modal.style.display = 'flex';
+      setTimeout(() => {
+        modal.classList.add('show');
+      }, 10);
+    }
+
+    // Ocultar modal con animación
+    function hideModal(modal) {
+      modal.classList.remove('show');
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300);
+    }
+
+    // Cargar umbral de notificación
+    async function loadThreshold() {
+      try {
+        const thresholdRef = doc(db, "users", currentUser.uid, "settings", "stockThreshold");
+        const thresholdDoc = await getDoc(thresholdRef);
+        
+        if (thresholdDoc.exists()) {
+          currentThreshold = thresholdDoc.data().value || 5;
+          thresholdInput.value = currentThreshold;
+        } else {
+          await setDoc(thresholdRef, { value: 5 });
+          thresholdInput.value = 5;
+        }
+      } catch (error) {
+        console.error("Error al cargar umbral:", error);
+        showAlert('error', 'Error al cargar configuración de umbral');
+      }
+    }
+
+    // Cargar categorías de productos
+    async function loadCategories() {
+      try {
+        const categoriesRef = collection(db, "categories");
+        const categoriesSnapshot = await getDocs(categoriesRef);
+        
+        allCategories = [];
+        categoryFilter.innerHTML = '<option value="all">Todas las categorías</option>';
+        
+        categoriesSnapshot.forEach(doc => {
+          allCategories.push(doc.data().name);
+          categoryFilter.innerHTML += `<option value="${doc.data().name}">${doc.data().name}</option>`;
+        });
+      } catch (error) {
+        console.error("Error al cargar categorías:", error);
+      }
+    }
+
+    // Cargar historial de reabastecimiento
+    async function loadReorderHistory() {
+      try {
+        const historyRef = collection(db, "reorderHistory");
+        const historyQuery = query(historyRef, orderBy("timestamp", "desc"));
+        const historySnapshot = await getDocs(historyQuery);
+        
+        reorderHistory = [];
+        historySnapshot.forEach(doc => {
+          reorderHistory.push({
+            id: doc.id,
+            ...doc.data(),
+            date: doc.data().timestamp.toDate().toLocaleString(),
+            timestamp: doc.data().timestamp
+          });
+        });
+        
+        applyHistoryFilters();
+      } catch (error) {
+        console.error("Error al cargar historial:", error);
+      }
+    }
+
+    // Aplicar filtros al historial
+    function applyHistoryFilters() {
+      const searchTerm = historySearchInput.value.toLowerCase();
+      const dateFilter = historyDateFilter.value;
+      const now = new Date();
+      
+      let filteredHistory = reorderHistory.filter(item => {
+        if (searchTerm && !item.productName.toLowerCase().includes(searchTerm) && 
+            !item.userName.toLowerCase().includes(searchTerm)) {
+          return false;
+        }
+        
+        if (dateFilter !== 'all') {
+          const itemDate = item.timestamp.toDate();
+          
+          if (dateFilter === 'today') {
+            return itemDate.toDateString() === now.toDateString();
+          } else if (dateFilter === 'week') {
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - now.getDay());
+            startOfWeek.setHours(0, 0, 0, 0);
+            return itemDate >= startOfWeek;
+          } else if (dateFilter === 'month') {
+            return itemDate.getMonth() === now.getMonth() && 
+                   itemDate.getFullYear() === now.getFullYear();
+          }
+        }
+        
+        return true;
+      });
+      
+      displayHistory(filteredHistory);
+    }
+
+    // Mostrar historial filtrado
+    function displayHistory(history) {
+      historyTableBody.innerHTML = '';
+      
+      if (history.length === 0) {
+        historyTableBody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: center; padding: 20px;">No hay registros que coincidan con los filtros</td>
+          </tr>
+        `;
+        return;
+      }
+      
+      history.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${item.productName}</td>
+          <td>${item.userName || 'Usuario desconocido'}</td>
+          <td>${item.date}</td>
+          <td>${item.quantityRequested || 'N/A'}</td>
+          <td>
+            <button class="view-btn" style="padding: 5px 10px; font-size: 0.8em;" data-id="${item.productId}" data-business="${item.businessId}">
+              <i class="fa-solid fa-eye"></i> Ver
+            </button>
+          </td>
+        `;
+        historyTableBody.appendChild(row);
+      });
+      
+      document.querySelectorAll('#historyTableBody .view-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const productId = e.currentTarget.getAttribute('data-id');
+          const businessId = e.currentTarget.getAttribute('data-business');
+          showProductDetails(businessId, productId);
+          hideModal(historyModal);
+        });
+      });
+    }
+
+    // Cargar productos con stock bajo
+    async function loadLowStockProducts() {
+      try {
+        showLoading(true);
+        const businessesRef = collection(db, "businesses");
+        const businessesSnapshot = await getDocs(businessesRef);
+        
+        lowStockProducts = [];
+        let criticalCount = 0;
+        let warningCount = 0;
+        let reorderedCount = 0;
+        
+        lowStockList.innerHTML = '';
+        
+        for (const businessDoc of businessesSnapshot.docs) {
+          const productsRef = collection(db, "businesses", businessDoc.id, "products");
+          const productsQuery = query(productsRef, where("quantity", "<=", currentThreshold * 2));
+          const productsSnapshot = await getDocs(productsQuery);
+          
+          for (const productDoc of productsSnapshot.docs) {
+            const productData = productDoc.data();
+            
+            if (productData.reordered) {
+              lowStockProducts.push({
+                id: productDoc.id,
+                businessId: businessDoc.id,
+                ...productData,
+                status: 'reordered'
+              });
+              reorderedCount++;
+            } else if (productData.quantity <= currentThreshold) {
+              lowStockProducts.push({
+                id: productDoc.id,
+                businessId: businessDoc.id,
+                ...productData,
+                status: 'critical'
+              });
+              criticalCount++;
+            } else if (productData.quantity <= currentThreshold * 2) {
+              lowStockProducts.push({
+                id: productDoc.id,
+                businessId: businessDoc.id,
+                ...productData,
+                status: 'warning'
+              });
+              warningCount++;
+            }
+          }
+        }
+        
+        applyFilters();
+        updateSummary(criticalCount, warningCount, reorderedCount);
+        
+      } catch (error) {
+        console.error("Error al cargar productos con stock bajo:", error);
+        showAlert('error', 'Error al cargar productos con stock bajo');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    // Aplicar filtros a los productos
+    function applyFilters() {
+      const statusFilterValue = statusFilter.value;
+      const categoryFilterValue = categoryFilter.value;
+      const searchTerm = searchInput.value.toLowerCase();
+      
+      filteredProducts = lowStockProducts.filter(product => {
+        if (statusFilterValue !== 'all' && product.status !== statusFilterValue) {
+          return false;
+        }
+        
+        if (categoryFilterValue !== 'all' && product.category !== categoryFilterValue) {
+          return false;
+        }
+        
+        if (searchTerm && !product.name.toLowerCase().includes(searchTerm) && 
+            !(product.eanUpcCode && product.eanUpcCode.toLowerCase().includes(searchTerm))) {
+          return false;
+        }
+        
+        return true;
+      });
+      
+      displayFilteredProducts();
+    }
+
+    // Mostrar productos filtrados
+    async function displayFilteredProducts() {
+      lowStockList.innerHTML = '';
+      
+      if (filteredProducts.length === 0) {
+        lowStockList.innerHTML = `
+          <div class="empty-state">
+            <i class="fa-solid fa-search"></i>
+            <h3>No se encontraron productos</h3>
+            <p>No hay productos que coincidan con los filtros aplicados</p>
+          </div>
+        `;
+        return;
+      }
+      
+      filteredProducts.sort((a, b) => {
+        if (a.status === 'critical' && b.status !== 'critical') return -1;
+        if (a.status !== 'critical' && b.status === 'critical') return 1;
+        if (a.status === 'warning' && b.status === 'reordered') return -1;
+        if (a.status === 'reordered' && b.status === 'warning') return 1;
+        return a.quantity - b.quantity;
+      });
+      
+      for (const product of filteredProducts) {
+        const productItem = document.createElement('div');
+        productItem.className = `low-stock-item ${product.status}`;
+        
+        let imageUrl = 'https://via.placeholder.com/60x60?text=No+Image';
+        if (product.imageUrl) {
+          try {
+            const imageRef = ref(storage, product.imageUrl);
+            imageUrl = await getDownloadURL(imageRef);
+          } catch (error) {
+            console.error("Error al cargar imagen:", error);
+          }
+        }
+        
+        const stockPercentage = (product.quantity / (currentThreshold * 2)) * 100;
+        
+        const reorderBtnText = product.reordered ? 
+          `<i class="fa-solid fa-check"></i> Reabastecido` : 
+          `<i class="fa-solid fa-truck-arrow-right"></i> Reabastecer`;
+        
+        const reorderBtnClass = product.reordered ? 'reorder-btn reordered' : 'reorder-btn';
+        
+        productItem.innerHTML = `
+          <img src="${imageUrl}" alt="${product.name}" class="product-image">
+          <div class="product-info">
+            <div class="product-name">${product.name}</div>
+            <div class="product-details">
+              <div class="product-detail">
+                <i class="fa-solid fa-box"></i> Stock: ${product.quantity}
+              </div>
+              <div class="product-detail">
+                <i class="fa-solid fa-barcode"></i> ${product.eanUpcCode || 'N/A'}
+              </div>
+              <div class="product-detail">
+                <i class="fa-solid fa-tag"></i> $${product.pricePerUnit?.toFixed(2) || '0.00'}
+              </div>
+              ${product.category ? `<div class="product-detail">
+                <i class="fa-solid fa-tags"></i> ${product.category}
+              </div>` : ''}
+              ${product.reordered ? `<div class="product-detail">
+                <i class="fa-solid fa-calendar-check"></i> ${product.reorderDate?.toDate().toLocaleDateString() || ''}
+              </div>` : ''}
+            </div>
+            <div class="stock-indicator">
+              <div class="stock-level ${product.status}" style="width: ${stockPercentage}%"></div>
+            </div>
+          </div>
+          <div class="action-buttons">
+            <button class="view-btn" data-id="${product.id}" data-business="${product.businessId}">
+              <i class="fa-solid fa-eye"></i> Ver
+            </button>
+            <button class="${reorderBtnClass}" data-id="${product.id}" data-business="${product.businessId}">
+              ${reorderBtnText}
+            </button>
+          </div>
+        `;
+        
+        lowStockList.appendChild(productItem);
+      }
+      
+      document.querySelectorAll('.reorder-btn').forEach(btn => {
+        if (!btn.classList.contains('reordered')) {
+          btn.addEventListener('click', (e) => {
+            const productId = e.currentTarget.getAttribute('data-id');
+            const businessId = e.currentTarget.getAttribute('data-business');
+            showReorderModal(businessId, productId);
+          });
+        }
+      });
+      
+      document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const productId = e.currentTarget.getAttribute('data-id');
+          const businessId = e.currentTarget.getAttribute('data-business');
+          showProductDetails(businessId, productId);
+        });
+      });
+    }
+
+    // Mostrar modal de reabastecimiento - FUNCIÓN MEJORADA
+    async function showReorderModal(businessId, productId) {
+      try {
+        showLoading(true);
+        
+        // Validar parámetros de entrada
+        if (!businessId || !productId) {
+          throw new Error('Faltan parámetros businessId o productId');
+        }
+
+        currentBusinessId = businessId;
+        currentProductId = productId;
+        
+        const productRef = doc(db, "businesses", businessId, "products", productId);
+        const productDoc = await getDoc(productRef);
+        
+        if (!productDoc.exists()) {
+          throw new Error('Producto no encontrado en Firestore');
+        }
+        
+        currentProductData = productDoc.data();
+        console.log('Datos del producto cargados:', currentProductData);
+
+        // Validar datos esenciales del producto
+        if (!currentProductData.name || typeof currentProductData.quantity !== 'number') {
+          throw new Error('Datos del producto incompletos');
+        }
+
+        // Configurar el formulario
+        reorderProductName.value = currentProductData.name;
+        reorderCurrentStock.value = currentProductData.quantity;
+        reorderQuantity.value = Math.max(1, currentThreshold * 2 - currentProductData.quantity);
+        reorderPriority.value = 'normal';
+        reorderNotes.value = '';
+        
+        showModal(reorderModal);
+      } catch (error) {
+        console.error("Error en showReorderModal:", error);
+        showAlert('error', `Error al cargar: ${error.message}`);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    // Procesar solicitud de reabastecimiento - FUNCIÓN CORREGIDA
+    async function processReorderRequest() {
+      try {
+        showLoading(true);
+        
+        // Validaciones básicas
+        const quantity = parseInt(reorderQuantity.value);
+        if (isNaN(quantity) || quantity < 1) {
+          showAlert('warning', 'Ingrese una cantidad válida (mayor o igual a 1)');
+          return false;
+        }
+
+        // Validación EXTRA reforzada
+        if (!currentBusinessId || !currentProductId || !currentProductData || !currentUser) {
+          console.error('Datos faltantes:', {
+            businessId: currentBusinessId,
+            productId: currentProductId,
+            productData: currentProductData,
+            user: currentUser
+          });
+          showAlert('error', 'Error crítico: Faltan datos esenciales. Recargue la página e intente nuevamente.');
+          return false;
+        }
+
+        // Validar que el producto tenga nombre y cantidad
+        if (!currentProductData.name || typeof currentProductData.quantity !== 'number') {
+          showAlert('error', 'Datos del producto incompletos o inválidos');
+          return false;
+        }
+
+        // Datos para actualizar el producto
+        const productUpdateData = {
+          needsReorder: true,
+          reordered: true,
+          reorderDate: serverTimestamp(),
+          reorderQuantity: quantity,
+          reorderPriority: reorderPriority.value,
+          reorderNotes: reorderNotes.value || null,
+          reorderUserId: currentUser.uid,
+          reorderUserName: currentUser.displayName || currentUser.email
+        };
+
+        // Actualizar el producto en Firestore
+        const productRef = doc(db, "businesses", currentBusinessId, "products", currentProductId);
+        await updateDoc(productRef, productUpdateData);
+        console.log('Producto actualizado en Firestore');
+
+        // Datos para el historial
+        const historyData = {
+          productId: currentProductId,
+          businessId: currentBusinessId,
+          productName: currentProductData.name,
+          userId: currentUser.uid,
+          userName: currentUser.displayName || currentUser.email,
+          quantityRequested: quantity,
+          currentStock: currentProductData.quantity,
+          threshold: currentThreshold,
+          priority: reorderPriority.value,
+          notes: reorderNotes.value || null,
+          timestamp: serverTimestamp()
+        };
+
+        // Registrar en el historial
+        await addDoc(collection(db, "reorderHistory"), historyData);
+        console.log('Registro añadido al historial');
+
+        showAlert('success', '¡Solicitud de reabastecimiento registrada correctamente!');
+        
+        // Actualizar la interfaz
+        await loadLowStockProducts();
+        await loadReorderHistory();
+        
+        // Cerrar modales
+        hideModal(reorderModal);
+        if (productModal.style.display === 'flex') {
+          hideModal(productModal);
+        }
+        
+        return true;
+      } catch (error) {
+        console.error("Error completo al procesar solicitud:", error);
+        showAlert('error', `Error al procesar: ${error.message}`);
+        return false;
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    // Mostrar detalles del producto en modal
+    async function showProductDetails(businessId, productId) {
+      try {
+        showLoading(true);
+        currentBusinessId = businessId;
+        currentProductId = productId;
+        
+        const productRef = doc(db, "businesses", businessId, "products", productId);
+        const productDoc = await getDoc(productRef);
+        
+        if (!productDoc.exists()) {
+          showAlert('error', 'Producto no encontrado');
+          return;
+        }
+        
+        const productData = productDoc.data();
+        currentProductData = productData;
+        
+        let imageUrl = 'https://via.placeholder.com/200x200?text=No+Image';
+        if (productData.imageUrl) {
+          try {
+            const imageRef = ref(storage, productData.imageUrl);
+            imageUrl = await getDownloadURL(imageRef);
+          } catch (error) {
+            console.error("Error al cargar imagen:", error);
+          }
+        }
+        
+        const stockPercentage = (productData.quantity / (currentThreshold * 2)) * 100;
+        
+        if (productData.reordered) {
+          modalReorderBtn.innerHTML = '<i class="fa-solid fa-check"></i> Reabastecido';
+          modalReorderBtn.className = 'reorder-btn reordered';
+          modalReorderBtn.disabled = true;
+        } else {
+          modalReorderBtn.innerHTML = '<i class="fa-solid fa-truck-arrow-right"></i> Reabastecer';
+          modalReorderBtn.className = 'reorder-btn';
+          modalReorderBtn.disabled = false;
+        }
+        
+        modalProductName.textContent = productData.name;
+        
+        modalProductDetails.innerHTML = `
+          <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+            <img src="${imageUrl}" alt="${productData.name}" style="width: 150px; height: 150px; object-fit: contain; border-radius: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+            <div style="flex: 1;">
+              <p><strong>Código:</strong> ${productData.eanUpcCode || 'N/A'}</p>
+              <p><strong>Categoría:</strong> ${productData.category || 'Sin categoría'}</p>
+              <p><strong>Precio:</strong> $${productData.pricePerUnit?.toFixed(2) || '0.00'}</p>
+              <p><strong>Costo:</strong> $${productData.costPerUnit?.toFixed(2) || '0.00'}</p>
+              <p><strong>Stock actual:</strong> ${productData.quantity}</p>
+              <p><strong>Umbral de notificación:</strong> ${currentThreshold}</p>
+              <div style="margin-top: 10px;">
+                <div class="stock-indicator">
+                  <div class="stock-level ${productData.quantity <= currentThreshold ? 'critical' : 'warning'}" style="width: ${stockPercentage}%"></div>
+                </div>
+                <small>${productData.quantity} unidades (${stockPercentage.toFixed(1)}% del umbral)</small>
+              </div>
+            </div>
+          </div>
+          ${productData.description ? `<p><strong>Descripción:</strong> ${productData.description}</p>` : ''}
+          <p><strong>Última actualización:</strong> ${productData.lastUpdated?.toDate().toLocaleString() || 'No disponible'}</p>
+          ${productData.reordered ? `
+            <div style="background: rgba(46, 204, 113, 0.2); padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.1);">
+              <p style="color: #2ecc71; font-weight: 500; margin-bottom: 10px;"><i class="fa-solid fa-check-circle"></i> Este producto fue marcado para reabastecimiento</p>
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
+                <p><strong>Fecha de solicitud:</strong><br> ${productData.reorderDate?.toDate().toLocaleString() || 'No disponible'}</p>
+                ${productData.reorderQuantity ? `<p><strong>Cantidad solicitada:</strong><br> ${productData.reorderQuantity}</p>` : ''}
+                ${productData.reorderPriority ? `<p><strong>Prioridad:</strong><br> ${
+                  productData.reorderPriority === 'high' ? 'Alta' : 
+                  productData.reorderPriority === 'urgent' ? 'Urgente' : 'Normal'
+                }</p>` : ''}
+                ${productData.reorderUserName ? `<p><strong>Solicitado por:</strong><br> ${productData.reorderUserName}</p>` : ''}
+              </div>
+              ${productData.reorderNotes ? `<p style="margin-top: 10px;"><strong>Notas:</strong><br> ${productData.reorderNotes}</p>` : ''}
+            </div>
+          ` : ''}
+        `;
+        
+        showModal(productModal);
+        
+      } catch (error) {
+        console.error("Error al cargar detalles del producto:", error);
+        showAlert('error', 'Error al cargar detalles del producto');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    // Mostrar historial de reabastecimiento
+    function showReorderHistory() {
+      applyHistoryFilters();
+      showModal(historyModal);
+    }
+
+    // Actualizar resumen
+    function updateSummary(criticalCount, warningCount, reorderedCount) {
+      const totalLowStock = criticalCount + warningCount + reorderedCount;
+      lowStockSummary.innerHTML = `
+        <i class="fa-solid fa-boxes-stacked"></i> 
+        Resumen: ${totalLowStock} productos con stock bajo 
+        (${criticalCount} <span style="color: #ff6347;">críticos</span>, 
+        ${warningCount} <span style="color: #ffa500;">advertencias</span>, 
+        ${reorderedCount} <span style="color: #2ecc71;">reabastecidos</span>)
+      `;
+    }
+
+    // Actualizar umbral de notificación
+    async function updateThreshold() {
+      const newThreshold = parseInt(thresholdInput.value);
+      
+      if (isNaN(newThreshold) || newThreshold < 1) {
+        showAlert('warning', 'Ingrese un valor válido (mayor o igual a 1)');
+        return;
+      }
+      
+      try {
+        showLoading(true, updateThresholdBtn);
+        const thresholdRef = doc(db, "users", currentUser.uid, "settings", "stockThreshold");
+        await setDoc(thresholdRef, { value: newThreshold });
+        
+        currentThreshold = newThreshold;
+        loadLowStockProducts();
+        showAlert('success', 'Umbral actualizado correctamente');
+      } catch (error) {
+        console.error("Error al actualizar umbral:", error);
+        showAlert('error', 'Error al actualizar umbral');
+      } finally {
+        showLoading(false, updateThresholdBtn);
+      }
+    }
+
+    // Exportar datos a CSV con estilo
+    function exportToCSV() {
+      if (filteredProducts.length === 0) {
+        showAlert('warning', 'No hay datos para exportar');
+        return;
+      }
+      
+      try {
+        let csv = `"Notificación de Stock Bajo - ${new Date().toLocaleDateString()}"\n\n`;
+        csv += '"Nombre","Código","Categoría","Stock","Precio","Estado","Fecha Reabastecimiento","Cantidad Solicitada","Prioridad"\n';
+        
+        filteredProducts.forEach(product => {
+          csv += `"${product.name}",`;
+          csv += `"${product.eanUpcCode || ''}",`;
+          csv += `"${product.category || ''}",`;
+          csv += `${product.quantity},`;
+          csv += `"$${product.pricePerUnit?.toFixed(2) || '0.00'}",`;
+          csv += `"${product.status === 'critical' ? 'Crítico' : product.status === 'warning' ? 'Advertencia' : 'Reabastecido'}",`;
+          csv += `"${product.reorderDate ? product.reorderDate.toDate().toLocaleString() : ''}",`;
+          csv += `${product.reorderQuantity || ''},`;
+          csv += `"${
+            product.reorderPriority === 'high' ? 'Alta' : 
+            product.reorderPriority === 'urgent' ? 'Urgente' : 
+            product.reordered ? 'Normal' : ''
+          }"\n`;
+        });
+        
+        const criticalCount = filteredProducts.filter(p => p.status === 'critical').length;
+        const warningCount = filteredProducts.filter(p => p.status === 'warning').length;
+        const reorderedCount = filteredProducts.filter(p => p.status === 'reordered').length;
+        
+        csv += `\n"Resumen","","","","","","","",""\n`;
+        csv += `"Críticos","${criticalCount}","","","","","","",""\n`;
+        csv += `"Advertencias","${warningCount}","","","","","","",""\n`;
+        csv += `"Reabastecidos","${reorderedCount}","","","","","","",""\n`;
+        csv += `"Total","${filteredProducts.length}","","","","","","",""\n`;
+        
+        const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `Stock_Bajo_${new Date().toISOString().slice(0,10)}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showAlert('success', 'Reporte exportado correctamente');
+      } catch (error) {
+        console.error("Error al exportar datos:", error);
+        showAlert('error', 'Error al exportar reporte');
+      }
+    }
+
+    // Exportar historial a CSV con estilo
+    function exportHistoryToCSV() {
+      if (reorderHistory.length === 0) {
+        showAlert('warning', 'No hay historial para exportar');
+        return;
+      }
+      
+      try {
+        const searchTerm = historySearchInput.value.toLowerCase();
+        const dateFilter = historyDateFilter.value;
+        const now = new Date();
+        
+        let filteredHistory = reorderHistory.filter(item => {
+          if (searchTerm && !item.productName.toLowerCase().includes(searchTerm) && 
+              !item.userName.toLowerCase().includes(searchTerm)) {
+            return false;
+          }
+          
+          if (dateFilter !== 'all') {
+            const itemDate = item.timestamp.toDate();
+            
+            if (dateFilter === 'today') {
+              return itemDate.toDateString() === now.toDateString();
+            } else if (dateFilter === 'week') {
+              const startOfWeek = new Date(now);
+              startOfWeek.setDate(now.getDate() - now.getDay());
+              startOfWeek.setHours(0, 0, 0, 0);
+              return itemDate >= startOfWeek;
+            } else if (dateFilter === 'month') {
+              return itemDate.getMonth() === now.getMonth() && 
+                     itemDate.getFullYear() === now.getFullYear();
+            }
+          }
+          
+          return true;
+        });
+        
+        if (filteredHistory.length === 0) {
+          showAlert('warning', 'No hay registros que coincidan con los filtros');
+          return;
+        }
+        
+        let csv = `"Historial de Reabastecimientos - ${new Date().toLocaleDateString()}"\n\n`;
+        csv += '"Producto","Usuario","Fecha","Cantidad Solicitada","Stock Actual","Umbral","Prioridad","Notas"\n';
+        
+        filteredHistory.forEach(item => {
+          csv += `"${item.productName}",`;
+          csv += `"${item.userName || 'Usuario desconocido'}",`;
+          csv += `"${item.date}",`;
+          csv += `${item.quantityRequested || 'N/A'},`;
+          csv += `${item.currentStock || 'N/A'},`;
+          csv += `${item.threshold || 'N/A'},`;
+          csv += `"${
+            item.priority === 'high' ? 'Alta' : 
+            item.priority === 'urgent' ? 'Urgente' : 'Normal'
+          }",`;
+          csv += `"${item.notes || ''}"\n`;
+        });
+        
+        csv += `\n"Resumen","","","","","","",""\n`;
+        csv += `"Total Registros","${filteredHistory.length}","","","","","",""\n`;
+        csv += `"Fecha de Exportación","${new Date().toLocaleString()}","","","","","",""\n`;
+        
+        const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `Historial_Reabastecimientos_${new Date().toISOString().slice(0,10)}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showAlert('success', 'Historial exportado correctamente');
+      } catch (error) {
+        console.error("Error al exportar historial:", error);
+        showAlert('error', 'Error al exportar historial');
+      }
+    }
+
+    // Mostrar/ocultar loading
+    function showLoading(show, element = null) {
+      if (element) {
+        if (show) {
+          element.innerHTML = `<span class="spinner"></span> Procesando...`;
+          element.disabled = true;
+        } else {
+          if (element.id === 'modalReorderBtn') {
+            // No cambiamos el texto aquí para mantener el estado "Reabastecido"
+          } else {
+            element.innerHTML = element.innerHTML.includes('Actualizar') ? 
+              `<i class="fa-solid fa-save"></i> Actualizar` : 
+              element.innerHTML.includes('Enviar') ? 
+              `<i class="fa-solid fa-paper-plane"></i> Enviar Solicitud` : 
+              element.innerHTML;
+          }
+          element.disabled = false;
+        }
+      } else {
+        if (show) {
+          if (lowStockList.innerHTML.includes('empty-state')) {
+            lowStockList.innerHTML = `
+              <div style="display: flex; justify-content: center; padding: 40px;">
+                <span class="spinner" style="width: 40px; height: 40px; border-width: 4px;"></span>
+              </div>
+            `;
+          } else {
+            const overlay = document.createElement('div');
+            overlay.id = 'loadingOverlay';
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            overlay.style.display = 'flex';
+            overlay.style.justifyContent = 'center';
+            overlay.style.alignItems = 'center';
+            overlay.style.zIndex = '1000';
+            
+            const spinner = document.createElement('span');
+            spinner.className = 'spinner';
+            spinner.style.width = '50px';
+            spinner.style.height = '50px';
+            spinner.style.borderWidth = '5px';
+            
+            overlay.appendChild(spinner);
+            document.body.appendChild(overlay);
+          }
+        } else {
+          const overlay = document.getElementById('loadingOverlay');
+          if (overlay) {
+            document.body.removeChild(overlay);
+          }
+        }
+      }
+    }
+
+    // Función para mostrar alertas
+    function showAlert(type, message) {
+      const existingAlerts = document.querySelectorAll('.alert');
+      existingAlerts.forEach(alert => alert.remove());
+      
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${type}`;
+      
+      const icon = document.createElement('i');
+      icon.className = 'fa-solid ';
+      
+      if (type === 'success') {
+        icon.className += 'fa-circle-check';
+      } else if (type === 'error') {
+        icon.className += 'fa-circle-xmark';
+      } else if (type === 'warning') {
+        icon.className += 'fa-triangle-exclamation';
+      }
+      
+      const text = document.createElement('span');
+      text.textContent = message;
+      
+      alertDiv.appendChild(icon);
+      alertDiv.appendChild(text);
+      document.body.appendChild(alertDiv);
+      
+      setTimeout(() => {
+        alertDiv.remove();
+      }, 3000);
+    }
+
+    // Event Listeners
+    homeBtn.addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+
+    refreshBtn.addEventListener('click', () => {
+      loadLowStockProducts();
+      loadReorderHistory();
+    });
+
+    printBtn.addEventListener('click', () => {
+      window.print();
+    });
+
+    printListBtn.addEventListener('click', () => {
+      window.print();
+    });
+
+    backToPosBtn.addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+
+    exportBtn.addEventListener('click', exportToCSV);
+
+    historyBtn.addEventListener('click', showReorderHistory);
+
+    updateThresholdBtn.addEventListener('click', updateThreshold);
+
+    thresholdInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        updateThreshold();
+      }
+    });
+
+    applyFiltersBtn.addEventListener('click', applyFilters);
+
+    resetFiltersBtn.addEventListener('click', () => {
+      statusFilter.value = 'all';
+      categoryFilter.value = 'all';
+      searchInput.value = '';
+      applyFilters();
+    });
+
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        applyFilters();
+      }
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+      hideModal(productModal);
+    });
+
+    modalReorderBtn.addEventListener('click', () => {
+      if (currentBusinessId && currentProductId && currentProductData) {
+        showReorderModal(currentBusinessId, currentProductId);
+      }
+    });
+
+    viewProductBtn.addEventListener('click', () => {
+      if (currentBusinessId && currentProductId) {
+        window.location.href = `inventory.html?businessId=${currentBusinessId}&productId=${currentProductId}`;
+      }
+    });
+
+    closeHistoryModalBtn.addEventListener('click', () => {
+      hideModal(historyModal);
+    });
+
+    exportHistoryBtn.addEventListener('click', exportHistoryToCSV);
+
+    historySearchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        applyHistoryFilters();
+      }
+    });
+
+    applyHistoryFiltersBtn.addEventListener('click', applyHistoryFilters);
+
+    closeReorderModalBtn.addEventListener('click', () => {
+      hideModal(reorderModal);
+    });
+
+    cancelReorderBtn.addEventListener('click', () => {
+      hideModal(reorderModal);
+    });
+
+    reorderForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const success = await processReorderRequest();
+        if (success) {
+          reorderForm.reset();
+        }
+      } catch (error) {
+        console.error('Error en el evento submit:', error);
+        showAlert('error', 'Error inesperado al enviar el formulario');
+      }
+    });
+
+    // Cerrar modales al hacer clic fuera del contenido
+    productModal.addEventListener('click', (e) => {
+      if (e.target === productModal) {
+        hideModal(productModal);
+      }
+    });
+
+    historyModal.addEventListener('click', (e) => {
+      if (e.target === historyModal) {
+        hideModal(historyModal);
+      }
+    });
+
+    reorderModal.addEventListener('click', (e) => {
+      if (e.target === reorderModal) {
+        hideModal(reorderModal);
+      }
+    });
+
+    // Cargar datos al iniciar
+    window.onload = function() {
+      if (currentUser) {
+        loadLowStockProducts();
+        loadReorderHistory();
+      }
+    };
+  </script>
+</body>
+</html>
