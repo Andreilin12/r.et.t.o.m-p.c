@@ -1589,6 +1589,7 @@ body {
         <a href="#" id="salesAnalysisBtn" title="Análisis de Ventas"><i class="fa-solid fa-chart-pie icon"></i></a>
         <a href="#" id="userBtn" title="Usuario"><i class="fa-solid fa-user icon"></i></a>
         <a href="#" id="ratesBtn" title="Tasas de Cambio"><i class="fa-solid fa-money-bill-transfer icon"></i></a>
+        <a href="notificacion-stock-bajo.html" id="inventoryBtn" title="Inventario"><i class="fa-solid fa-bell icon"></i></a>
       </div>
       <span id="invoiceUser"></span>
     </header>
@@ -2844,7 +2845,7 @@ body {
         }
         
         showProgressBar(100, "Factura guardada con éxito");
-        showAlert('success', 'Factura generada y guardada correctamente');
+        showAlert('success', 'El pago fue realizado');
       } catch (error) {
         console.error("Error al guardar la factura:", error);
         showProgressBar(0, "Error al guardar factura");
