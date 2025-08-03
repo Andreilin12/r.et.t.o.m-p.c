@@ -3,68 +3,121 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Consultar precio de productos</title>
+  <title>Sistema de Consulta de Precios</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Arial', sans-serif;
-      background: linear-gradient(135deg, #1e1e2f, #2a2a40);
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       height: 100vh;
-      margin: 0;
-    }
-
-    .slider {
-      width: 300px;
-      height: 400px;
       overflow: hidden;
       position: relative;
-      margin-bottom: 1rem;
+      background-color: #000;
     }
 
-    .slides {
+    /* Fondo con imágenes de marketing */
+    .marketing-background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .marketing-slides {
       display: flex;
+      width: 100%;
+      height: 100%;
       transition: transform 0.5s ease;
-      width: 100%;
     }
 
-    .slide {
-      width: 100%;
-      flex-shrink: 0;
+    .marketing-slide {
+      min-width: 100%;
+      height: 100%;
     }
 
-    .slide img {
+    .marketing-slide img {
       width: 100%;
-      height: 50%;
+      height: 100%;
       object-fit: cover;
     }
 
-    .logo {
-      width: 100px;
-      height: auto;
-      margin: 1rem 0;
+    /* Botón de teclado flotante */
+    .keyboard-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      z-index: 10;
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
     }
 
-    .container {
-      text-align: center;
-      background: rgba(255, 255, 255, 0.1);
-      padding: 2rem;
-      border-radius: 15px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-      backdrop-filter: blur(10px);
-      max-width: 400px;
-      width: 100%;
+    .keyboard-toggle:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
     }
 
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 1.5rem;
-      color: #00ffcc;
+    /* Campo de búsqueda oculto pero siempre activo para scanner/teclado */
+    .hidden-search-container {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
     }
 
     #searchInput {
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      border: 0;
+      position: absolute;
+    }
+
+    /* Contenedor de búsqueda manual (oculto por defecto) - Mejorado para móviles */
+    .search-container {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      padding: 1rem;
+      box-sizing: border-box;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+      z-index: 5;
+      backdrop-filter: blur(10px);
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .search-container.visible {
+      transform: translateY(0);
+    }
+
+    #searchInputManual {
       width: 100%;
       padding: 0.75rem;
       font-size: 1rem;
@@ -76,28 +129,31 @@
       margin-bottom: 1rem;
     }
 
-    #searchInput::placeholder {
+    #searchInputManual::placeholder {
       color: rgba(255, 255, 255, 0.7);
     }
 
+    /* Teclado numérico - Diseño responsivo mejorado */
     .numeric-keyboard {
-      display: none;
+      display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 1rem;
+      gap: 8px;
       width: 100%;
     }
 
     .numeric-btn {
-      padding: 1rem;
-      font-size: 1.25rem;
+      padding: 0.8rem 0.2rem;
+      font-size: 1.1rem;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       background: rgba(255, 255, 255, 0.2);
       color: #fff;
       cursor: pointer;
-      transition: background 0.3s ease;
-      flex: 1;
+      transition: all 0.2s ease;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .numeric-btn:hover {
@@ -108,13 +164,14 @@
       grid-column: span 3;
       background: #00ffcc;
       color: #1e1e2f;
+      padding: 0.8rem;
     }
 
     #backspaceBtn:hover, #acceptBtn:hover {
       background: #00e6b8;
     }
 
-    /* Estilos del modal */
+    /* Estilos del modal - Mejorado para responsivo */
     .modal {
       display: none;
       position: fixed;
@@ -122,83 +179,250 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.95);
       justify-content: center;
       align-items: center;
       z-index: 1000;
+      flex-direction: column;
+      padding: 1rem;
+      box-sizing: border-box;
     }
 
     .modal-content {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 2rem;
-      border-radius: 15px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-      backdrop-filter: blur(10px);
-      max-width: 400px;
-      width: 90%;
+      background: rgba(0, 0, 0, 0.9);
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 2px solid #00ffcc;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
       text-align: center;
+      animation: fadeIn 0.3s ease;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
     }
 
     .modal-content h2 {
       font-size: 1.5rem;
-      margin-bottom: 1rem;
-      color: #00ffcc;
+      margin-bottom: 1.5rem;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
-    .modal-content p {
-      font-size: 1.25rem;
-      margin: 0.5rem 0;
+    #productName {
+      font-size: 1.8rem;
+      margin: 1rem 0;
       color: #fff;
+      font-weight: bold;
+      word-break: break-word;
+      line-height: 1.3;
+    }
+
+    #productPrice {
+      font-size: 3rem;
+      margin: 1.5rem 0;
+      color: #00ffcc;
+      font-weight: bold;
+      text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
     }
 
     .modal-content button {
-      padding: 0.75rem 1.5rem;
+      padding: 0.8rem 1.5rem;
       font-size: 1rem;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       background: #00ffcc;
       color: #1e1e2f;
       cursor: pointer;
-      transition: background 0.3s ease;
-      margin-top: 1rem;
+      transition: all 0.2s ease;
+      margin-top: 1.5rem;
+      font-weight: bold;
+      width: 100%;
+      max-width: 200px;
     }
 
     .modal-content button:hover {
       background: #00e6b8;
+      transform: scale(1.03);
     }
 
-    @media (orientation: landscape) {
-      .numeric-keyboard {
-        grid-template-columns: repeat(6, 1fr);
-        width: 100%;
-        margin: 0;
-        padding: 0;
-      }
+    /* Loading spinner */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
 
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #00ffcc;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: #fff;
+      margin-top: 15px;
+      font-size: 1rem;
+    }
+
+    /* Media Queries para mejor adaptación */
+    @media (max-width: 480px) {
+      /* Ajustes para móviles pequeños */
+      .search-container {
+        padding: 0.8rem;
+      }
+      
+      #searchInputManual {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+      }
+      
       .numeric-btn {
-        padding: 1.5rem;
+        min-height: 45px;
+        font-size: 1rem;
+        padding: 0.6rem 0.1rem;
+      }
+      
+      #backspaceBtn, #acceptBtn {
+        padding: 0.6rem;
+      }
+      
+      .modal-content {
+        padding: 1.2rem;
+        border-radius: 10px;
+      }
+      
+      .modal-content h2 {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+      }
+      
+      #productName {
         font-size: 1.5rem;
       }
+      
+      #productPrice {
+        font-size: 2.5rem;
+        margin: 1rem 0;
+      }
+      
+      .modal-content button {
+        padding: 0.7rem 1.2rem;
+        font-size: 0.9rem;
+      }
+    }
 
+    @media (min-width: 481px) and (max-width: 768px) {
+      /* Ajustes para tablets pequeñas y móviles grandes */
+      .numeric-btn {
+        min-height: 55px;
+        font-size: 1.2rem;
+      }
+      
+      .modal-content h2 {
+        font-size: 1.6rem;
+      }
+      
+      #productName {
+        font-size: 2rem;
+      }
+      
+      #productPrice {
+        font-size: 3.2rem;
+      }
+    }
+
+    @media (min-width: 769px) {
+      /* Ajustes para pantallas más grandes */
+      .numeric-btn {
+        min-height: 60px;
+        font-size: 1.3rem;
+      }
+    }
+
+    @media (orientation: landscape) and (max-height: 500px) {
+      /* Ajustes especiales para móviles en horizontal */
+      .search-container {
+        max-height: 90vh;
+      }
+      
+      .numeric-keyboard {
+        grid-template-columns: repeat(6, 1fr);
+      }
+      
+      .numeric-btn {
+        min-height: 40px;
+        font-size: 1rem;
+        padding: 0.4rem 0.1rem;
+      }
+      
       #backspaceBtn, #acceptBtn {
         grid-column: span 3;
+      }
+      
+      .modal-content {
+        max-width: 90%;
+        padding: 1rem;
+      }
+      
+      #productName {
+        font-size: 1.5rem;
+      }
+      
+      #productPrice {
+        font-size: 2.5rem;
       }
     }
   </style>
 </head>
 <body>
-<img src="logo.png" alt="Logo" class="logo">
-
-  <div class="slider">
-    <div class="slides" id="slides">
+  <!-- Fondo con imágenes de marketing -->
+  <div class="marketing-background">
+    <div class="marketing-slides" id="marketingSlides">
       <!-- Las imágenes se agregarán aquí dinámicamente -->
     </div>
   </div>
 
-  
-  <div class="container">
-    <h1>Buscador EAN/UPC</h1>
-    <input type="text" id="searchInput" placeholder="Ingrese el código EAN/UPC" autofocus>
+  <!-- Loading overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Buscando producto...</div>
+  </div>
+
+  <!-- Campo de búsqueda oculto pero siempre activo para scanner/teclado -->
+  <div class="hidden-search-container">
+    <input type="text" id="searchInput" autofocus>
+  </div>
+
+  <!-- Botón para mostrar el teclado manual -->
+  <button class="keyboard-toggle" id="keyboardToggle">
+    <i class="fas fa-keyboard"></i>
+  </button>
+
+  <!-- Contenedor de búsqueda manual (oculto inicialmente) -->
+  <div class="search-container" id="searchContainer">
+    <input type="text" id="searchInputManual" placeholder="Ingrese el código EAN/UPC">
     <div class="numeric-keyboard" id="numericKeyboard">
       <button class="numeric-btn" data-value="1">1</button>
       <button class="numeric-btn" data-value="2">2</button>
@@ -218,10 +442,10 @@
   <!-- Modal para mostrar el resultado -->
   <div class="modal" id="resultModal">
     <div class="modal-content">
-      <h2>Resultado de la búsqueda</h2>
+      <h2>PRECIO DEL PRODUCTO</h2>
       <p id="productName"></p>
       <p id="productPrice"></p>
-      <button id="closeModalBtn">Cerrar</button>
+      <button id="closeModalBtn">CERRAR</button>
     </div>
   </div>
 
@@ -247,9 +471,10 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const slides = document.getElementById('slides');
+    // Elementos del DOM
+    const marketingSlides = document.getElementById('marketingSlides');
     const searchInput = document.getElementById("searchInput");
-    const numericKeyboard = document.getElementById("numericKeyboard");
+    const searchInputManual = document.getElementById("searchInputManual");
     const numericButtons = document.querySelectorAll(".numeric-btn");
     const backspaceBtn = document.getElementById("backspaceBtn");
     const acceptBtn = document.getElementById("acceptBtn");
@@ -257,130 +482,235 @@
     const productName = document.getElementById("productName");
     const productPrice = document.getElementById("productPrice");
     const closeModalBtn = document.getElementById("closeModalBtn");
+    const keyboardToggle = document.getElementById("keyboardToggle");
+    const searchContainer = document.getElementById("searchContainer");
+    const loadingOverlay = document.getElementById("loadingOverlay");
 
-    // Mostrar el teclado al hacer clic en el buscador
-    searchInput.addEventListener("focus", () => {
-      numericKeyboard.style.display = "grid";
-    });
+    // Variables para el temporizador
+    let modalTimeout;
+    const MODAL_DISPLAY_TIME = 15000; // 15 segundos
+    let searchTimeout;
+    const SEARCH_DELAY = 2000; // 2 segundos de retardo para el buscador oculto
 
-    // Ocultar el teclado solo si se hace clic fuera del campo de búsqueda y del teclado
-    document.addEventListener("click", (event) => {
-      const isClickInsideInput = searchInput.contains(event.target);
-      const isClickInsideKeyboard = numericKeyboard.contains(event.target);
-
-      if (!isClickInsideInput && !isClickInsideKeyboard) {
-        numericKeyboard.style.display = "none";
+    // Mostrar/ocultar teclado manual
+    keyboardToggle.addEventListener("click", () => {
+      searchContainer.classList.toggle("visible");
+      if (searchContainer.classList.contains("visible")) {
+        searchInputManual.focus();
+        // Pausar el foco automático mientras el teclado manual está visible
+        clearInterval(focusInterval);
+      } else {
+        searchInput.focus();
+        // Reanudar el foco automático
+        startFocusInterval();
       }
     });
 
-    // Función para cargar imágenes del slider desde Firestore
-    const loadImages = async () => {
-      const sliderRef = collection(db, "slider");
-      const sliderSnapshot = await getDocs(sliderRef);
-
-      sliderSnapshot.forEach(async (sliderDoc) => {
-        const sliderData = sliderDoc.data();
-        if (sliderData.images) {
-          sliderData.images.forEach((image) => {
-            const slide = document.createElement('div');
-            slide.className = 'slide';
-            slide.innerHTML = `<img src="${image}" alt="Imagen">`;
-            slides.appendChild(slide);
-          });
+    // Intervalo para mantener el foco en el campo oculto
+    let focusInterval;
+    function startFocusInterval() {
+      focusInterval = setInterval(() => {
+        if (!searchContainer.classList.contains("visible") && document.activeElement !== searchInput) {
+          searchInput.focus();
         }
-      });
-      startSlider(); // Inicia el slider después de cargar las imágenes
-    };
+      }, 500);
+    }
 
-    // Manejar la entrada de números en el campo EAN/UPC
+    // Manejar teclado numérico manual
     numericButtons.forEach(button => {
       button.addEventListener("click", () => {
         if (button.id !== "backspaceBtn" && button.id !== "acceptBtn") {
-          searchInput.value += button.getAttribute("data-value");
+          searchInputManual.value += button.getAttribute("data-value");
         }
       });
     });
 
-    // Botón de borrar
+    // Botón de borrar en teclado manual
     backspaceBtn.addEventListener("click", () => {
-      searchInput.value = searchInput.value.slice(0, -1);
+      searchInputManual.value = searchInputManual.value.slice(0, -1);
     });
 
-    // Función para buscar el producto
-    const searchProduct = async (eanTerm) => {
+    // Botón de aceptar en teclado manual
+    acceptBtn.addEventListener("click", () => {
+      if (searchInputManual.value.length > 0) {
+        handleSearch(searchInputManual.value);
+      }
+    });
+
+    // Cargar imágenes de marketing desde Firestore
+    const loadMarketingImages = async () => {
       try {
+        const sliderRef = collection(db, "slider");
+        const sliderSnapshot = await getDocs(sliderRef);
+
+        sliderSnapshot.forEach((sliderDoc) => {
+          const sliderData = sliderDoc.data();
+          if (sliderData.images) {
+            sliderData.images.forEach((image) => {
+              const slide = document.createElement('div');
+              slide.className = 'marketing-slide';
+              slide.innerHTML = `<img src="${image}" alt="Imagen de marketing">`;
+              marketingSlides.appendChild(slide);
+            });
+          }
+        });
+        startMarketingSlider();
+      } catch (error) {
+        console.error("Error cargando imágenes de marketing:", error);
+      }
+    };
+
+    // Función para formatear el precio con comas y puntos
+    const formatPrice = (price) => {
+      return new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(price);
+    };
+
+    // Mostrar loading
+    const showLoading = () => {
+      loadingOverlay.style.display = 'flex';
+    };
+
+    // Ocultar loading
+    const hideLoading = () => {
+      loadingOverlay.style.display = 'none';
+    };
+
+    // Buscar producto en Firebase
+    const searchProduct = async (eanTerm) => {
+      showLoading(); // Mostrar loading al iniciar la búsqueda
+      
+      try {
+        // Limpiar el código de cualquier caracter no numérico
+        const cleanEan = eanTerm.toString().replace(/\D/g, '');
+        
+        if (!cleanEan) {
+          showProductInModal(null);
+          hideLoading();
+          return;
+        }
+
         const businessesRef = collection(db, "businesses");
         const businessesSnapshot = await getDocs(businessesRef);
 
         let productFound = false;
 
-        businessesSnapshot.forEach(async (businessDoc) => {
+        // Buscar en todas las empresas
+        for (const businessDoc of businessesSnapshot.docs) {
           const productsRef = collection(db, "businesses", businessDoc.id, "products");
-          const productsQuery = query(productsRef, where("eanUpcCode", "==", eanTerm));
-
+          const productsQuery = query(productsRef, where("eanUpcCode", "==", cleanEan));
           const querySnapshot = await getDocs(productsQuery);
-          querySnapshot.forEach((doc) => {
-            const product = doc.data();
-            productFound = true;
-            showProductInModal(product);
-          });
-        });
+
+          if (!querySnapshot.empty) {
+            querySnapshot.forEach((doc) => {
+              const product = doc.data();
+              productFound = true;
+              showProductInModal(product);
+            });
+            break; // Salir del bucle si encontramos el producto
+          }
+        }
 
         if (!productFound) {
-          productName.textContent = "Producto no encontrado.";
-          productPrice.textContent = "";
-          resultModal.style.display = "flex";
+          showProductInModal(null);
         }
       } catch (error) {
         console.error("Error al buscar el producto:", error);
+        showProductInModal(null);
+      } finally {
+        hideLoading(); // Ocultar loading cuando termine la búsqueda (éxito o error)
       }
     };
 
-    // Botón de aceptar (buscar)
-    acceptBtn.addEventListener("click", () => {
-      searchProduct(searchInput.value);
-    });
+    // Manejar la búsqueda
+    const handleSearch = (searchTerm) => {
+      if (searchTerm && searchTerm.toString().trim().length > 0) {
+        searchProduct(searchTerm.toString().trim());
+        // Limpiar campos después de la búsqueda
+        searchInput.value = '';
+        searchInputManual.value = '';
+      }
+    };
 
-    // Escuchar cambios en el campo de búsqueda
-    searchInput.addEventListener("input", () => {
-      if (searchInput.value.length > 0) {
-        searchProduct(searchInput.value); // Busca automáticamente al escribir
+    // Escuchar cambios en el campo oculto (para scanner) con retardo de 2 segundos
+    searchInput.addEventListener("input", (e) => {
+      // Solo procesar si el teclado manual no está visible
+      if (!searchContainer.classList.contains("visible")) {
+        // Cancelar cualquier búsqueda pendiente
+        clearTimeout(searchTimeout);
+        
+        // Programar nueva búsqueda después de 2 segundos de inactividad
+        searchTimeout = setTimeout(() => {
+          if (searchInput.value.length > 0) {
+            handleSearch(searchInput.value);
+          }
+        }, SEARCH_DELAY);
       }
     });
 
-    // Función para mostrar el producto en el modal
+    // Escuchar cambios en el campo manual (sin retardo)
+    searchInputManual.addEventListener("input", () => {
+      handleSearch(searchInputManual.value);
+    });
+
+    // Mostrar resultado en modal
     const showProductInModal = (product) => {
-      const profitPercentage = product.profitPercentage || 10; // Ganancia del 10% por defecto
-      const priceWithProfit = product.pricePerUnit * (1 + profitPercentage / 100);
-
-      productName.textContent = `Producto: ${product.name}`;
-      productPrice.textContent = `Precio final: $${priceWithProfit.toFixed(2)}`;
+      clearTimeout(modalTimeout);
+      
+      if (product) {
+        const profitPercentage = product.profitPercentage || 10;
+        const priceWithProfit = product.pricePerUnit * (1 + profitPercentage / 100);
+        
+        productName.textContent = product.name.toUpperCase();
+        productPrice.textContent = `$${formatPrice(priceWithProfit)}`;
+        productPrice.style.color = "#00ffcc";
+      } else {
+        productName.textContent = "PRODUCTO NO ENCONTRADO";
+        productPrice.textContent = "$0.00";
+        productPrice.style.color = "#ff5555";
+      }
+      
       resultModal.style.display = "flex";
+      document.querySelector('.marketing-background').style.display = 'none';
+      
+      // Temporizador para cerrar automáticamente
+      modalTimeout = setTimeout(closeModal, MODAL_DISPLAY_TIME);
     };
 
-    // Cerrar el modal
-    closeModalBtn.addEventListener("click", () => {
+    // Cerrar modal
+    const closeModal = () => {
       resultModal.style.display = "none";
-    });
-
-    // Enfocar automáticamente el campo de búsqueda al cargar la página
-    window.onload = async () => {
-      searchInput.focus();
-      await loadImages(); // Cargar imágenes al iniciar
+      document.querySelector('.marketing-background').style.display = 'block';
+      // Restaurar el foco al campo correspondiente
+      if (searchContainer.classList.contains("visible")) {
+        searchInputManual.focus();
+      } else {
+        searchInput.focus();
+      }
     };
 
-    // Función para el slider
-    let currentIndex = 0;
+    closeModalBtn.addEventListener("click", closeModal);
 
-    function startSlider() {
-      const totalSlides = slides.children.length;
+    // Iniciar slider de imágenes
+    let currentMarketingIndex = 0;
+    function startMarketingSlider() {
+      const totalSlides = marketingSlides.children.length;
       if (totalSlides > 0) {
         setInterval(() => {
-          currentIndex = (currentIndex + 1) % totalSlides; // Cambia el índice
-          slides.style.transform = `translateX(-${currentIndex * 100}%)`;
-        }, 3000);
+          currentMarketingIndex = (currentMarketingIndex + 1) % totalSlides;
+          marketingSlides.style.transform = `translateX(-${currentMarketingIndex * 100}%)`;
+        }, 5000); // Cambio cada 5 segundos
       }
     }
+
+    // Inicializar la aplicación
+    window.onload = async () => {
+      await loadMarketingImages();
+      searchInput.focus();
+      startFocusInterval();
+    };
   </script>
 </body>
 </html>
