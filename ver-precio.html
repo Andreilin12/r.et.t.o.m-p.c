@@ -78,25 +78,27 @@
     /* Campo de búsqueda oculto pero siempre activo para scanner/teclado */
     .hidden-search-container {
       position: absolute;
-      width: 1px;
+      width: 100%;
       height: 1px;
       padding: 0;
-      margin: -1px;
+      margin: 0;
       overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      border: 0;
     }
 
     #searchInput {
-      width: 1px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
       height: 1px;
       padding: 0;
-      margin: -1px;
+      margin: 0;
       border: 0;
-      position: absolute;
+      opacity: 0;
+      pointer-events: none;
     }
 
-    /* Contenedor de búsqueda manual (oculto por defecto) - Mejorado para móviles */
+    /* Contenedor de búsqueda manual (oculto por defecto) */
     .search-container {
       position: fixed;
       bottom: 0;
@@ -218,11 +220,11 @@
     #productName {
       font-size: 1.8rem;
       margin: 1rem 0;
+      color: #ffa500;
       font-weight: bold;
       word-break: break-word;
       line-height: 1.3;
-      color: #ffa500; /* Nuevo color naranja para el nombre del producto */
-      text-shadow: 0 0 8px rgba(255, 165, 0, 0.5); /* Sutil efecto de resplandor */
+      text-shadow: 0 0 8px rgba(255, 165, 0, 0.5);
     }
 
     #productPrice {
@@ -493,29 +495,32 @@
     let searchTimeout;
     const SEARCH_DELAY = 2000; // 2 segundos de retardo para el buscador oculto
 
+    // Función para mantener el foco en el campo oculto
+    const maintainFocus = () => {
+      // Solo si el teclado manual no está visible
+      if (!searchContainer.classList.contains("visible")) {
+        searchInput.focus();
+      }
+    };
+
+    // Configurar el campo oculto para capturar todo el input
+    searchInput.addEventListener('keydown', (e) => {
+      // Permitir sólo teclas numéricas y Enter
+      if (!/[0-9]/.test(e.key) && e.key !== 'Enter' && 
+          !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+        e.preventDefault();
+      }
+    });
+
     // Mostrar/ocultar teclado manual
     keyboardToggle.addEventListener("click", () => {
       searchContainer.classList.toggle("visible");
       if (searchContainer.classList.contains("visible")) {
         searchInputManual.focus();
-        // Pausar el foco automático mientras el teclado manual está visible
-        clearInterval(focusInterval);
       } else {
-        searchInput.focus();
-        // Reanudar el foco automático
-        startFocusInterval();
+        maintainFocus();
       }
     });
-
-    // Intervalo para mantener el foco en el campo oculto
-    let focusInterval;
-    function startFocusInterval() {
-      focusInterval = setInterval(() => {
-        if (!searchContainer.classList.contains("visible") && document.activeElement !== searchInput) {
-          searchInput.focus();
-        }
-      }, 500);
-    }
 
     // Manejar teclado numérico manual
     numericButtons.forEach(button => {
@@ -581,7 +586,7 @@
 
     // Buscar producto en Firebase
     const searchProduct = async (eanTerm) => {
-      showLoading(); // Mostrar loading al iniciar la búsqueda
+      showLoading();
       
       try {
         // Limpiar el código de cualquier caracter no numérico
@@ -598,7 +603,6 @@
 
         let productFound = false;
 
-        // Buscar en todas las empresas
         for (const businessDoc of businessesSnapshot.docs) {
           const productsRef = collection(db, "businesses", businessDoc.id, "products");
           const productsQuery = query(productsRef, where("eanUpcCode", "==", cleanEan));
@@ -610,7 +614,7 @@
               productFound = true;
               showProductInModal(product);
             });
-            break; // Salir del bucle si encontramos el producto
+            break;
           }
         }
 
@@ -621,7 +625,7 @@
         console.error("Error al buscar el producto:", error);
         showProductInModal(null);
       } finally {
-        hideLoading(); // Ocultar loading cuando termine la búsqueda (éxito o error)
+        hideLoading();
       }
     };
 
@@ -635,7 +639,7 @@
       }
     };
 
-    // Escuchar cambios en el campo oculto (para scanner) con retardo de 2 segundos
+    // Escuchar cambios en el campo oculto (para scanner/teclado físico)
     searchInput.addEventListener("input", (e) => {
       // Solo procesar si el teclado manual no está visible
       if (!searchContainer.classList.contains("visible")) {
@@ -651,7 +655,7 @@
       }
     });
 
-    // Escuchar cambios en el campo manual (sin retardo)
+    // Escuchar cambios en el campo manual
     searchInputManual.addEventListener("input", () => {
       handleSearch(searchInputManual.value);
     });
@@ -677,19 +681,17 @@
       document.querySelector('.marketing-background').style.display = 'none';
       
       // Temporizador para cerrar automáticamente
-      modalTimeout = setTimeout(closeModal, MODAL_DISPLAY_TIME);
+      modalTimeout = setTimeout(() => {
+        closeModal();
+        maintainFocus();
+      }, MODAL_DISPLAY_TIME);
     };
 
     // Cerrar modal
     const closeModal = () => {
       resultModal.style.display = "none";
       document.querySelector('.marketing-background').style.display = 'block';
-      // Restaurar el foco al campo correspondiente
-      if (searchContainer.classList.contains("visible")) {
-        searchInputManual.focus();
-      } else {
-        searchInput.focus();
-      }
+      maintainFocus();
     };
 
     closeModalBtn.addEventListener("click", closeModal);
@@ -702,15 +704,25 @@
         setInterval(() => {
           currentMarketingIndex = (currentMarketingIndex + 1) % totalSlides;
           marketingSlides.style.transform = `translateX(-${currentMarketingIndex * 100}%)`;
-        }, 5000); // Cambio cada 5 segundos
+        }, 5000);
       }
     }
 
     // Inicializar la aplicación
     window.onload = async () => {
       await loadMarketingImages();
-      searchInput.focus();
-      startFocusInterval();
+      
+      // Configurar eventos para mantener el foco
+      document.addEventListener('click', maintainFocus);
+      document.addEventListener('keydown', maintainFocus);
+      
+      // Enfocar el campo oculto al cargar
+      maintainFocus();
+      
+      // Forzar el foco periódicamente por si se pierde
+      setInterval(maintainFocus, 1000);
+      
+      startMarketingSlider();
     };
   </script>
 </body>
