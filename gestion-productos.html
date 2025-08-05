@@ -1256,6 +1256,7 @@
     let newAlerts = 0;
     let newHistory = 0;
     let selectedImageFile = null;
+    let isLoadingProducts = false; // Bandera para controlar carga duplicada
 
     // Formatear número con comas y puntos
     function formatNumber(number) {
@@ -2671,10 +2672,16 @@
 
     // Cargar todos los productos
     async function loadAllProducts() {
+      // Evitar múltiples llamadas simultáneas
+      if (isLoadingProducts) return;
+      isLoadingProducts = true;
+      
       showLoading("Cargando productos...");
       
       try {
-        allProducts = [];
+        // Limpiar el array completamente
+        allProducts.length = 0;
+        
         const businessesQuerySnapshot = await getDocs(collection(db, "businesses"));
         
         for (const businessDoc of businessesQuerySnapshot.docs) {
@@ -2683,11 +2690,14 @@
           
           productsQuerySnapshot.forEach(productDoc => {
             const productData = productDoc.data();
-            allProducts.push({
-              id: productDoc.id,
-              businessName: businessName,
-              ...productData
-            });
+            // Verificar que el producto no exista ya en el array
+            if (!allProducts.some(p => p.id === productDoc.id && p.businessName === businessName)) {
+              allProducts.push({
+                id: productDoc.id,
+                businessName: businessName,
+                ...productData
+              });
+            }
           });
         }
         
@@ -2699,6 +2709,7 @@
         showAlert("Error al cargar los productos", "error");
       } finally {
         hideLoading();
+        isLoadingProducts = false;
       }
     }
 
@@ -2767,8 +2778,5 @@
     // Iniciar la aplicación cuando el DOM esté listo
     document.addEventListener('DOMContentLoaded', initApp);
   </script>
-
-  <!-- Incluir la librería XLSX -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 </body>
 </html>
