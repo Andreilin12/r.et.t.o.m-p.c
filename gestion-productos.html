@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inventarios Avanzado</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
   <style>
     :root {
       --primary-color: #16a085;
@@ -1205,7 +1206,7 @@
   </div>
 
   <audio id="alertSound" src="https://firebasestorage.googleapis.com/v0/b/inventario-35d6b.appspot.com/o/SD_ALERT_32.mp3?alt=media&token=6c8d7b14-ca44-44ad-95de-8e533cd9e948"></audio>
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+  
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
     import { 
@@ -2586,82 +2587,80 @@
       showLoading("Generando reporte...");
       
       try {
-        const table = document.createElement("table");
-        const headerRow = table.insertRow();
+        // Crear un libro de trabajo
+        const wb = XLSX.utils.book_new();
         
-        const headers = [
-          "Negocio", "Nombre", "Código", "EAN/UPC", "Categoría", 
-          "Cantidad", "Unidad", "Precio", "Precio Original", 
-          "% Ganancia", "% Descuento", "Fecha Vencimiento", "Estado"
+        // Crear una hoja de cálculo con los datos
+        const wsData = [
+          // Encabezados
+          [
+            "Negocio", "Nombre", "Código", "EAN/UPC", "Categoría", 
+            "Cantidad", "Unidad", "Precio", "Precio Original", 
+            "% Ganancia", "% Descuento", "Fecha Vencimiento", "Estado"
+          ],
+          // Datos
+          ...allProducts.map(product => {
+            const currentDate = new Date();
+            const expirationDate = product.expirationDate ? new Date(product.expirationDate) : null;
+            const daysUntilExpiration = expirationDate ? Math.ceil((expirationDate - currentDate) / (1000 * 60 * 60 * 24)) : null;
+            
+            let status = '';
+            if (product.quantity === 0) {
+              status = 'AGOTADO';
+            } else if (product.quantity <= (product.lowStockThreshold || 10)) {
+              status = 'BAJO STOCK';
+            } else {
+              status = 'DISPONIBLE';
+            }
+            
+            if (daysUntilExpiration !== null) {
+              if (daysUntilExpiration < 0) {
+                status += ', VENCIDO';
+              } else if (daysUntilExpiration <= 30) {
+                status += `, VENCE EN ${daysUntilExpiration} DÍAS`;
+              }
+            }
+            
+            // Verificar si es un producto con poca venta
+            const lastChangeDate = product.lastQuantityChange ? new Date(product.lastQuantityChange) : null;
+            const daysSinceChange = lastChangeDate ? Math.ceil((currentDate - lastChangeDate) / (1000 * 60 * 60 * 24)) : null;
+            if (daysSinceChange > 30 && product.quantity > 0) {
+              status += `, POCO MOVIMIENTO (${daysSinceChange} días)`;
+            }
+            
+            // Verificar si es un producto con Estocolmo bajo
+            if (product.initialQuantity && (product.quantity <= (product.initialQuantity * 0.2))) {
+              status += `, ESTOCOLMO BAJO (${Math.round((product.quantity / product.initialQuantity) * 100)}%)`;
+            }
+            
+            return [
+              product.businessName || 'N/A',
+              product.name || 'N/A',
+              product.code || 'N/A',
+              product.eanUpcCode || 'N/A',
+              product.type || 'N/A',
+              product.quantity || 0,
+              product.unit || 'N/A',
+              product.pricePerUnit?.toFixed(2) || '0.00',
+              product.originalPrice?.toFixed(2) || '0.00',
+              product.profitPercentage || '0',
+              product.discount || '0',
+              expirationDate?.toLocaleDateString() || 'N/A',
+              status
+            ];
+          })
         ];
         
-        headers.forEach(header => {
-          const th = document.createElement("th");
-          th.textContent = header;
-          headerRow.appendChild(th);
-        });
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
         
-        const currentDate = new Date();
+        // Agregar la hoja al libro de trabajo
+        XLSX.utils.book_append_sheet(wb, ws, "Inventario");
         
-        allProducts.forEach(product => {
-          const row = table.insertRow();
-          
-          const expirationDate = product.expirationDate ? new Date(product.expirationDate) : null;
-          const daysUntilExpiration = expirationDate ? Math.ceil((expirationDate - currentDate) / (1000 * 60 * 60 * 24)) : null;
-          
-          let status = '';
-          if (product.quantity === 0) {
-            status = 'AGOTADO';
-          } else if (product.quantity <= (product.lowStockThreshold || 10)) {
-            status = 'BAJO STOCK';
-          } else {
-            status = 'DISPONIBLE';
-          }
-          
-          if (daysUntilExpiration !== null) {
-            if (daysUntilExpiration < 0) {
-              status += ', VENCIDO';
-            } else if (daysUntilExpiration <= 30) {
-              status += `, VENCE EN ${daysUntilExpiration} DÍAS`;
-            }
-          }
-          
-          // Verificar si es un producto con poca venta
-          const lastChangeDate = product.lastQuantityChange ? new Date(product.lastQuantityChange) : null;
-          const daysSinceChange = lastChangeDate ? Math.ceil((currentDate - lastChangeDate) / (1000 * 60 * 60 * 24)) : null;
-          if (daysSinceChange > 30 && product.quantity > 0) {
-            status += `, POCO MOVIMIENTO (${daysSinceChange} días)`;
-          }
-          
-          // Verificar si es un producto con Estocolmo bajo
-          if (product.initialQuantity && (product.quantity <= (product.initialQuantity * 0.2))) {
-            status += `, ESTOCOLMO BAJO (${Math.round((product.quantity / product.initialQuantity) * 100)}%)`;
-          }
-          
-          const cells = [
-            product.businessName || 'N/A',
-            product.name || 'N/A',
-            product.code || 'N/A',
-            product.eanUpcCode || 'N/A',
-            product.type || 'N/A',
-            product.quantity || 0,
-            product.unit || 'N/A',
-            product.pricePerUnit?.toFixed(2) || '0.00',
-            product.originalPrice?.toFixed(2) || '0.00',
-            product.profitPercentage || '0',
-            product.discount || '0',
-            expirationDate?.toLocaleDateString() || 'N/A',
-            status
-          ];
-          
-          cells.forEach(cellData => {
-            const cell = row.insertCell();
-            cell.textContent = cellData;
-          });
-        });
+        // Generar el archivo Excel y descargarlo
+        const today = new Date();
+        const dateStr = today.toISOString().split('T')[0];
+        XLSX.writeFile(wb, `inventario_${dateStr}.xlsx`);
         
-        const wb = XLSX.utils.table_to_book(table);
-        XLSX.writeFile(wb, `inventario_${new Date().toISOString().split('T')[0]}.xlsx`);
       } catch (error) {
         console.error("Error al generar Excel:", error);
         showAlert("Error al generar el reporte Excel", "error");
